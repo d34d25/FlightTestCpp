@@ -1,0 +1,76 @@
+#pragma once
+
+#include "plane.h"
+
+class Player
+{
+private:
+
+    int pitchInput = 0;
+    int rollInput = 0;
+    int yawInput = 0;
+
+    bool globalCamera = false;
+    float orbitYaw = 0.0f;
+    float orbitPitch = 0.0f;
+    float orbitDistance = -100.0f;
+
+    Vector3 smoothedOffset;
+
+    float engineGlow = 0.5f;
+    float idleEngineGlow = 0.5f;
+
+    int maxEngineGlow = 1;
+    float engineGlowChange = 0.005f;
+
+public:
+
+    Plane plane;
+
+    Camera3D camera;
+
+    Vector3 cameraOffset;
+
+    Player();
+
+    void UpdatePlayer(float dt, int iterations);
+    
+    void UpdateCamera(float dt);
+
+    //getters
+
+    inline Body3D GetBody()
+    {
+        return plane.body;
+    }
+
+    inline Transform GetTransform()
+    {
+        return plane.body.transform;
+    }
+
+    inline Vector3 GetPosition()
+    {
+        return plane.body.transform.translation;
+    }
+
+    inline Quaternion GetOrientation()
+    {
+        return plane.body.transform.rotation;
+    }
+
+    inline int GetWidth()
+    {
+        return plane.params.hitboxWidth;
+    }
+
+    inline int GetHeight()
+    {
+        return plane.params.hitboxHeight;
+    }
+
+    inline int GetLength()
+    {
+        return plane.params.hitboxLength;
+    }    
+};

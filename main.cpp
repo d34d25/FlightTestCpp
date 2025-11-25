@@ -96,7 +96,8 @@ int main()
 
         DrawFPS(10,10);
 
-        DrawText(TextFormat("%0.2f", player.plane.GetSpeed()),SCREEN_WIDTH / 4, SCREEN_HEIGHT / 2, 20, GREEN);
+        DrawText(TextFormat("SPEED: %0.2f", player.plane.GetSpeed()),SCREEN_WIDTH / 4, SCREEN_HEIGHT / 2, 20, GREEN);
+          DrawText(TextFormat("THRUST: %0.2f", player.plane.thrust),SCREEN_WIDTH / 4, SCREEN_HEIGHT / 4, 20, GREEN);
 
 
         EndDrawing();

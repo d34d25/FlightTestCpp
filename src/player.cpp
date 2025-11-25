@@ -15,7 +15,7 @@ Player::Player()
     params.maxThrust = 350000.0f;
     params.idleThrust = DEFAULT_IDLE_THRUST;
 
-    params.returnSpeedHigh = DEFAULT_RETURN_SPEED_HIGH;
+    params.returnSpeedHigh = DEFAULT_RETURN_SPEED_HIGH * 1.25f;
     params.returnSpeedLow = DEFAULT_RETURN_SPEED_LOW;
 
     params.acceleration = 21000.0f;
@@ -94,9 +94,20 @@ void Player::UpdatePlayer(float dt, int iterations)
         }
         else
         {
-            if (engineGlow < idleEngineGlow) engineGlow += engineGlowChange;
-            else if (engineGlow > idleEngineGlow) engineGlow -= engineGlowChange;
-            else engineGlow = idleEngineGlow;
+            plane.hasInput = false;
+
+            if (engineGlow < idleEngineGlow)
+            {
+                engineGlow += engineGlowChange;
+            } 
+            else if (engineGlow > idleEngineGlow)
+            {
+                engineGlow -= engineGlowChange;
+            } 
+            else
+            {
+                engineGlow = idleEngineGlow;
+            } 
         }
 
         engineGlow = Clamp(engineGlow, 0, maxEngineGlow);
@@ -115,21 +126,17 @@ void Player::UpdatePlayer(float dt, int iterations)
     }
     else
     {
+        plane.returnToIdle = false;
+
         engineGlow = plane.thrust / plane.params.maxThrust;
         
         if (IsKeyDown(KEY_LEFT_SHIFT))
         {
             plane.thrust += plane.params.acceleration * dt;
-            plane.hasInput = true;
         }
         else if (IsKeyDown(KEY_LEFT_CONTROL))
         {
             plane.thrust -= plane.params.brake * dt;
-            plane.hasInput = true;
-        }
-        else
-        {
-            plane.hasInput = false;
         }
 
         if (IsKeyDown(KEY_E))  yawInput = -1;
@@ -198,6 +205,8 @@ void Player::UpdateCamera(float dt)
     else
     {
         plane.returnToIdle = false;
+
+        plane.hasInput = true;
 
         HideCursor();
         

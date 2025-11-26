@@ -2,6 +2,7 @@
 #include "rlgl.h"
 #include "player.h"
 #include "body.h"
+#include "drawing.h"
 #include <iostream>
 
 int INTERNAL_WIDTH = 426;
@@ -24,7 +25,7 @@ int main()
     background.r = 64.0f, background.g = 152.0f, background.b = 230.0f;
     background.a = 255.0f;
 
-    Player player = Player();
+    Player player = Player(2.0f);
 
     InitWindow(SCREEN_WIDTH,SCREEN_HEIGHT,"");
 
@@ -32,7 +33,13 @@ int main()
 
     RenderTexture2D renderTarget = LoadRenderTexture(INTERNAL_WIDTH, INTERNAL_HEIGHT);
 
-    Texture2D groundTexture = LoadTexture("assets/groundTest.jpeg");    
+    Texture2D groundTexture = LoadTexture("assets/groundTest.jpeg");
+
+    //shader
+
+    FlatShaderData shaderData = mLoadShader("shaders/flatShader.vs", "shaders/flatShader.fs", 7);
+
+    mApplyShader(&shaderData, &planeModel);
 
     SetTargetFPS(60);
     
@@ -41,6 +48,7 @@ int main()
     while (!WindowShouldClose())
     {
         //update
+        shaderData.skipIntensity = player.GetEngineGlow();
 
         float dt = GetFrameTime();
 
@@ -70,11 +78,7 @@ int main()
         DrawText("TEST", 200,-90,100,RED);
         rlPopMatrix();
         
-        rlPushMatrix();
-        const float* m = GetLocalMatrixTransform(player.GetTransform()).data();
-        rlMultMatrixf(m);
-        DrawModel(planeModel, {0,0,0}, 2, WHITE);
-        rlPopMatrix();
+        DrawShadedModel(player.GetTransform(), planeModel, &shaderData);
 
         EndMode3D();
         EndTextureMode();
@@ -96,8 +100,11 @@ int main()
 
         DrawFPS(10,10);
 
-        DrawText(TextFormat("SPEED: %0.2f", player.plane.GetSpeed()),SCREEN_WIDTH / 4, SCREEN_HEIGHT / 2, 20, GREEN);
-          DrawText(TextFormat("THRUST: %0.2f", player.plane.thrust),SCREEN_WIDTH / 4, SCREEN_HEIGHT / 4, 20, GREEN);
+        DrawText(TextFormat("SPEED: %0.2f", player.plane.GetSpeed()),SCREEN_WIDTH * 0.25, SCREEN_HEIGHT / 2, 20, GREEN);
+        DrawText(TextFormat("THRUST: %0.2f", player.plane.thrust),SCREEN_WIDTH * 0.25, SCREEN_HEIGHT / 4, 20, GREEN);
+
+
+        DrawText(TextFormat("ALTITUDE: %0.2f", player.plane.GetSpeed()),SCREEN_WIDTH * 0.7f, SCREEN_HEIGHT / 2, 20, GREEN);
 
 
         EndDrawing();
@@ -106,6 +113,7 @@ int main()
     
     std::cout<<""<<std::endl;
 
+    UnloadShader(shaderData.__shader);
     UnloadModel(planeModel);
     UnloadTexture(groundTexture);
     UnloadRenderTexture(renderTarget);

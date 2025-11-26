@@ -31,13 +31,18 @@ public:
 
     Vector3 cameraOffset;
 
-    Player();
+    Player(float scale);
 
     void UpdatePlayer(float dt, int iterations);
     
     void UpdateCamera(float dt);
 
     //getters
+
+    inline float GetEngineGlow()
+    {
+        return engineGlow;
+    }
 
     inline Body3D GetBody()
     {

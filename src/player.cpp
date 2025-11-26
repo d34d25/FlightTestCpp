@@ -1,7 +1,7 @@
 #include "player.h"
 #include <cmath>
 
-Player::Player()
+Player::Player(float scale)
 {
     PlaneParams params = PlaneParams();
     params.position.x = 0.0f;
@@ -32,6 +32,10 @@ Player::Player()
     params.modelPath = "assets/sf15b.obj";
 
     plane = Plane(params);
+
+    plane.body.transform.scale.x = scale;
+    plane.body.transform.scale.y = scale;
+    plane.body.transform.scale.z = scale;
 
     plane.thrust = plane.params.idleThrust * 1.25f;
 

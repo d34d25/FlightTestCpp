@@ -3,6 +3,7 @@
 #include "player.h"
 #include "body.h"
 #include "drawing.h"
+#include "collider.h"
 #include <iostream>
 
 int INTERNAL_WIDTH = 426;
@@ -11,14 +12,10 @@ int INTERNAL_HEIGHT = 240;
 int SCREEN_WIDTH = 1280;
 int SCREEN_HEIGHT = 720;
 
-
 int main()
 {
-    Vector2 origin;
-    origin.x = 0;
-    origin.y = 0;
 
-    //SetConfigFlags(FLAG_WINDOW_HIGHDPI);
+    SetConfigFlags(FLAG_WINDOW_HIGHDPI);
     //SetConfigFlags(FLAG_FULLSCREEN_MODE);
 
     Color background;
@@ -26,6 +23,15 @@ int main()
     background.a = 255.0f;
 
     Player player = Player(2.0f);
+    Collider testCollider = Collider();
+
+    testCollider.CreatePrismatoidForward(
+        player.plane.params.hitboxWidth,
+        player.plane.params.hitboxHeight,
+        player.plane.params.hitboxWidth / 2,
+        player.plane.params.hitboxHeight / 2,
+        player.plane.params.hitboxLength);
+
 
     InitWindow(SCREEN_WIDTH,SCREEN_HEIGHT,"");
 
@@ -37,23 +43,31 @@ int main()
 
     //shader
 
-    FlatShaderData shaderData = mLoadShader("shaders/flatShader.vs", "shaders/flatShader.fs", 7);
+    FlatShaderData shaderData = mLoadFlatShader("shaders/flatShader.vs", "shaders/flatShader.fs", 7);
 
-    mApplyShader(&shaderData, &planeModel);
+    mApplyFlatShader(&shaderData, &planeModel);
 
     SetTargetFPS(60);
     
     rlSetClipPlanes(10,7000);
 
+    float accumulator = 0.0f;
+    float FIXED_DELTA_TIME = 1.0f/60.0f;
+
     while (!WindowShouldClose())
-    {
-        //update
-        shaderData.skipIntensity = player.GetEngineGlow();
-
+    { 
         float dt = GetFrameTime();
+        //update
+        accumulator += dt;
 
-        player.UpdatePlayer(dt,1);
-        player.UpdateCamera(dt);
+        while (accumulator >= FIXED_DELTA_TIME)
+        {
+            shaderData.skipIntensity = player.GetEngineGlow();
+            player.UpdatePlayer(FIXED_DELTA_TIME,1);
+            player.UpdateCamera(FIXED_DELTA_TIME);
+
+            accumulator -= FIXED_DELTA_TIME;
+        }
 
         //drawing
         BeginTextureMode(renderTarget);
@@ -75,33 +89,35 @@ int main()
         
         rlPushMatrix();
         rlScalef(-1,-1,-1);
-        DrawText("TEST", 200,-90,100,RED);
         rlPopMatrix();
         
-        DrawShadedModel(player.GetTransform(), planeModel, &shaderData);
+        DrawFlatShadedModel(player.GetTransform(), planeModel, &shaderData);
+
+        DrawCollider(testCollider.GetTransformedVertices(player.GetTransform()), RED);
+
+        DrawSphere(player.GetTransform().translation, 2, MAGENTA);
 
         EndMode3D();
         EndTextureMode();
         
         BeginDrawing();
         ClearBackground(background);
-
-        Rectangle source;
-        source.x = 0, source.y = 0, source.width = INTERNAL_WIDTH, source.height = -INTERNAL_HEIGHT;
-
-        Rectangle dest;
-        dest.x = 0, dest.y = 0, dest.width = SCREEN_WIDTH, dest.height = SCREEN_HEIGHT;
         
         DrawTexturePro(
             renderTarget.texture,
-            source, dest, origin,
+            {0,0,(float)INTERNAL_WIDTH,(float)-INTERNAL_HEIGHT},
+            {0,0,(float)SCREEN_WIDTH, (float)SCREEN_HEIGHT}, 
+            {0,0},
             0.0f, WHITE
         );
 
         DrawFPS(10,10);
 
-        DrawText(TextFormat("SPEED: %0.2f", player.plane.GetSpeed()),SCREEN_WIDTH * 0.25, SCREEN_HEIGHT / 2, 20, GREEN);
-        DrawText(TextFormat("THRUST: %0.2f", player.plane.thrust),SCREEN_WIDTH * 0.25, SCREEN_HEIGHT / 4, 20, GREEN);
+
+        DrawText(TextFormat("MAX SPEED: %0.2f", player.plane.GetMaxSpeed()),SCREEN_WIDTH * 0.25, SCREEN_HEIGHT * 0.15, 20, GREEN);
+        DrawText(TextFormat("IDLE SPEED: %0.2f", player.plane.GetIdleSpeed()),SCREEN_WIDTH * 0.75, SCREEN_HEIGHT * 0.15, 20, GREEN);
+        DrawText(TextFormat("SPEED: %0.2f", player.plane.GetSpeed()),SCREEN_WIDTH * 0.25, SCREEN_HEIGHT * 0.5, 20, GREEN);
+        DrawText(TextFormat("THRUST: %0.2f", player.plane.thrust),SCREEN_WIDTH * 0.25, SCREEN_HEIGHT * 0.25, 20, GREEN);
 
 
         DrawText(TextFormat("ALTITUDE: %0.2f", player.plane.GetSpeed()),SCREEN_WIDTH * 0.7f, SCREEN_HEIGHT / 2, 20, GREEN);

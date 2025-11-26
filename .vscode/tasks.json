@@ -13,6 +13,7 @@
                 "${workspaceFolder}/src/plane.cpp",
                 "${workspaceFolder}/src/player.cpp",
                 "${workspaceFolder}/src/drawing.cpp",
+                "${workspaceFolder}/src/collider.cpp",
                 "-o",
                 "${fileDirname}/${fileBasenameNoExtension}",
                 "-I", "${workspaceFolder}/headers",

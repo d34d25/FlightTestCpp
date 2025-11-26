@@ -2,7 +2,7 @@
 #include<iostream>
 #include <simpleTransform.h>
 
-FlatShaderData mLoadShader(const char* shaderVs, const char* shaderFs, int skipIndex)
+FlatShaderData mLoadFlatShader(const char* shaderVs, const char* shaderFs, int skipIndex)
 {
     FlatShaderData shaderData;
 
@@ -20,7 +20,7 @@ FlatShaderData mLoadShader(const char* shaderVs, const char* shaderFs, int skipI
     return shaderData;
 }
 
-void mApplyShader(FlatShaderData* shaderData, Model* model)
+void mApplyFlatShader(FlatShaderData* shaderData, Model* model)
 {
     for (int i = 0; i < model->materialCount; i++)
     {
@@ -62,18 +62,16 @@ void DrawShadedMesh(FlatShaderData* shaderData, Model model)
 
         Color baseColor = model.materials[matIndex].maps[0].color;
 
+        baseColorArray[0] = baseColor.r / 255.0f;
+        baseColorArray[1] = baseColor.g / 255.0f;
+        baseColorArray[2] = baseColor.b / 255.0f;
+
         if(matIndex == shaderData->__skipMaterial)
         {
-            baseColorArray[0] = baseColor.r / 255.0f;
-            baseColorArray[1] = baseColor.g / 255.0f;
-            baseColorArray[2] = baseColor.b / 255.0f;
             baseColorArray[3] = -shaderData->skipIntensity;
         }
         else
         {
-            baseColorArray[0] = baseColor.r / 255.0f;
-            baseColorArray[1] = baseColor.g / 255.0f;
-            baseColorArray[2] = baseColor.b / 255.0f;
             baseColorArray[3] = baseColor.a / 255.0f;
         }
 
@@ -94,7 +92,7 @@ void DrawShadedMesh(FlatShaderData* shaderData, Model model)
 }
 
 
-void DrawShadedModel(Transform transform, Model model,
+void DrawFlatShadedModel(Transform transform, Model model,
 FlatShaderData* shaderData)
 {
     rlPushMatrix();
@@ -105,3 +103,42 @@ FlatShaderData* shaderData)
     rlPopMatrix();
 }
 
+void DrawCollider(std::vector<Vector3> transformedVertices, Color color)
+{
+    switch (transformedVertices.size())
+    {
+    case 8:
+        DrawLine3D(transformedVertices[0], transformedVertices[1], color);
+        DrawLine3D(transformedVertices[1], transformedVertices[2], color);
+        DrawLine3D(transformedVertices[2], transformedVertices[3], color);
+        DrawLine3D(transformedVertices[3], transformedVertices[0], color);
+
+        DrawLine3D(transformedVertices[4], transformedVertices[5], color);
+        DrawLine3D(transformedVertices[5], transformedVertices[6], color);
+        DrawLine3D(transformedVertices[6], transformedVertices[7], color);
+        DrawLine3D(transformedVertices[7], transformedVertices[4], color);
+
+        DrawLine3D(transformedVertices[0], transformedVertices[4], color);
+        DrawLine3D(transformedVertices[1], transformedVertices[5], color);
+        DrawLine3D(transformedVertices[2], transformedVertices[6], color);
+        DrawLine3D(transformedVertices[3], transformedVertices[7], color);
+        break;
+    case 5:
+        DrawLine3D(transformedVertices[0], transformedVertices[1], color);
+        DrawLine3D(transformedVertices[1], transformedVertices[2], color);
+        DrawLine3D(transformedVertices[2], transformedVertices[3], color);
+        DrawLine3D(transformedVertices[3], transformedVertices[0], color);
+
+        DrawLine3D(transformedVertices[0], transformedVertices[4], color);
+        DrawLine3D(transformedVertices[1], transformedVertices[4], color);
+        DrawLine3D(transformedVertices[2], transformedVertices[4], color);
+        DrawLine3D(transformedVertices[3], transformedVertices[4], color);
+        break;
+
+    default:
+        return;
+        break;
+    }
+
+    
+}

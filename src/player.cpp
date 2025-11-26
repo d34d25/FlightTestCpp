@@ -29,6 +29,10 @@ Player::Player(float scale)
     params.maxRollSpeed = 1.8f;
     params.maxYawSpeed = 0.23f;
 
+    params.hitboxWidth = 20;
+    params.hitboxLength = 30;
+    params.hitboxHeight = 2;
+
     params.modelPath = "assets/sf15b.obj";
 
     plane = Plane(params);
@@ -176,7 +180,7 @@ void Player::UpdateCamera(float dt)
     {
         plane.returnToIdle = true;
 
-        float alpha = 0.15f;
+        float alpha = 10.0f * dt;
 
         smoothedOffset.x += alpha * (rotatedOffset.x - smoothedOffset.x);
         smoothedOffset.y += alpha * (rotatedOffset.y - smoothedOffset.y);
@@ -186,8 +190,7 @@ void Player::UpdateCamera(float dt)
         camera.position.y = GetPosition().y + smoothedOffset.y;
         camera.position.z = GetPosition().z + smoothedOffset.z;
 
-        Vector3 localForward;
-        localForward.x = 0.0f, localForward.y = 0.14f, localForward.z = 1.0f;
+        Vector3 localForward = {0.0f,0.14f,1.0f};
 
         Vector3 forward = Vector3RotateByQuaternion(localForward, GetOrientation());
 
@@ -197,8 +200,7 @@ void Player::UpdateCamera(float dt)
         camera.target.y = GetPosition().y + forward.y * lookAhead;
         camera.target.z = GetPosition().z + forward.z * lookAhead;
 
-        Vector3 localUp;
-        localUp.x = 0.0f, localUp.y = 1.0f, localUp.z = 0.0f;
+        Vector3 localUp = {0.0f,1.0f,0.0f};
 
         Vector3 upWorld = upWorld = Vector3RotateByQuaternion(localUp,GetOrientation());
 

@@ -1,6 +1,7 @@
 #pragma once
 #include "raylib.h"
 #include "rlgl.h"
+#include <vector>
 
 struct FlatShaderData
 {
@@ -21,8 +22,10 @@ struct FlatShaderData
     Vector4 __lastBaseColor = {-100,-100,-100,-100};
 };
 
-FlatShaderData mLoadShader(const char* shaderVs, const char* shaderFs, int skipIndex);
+FlatShaderData mLoadFlatShader(const char* shaderVs, const char* shaderFs, int skipIndex);
 
-void mApplyShader(FlatShaderData* shaderData, Model* model);
+void mApplyFlatShader(FlatShaderData* shaderData, Model* model);
 
-void DrawShadedModel(Transform transform, Model model, FlatShaderData* shaderData);
+void DrawFlatShadedModel(Transform transform, Model model, FlatShaderData* shaderData);
+
+void DrawCollider(std::vector<Vector3> transformedVertices, Color color);

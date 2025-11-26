@@ -106,7 +106,7 @@ public:
     {
         float maxThrust = params.idleThrust + (params.maxThrust - params.idleThrust);
 
-        float maxVelocity = maxThrust / body.GetMass();
+        float maxVelocity = maxThrust  / body.GetMass();
 
         float correctionFactor = 0.97f;
 

@@ -98,11 +98,17 @@ void Plane::UpdatePlane(float dt, int iterations)
 
     float fakeGravity = 15000;
 
-    if (dotFU > 0.1 || dotFU < -0.1)
+    float forwardSpeed = Vector3DotProduct(body.linearVelocity, forward);
+
+    if (dotFU > 0.1)
+    {
+        if(forwardSpeed > 0.0f) body.ApplyLocalForce(backDir, fakeGravity * dotFU); 
+    }
+    else if (dotFU < -0.1)
     {
         body.ApplyLocalForce(backDir, fakeGravity * dotFU);
     }
-    
+
     //fake banking
 
     float maxBankTorque = 5.0f;
@@ -166,7 +172,7 @@ void Plane::UpdatePlane(float dt, int iterations)
         body.torque.y = 0.0f;
         body.torque.z = 0.0f;
 
-        body.ApplyForce(downDir, 1500.0f);
+        body.ApplyForce(downDir, 4000);
     }
 
     Vector3 axisOfRotation = Vector3CrossProduct(forward, downDir);
@@ -194,7 +200,7 @@ void Plane::UpdatePlane(float dt, int iterations)
         stallTorque = params.maxStallTorque;
     }
 
-    body.ApplyWorldTorque(angleSpeed, stallTorque, axisOfRotation, dt);
+    body.ApplyWorldTorque(angleSpeed, stallTorque, axisOfRotation, dt, iterations);
 
     body.UpdateBody(dt, iterations);
 }

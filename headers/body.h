@@ -49,7 +49,7 @@ public:
 
     void ApplyYaw(float amount);
 
-    void ApplyWorldTorque(float speed, float torque, Vector3 axis, float dt);
+    void ApplyWorldTorque(float speed, float torque, Vector3 axis, float dt, int iterations);
 
     void UpdateBody(float dt, int iterations);
 

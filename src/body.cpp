@@ -80,8 +80,12 @@ void Body3D::ApplyYaw(float amount)
     torque.y += amount;
 }
 
-void Body3D::ApplyWorldTorque(float speed, float torque, Vector3 axis, float dt)
+void Body3D::ApplyWorldTorque(float speed, float torque, Vector3 axis, float dt, int iterations)
 {
+    if(iterations <= 0) return;
+    
+    dt /= iterations;
+
     float lSpeed = speed;
 
     float aAcc = 0.0f;

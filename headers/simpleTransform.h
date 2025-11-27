@@ -15,4 +15,4 @@ Vector3 GetLocalRightVector(const Transform& transform);
 
 //void VecFollowTarget(Vector3* position, const Vector3& offset, const Transform& targetTransform);
 
-//void FollowTransform(Transform* transform_1, const Transform& transform_2, const Vector3& offset);
+void FollowTransform(Transform* transform_1, const Transform& transform_2, const Vector3& offset);

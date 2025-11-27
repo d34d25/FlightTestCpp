@@ -70,7 +70,7 @@ void VecFollowTarget(Vector3* position, const Vector3& offset, const Transform& 
     position->x = targetTransform.translation.x + rotatedOffset.x;
     position->y = targetTransform.translation.y + rotatedOffset.y;
     position->z = targetTransform.translation.z + rotatedOffset.z;
-}
+} */
 
 void FollowTransform(Transform* transform_1, const Transform& transform_2, const Vector3& offset)
 {
@@ -82,4 +82,3 @@ void FollowTransform(Transform* transform_1, const Transform& transform_2, const
 
     transform_1->rotation = transform_2.rotation;
 }
-*/

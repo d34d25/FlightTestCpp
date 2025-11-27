@@ -21,7 +21,8 @@ private:
     float idleEngineGlow = 0.5f;
 
     int maxEngineGlow = 1;
-    float engineGlowChange = 0.005f;
+    float engineGlowChange;
+
 
 public:
 
@@ -52,6 +53,15 @@ public:
     inline Transform GetTransform()
     {
         return plane.body.transform;
+    }
+
+    inline Transform GetHitboxTransform()
+    {
+        Transform colliderTransform = {};
+
+        FollowTransform(&colliderTransform, GetTransform(),{0,0,2});
+
+        return colliderTransform;
     }
 
     inline Vector3 GetPosition()

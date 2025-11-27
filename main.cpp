@@ -5,6 +5,7 @@
 #include "drawing.h"
 #include "collider.h"
 #include <iostream>
+#include "collisions.h"
 
 int INTERNAL_WIDTH = 426;
 int INTERNAL_HEIGHT = 240;
@@ -28,10 +29,20 @@ int main()
     testCollider.CreatePrismatoidForward(
         player.plane.params.hitboxWidth,
         player.plane.params.hitboxHeight,
-        player.plane.params.hitboxWidth / 2,
-        player.plane.params.hitboxHeight / 2,
+        player.plane.params.hitboxWidth / 6,
+        player.plane.params.hitboxHeight,
         player.plane.params.hitboxLength);
 
+    Collider obstacleCollider = Collider();
+
+    obstacleCollider.CreatePrismatoidUp(10500,25,10500,25,10300);
+
+    Vector3 obstacleColliderPos = {0,300,7000};
+
+    Transform obstacleColliderTransform = {};
+    obstacleColliderTransform.translation = obstacleColliderPos;
+
+    Color obstacleColliderColor = GREEN;
 
     InitWindow(SCREEN_WIDTH,SCREEN_HEIGHT,"");
 
@@ -62,10 +73,33 @@ int main()
 
         while (accumulator >= FIXED_DELTA_TIME)
         {
-            shaderData.skipIntensity = player.GetEngineGlow();
-            player.UpdatePlayer(FIXED_DELTA_TIME,1);
-            player.UpdateCamera(FIXED_DELTA_TIME);
+            CollisionResult r;
 
+            int iterations = 4;
+
+            shaderData.skipIntensity = player.GetEngineGlow();
+
+            for(int i = 0; i < iterations; i++)
+            {
+                player.UpdatePlayer(FIXED_DELTA_TIME, iterations);
+                
+                r = SAT3D(player.GetPosition(), testCollider.GetTransformedVertices(player.GetHitboxTransform()), 
+                obstacleColliderPos, obstacleCollider.GetTransformedVertices(obstacleColliderTransform));
+
+                if (r.collision)
+                {
+                    obstacleColliderColor = RED;
+                    std::cout<<"HIT! "<<"\n";
+                    std::cout<<"HIT at: "<<player.plane.GetSpeed()<<"\n";
+                }
+                else
+                {
+                    obstacleColliderColor = GREEN;
+                }
+            }
+
+            player.UpdateCamera(FIXED_DELTA_TIME);
+            
             accumulator -= FIXED_DELTA_TIME;
         }
 
@@ -93,9 +127,11 @@ int main()
         
         DrawFlatShadedModel(player.GetTransform(), planeModel, &shaderData);
 
-        DrawCollider(testCollider.GetTransformedVertices(player.GetTransform()), RED);
+        DrawCollider(testCollider.GetTransformedVertices(player.GetHitboxTransform()), RED);
 
         DrawSphere(player.GetTransform().translation, 2, MAGENTA);
+
+        DrawCollider(obstacleCollider.GetTransformedVertices(obstacleColliderTransform), obstacleColliderColor);
 
         EndMode3D();
         EndTextureMode();

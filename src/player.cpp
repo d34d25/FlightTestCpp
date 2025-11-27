@@ -1,5 +1,6 @@
 #include "player.h"
 #include <cmath>
+#include <iostream>
 
 Player::Player(float scale)
 {
@@ -29,9 +30,11 @@ Player::Player(float scale)
     params.maxRollSpeed = 1.8f;
     params.maxYawSpeed = 0.23f;
 
-    params.hitboxWidth = 20;
-    params.hitboxLength = 30;
+    params.hitboxWidth =  20;
+    params.hitboxLength = 23;
     params.hitboxHeight = 2;
+
+    //params.stallSpeed = 0;
 
     params.modelPath = "assets/sf15b.obj";
 
@@ -77,26 +80,30 @@ Player::Player(float scale)
 
     maxEngineGlow = 1;
 
-    engineGlowChange = 0.005f;
+    engineGlowChange = 0.2f;
 }
 
 void Player::UpdatePlayer(float dt, int iterations)
 {
+    float fdt = dt;
+    if(iterations > 0) fdt /= iterations;
+
     if(!globalCamera)
     {
         if (IsKeyDown(KEY_W))
         {
-            plane.thrust += plane.params.acceleration * dt;
 
-            engineGlow += engineGlowChange;
+            plane.thrust += plane.params.acceleration * fdt;
+
+            engineGlow += engineGlowChange * dt;
 
             plane.hasInput = true;
         }
         else if (IsKeyDown(KEY_S))
         {
-            plane.thrust -= plane.params.brake * dt;
+            plane.thrust -= plane.params.brake * fdt;
 
-            engineGlow -= engineGlowChange;
+            engineGlow -= engineGlowChange * dt;
 
             plane.hasInput = true;
         }
@@ -106,11 +113,11 @@ void Player::UpdatePlayer(float dt, int iterations)
 
             if (engineGlow < idleEngineGlow)
             {
-                engineGlow += engineGlowChange;
+                engineGlow += engineGlowChange * dt;
             } 
             else if (engineGlow > idleEngineGlow)
             {
-                engineGlow -= engineGlowChange;
+                engineGlow -= engineGlowChange * dt;
             } 
             else
             {
@@ -140,11 +147,11 @@ void Player::UpdatePlayer(float dt, int iterations)
         
         if (IsKeyDown(KEY_LEFT_SHIFT))
         {
-            plane.thrust += plane.params.acceleration * dt;
+            plane.thrust += plane.params.acceleration * fdt;
         }
         else if (IsKeyDown(KEY_LEFT_CONTROL))
         {
-            plane.thrust -= plane.params.brake * dt;
+            plane.thrust -= plane.params.brake * fdt;
         }
 
         if (IsKeyDown(KEY_E))  yawInput = -1;
@@ -169,11 +176,13 @@ void Player::UpdatePlayer(float dt, int iterations)
 
 void Player::UpdateCamera(float dt)
 {
+ 
     Vector3 rotatedOffset = Vector3RotateByQuaternion(cameraOffset, GetOrientation());
 
     if (IsKeyPressed(KEY_ONE))
     {
         globalCamera = !globalCamera;
+        std::cout<<"CAMERA MODE"<< globalCamera << "\n";
     }
 
     if(!globalCamera)

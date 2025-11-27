@@ -58,7 +58,7 @@ Player::Player(float scale)
     camera.projection = CAMERA_PERSPECTIVE;
 
     cameraOffset.x = 0.0f;
-    cameraOffset.y = 3.0f;
+    cameraOffset.y = 5.0f;
     cameraOffset.z = -39.0f;
 
     pitchInput = 0;
@@ -81,6 +81,8 @@ Player::Player(float scale)
     maxEngineGlow = 1;
 
     engineGlowChange = 0.2f;
+
+    bulletPool = BulletPool(30,2,0.1f);
 }
 
 void Player::UpdatePlayer(float dt, int iterations)
@@ -92,7 +94,6 @@ void Player::UpdatePlayer(float dt, int iterations)
     {
         if (IsKeyDown(KEY_W))
         {
-
             plane.thrust += plane.params.acceleration * fdt;
 
             engineGlow += engineGlowChange * dt;
@@ -141,8 +142,6 @@ void Player::UpdatePlayer(float dt, int iterations)
     }
     else
     {
-        plane.returnToIdle = false;
-
         engineGlow = plane.thrust / plane.params.maxThrust;
         
         if (IsKeyDown(KEY_LEFT_SHIFT))
@@ -176,7 +175,6 @@ void Player::UpdatePlayer(float dt, int iterations)
 
 void Player::UpdateCamera(float dt)
 {
- 
     Vector3 rotatedOffset = Vector3RotateByQuaternion(cameraOffset, GetOrientation());
 
     if (IsKeyPressed(KEY_ONE))
@@ -261,3 +259,34 @@ void Player::UpdateCamera(float dt)
     }
 
 }
+
+void Player::Fire(float dt)
+{
+    int bulletspeed = 600;
+
+    Transform bulletTransform = {};
+
+    FollowTransform(&bulletTransform, GetTransform(),{-2.5f,0,4});
+    bulletTransform.scale = GetTransform().scale;
+
+    if(!globalCamera)
+    {
+        if(IsKeyPressed(KEY_LEFT_SHIFT))
+        {
+            bulletPool.FireBullet(bulletTransform, dt, plane.GetSpeed() + bulletspeed);
+        }
+    }
+    else
+    {
+        if(IsKeyPressed(KEY_SPACE))
+        {
+            bulletPool.FireBullet(bulletTransform, dt, plane.GetSpeed() + bulletspeed);
+        }
+    }
+    
+}
+
+/*
+bullet.transform = GetTransform();
+bullet.FireBullet(dt, plane.GetSpeed() + 800);
+*/

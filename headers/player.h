@@ -1,6 +1,7 @@
 #pragma once
 
 #include "plane.h"
+#include "bullet.h"
 
 class Player
 {
@@ -23,6 +24,7 @@ private:
     int maxEngineGlow = 1;
     float engineGlowChange;
 
+    
 
 public:
 
@@ -32,12 +34,15 @@ public:
 
     Vector3 cameraOffset;
 
+    BulletPool bulletPool;
+
     Player(float scale);
 
     void UpdatePlayer(float dt, int iterations);
     
     void UpdateCamera(float dt);
 
+    void Fire(float dt);
     //getters
 
     inline float GetEngineGlow()

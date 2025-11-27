@@ -92,7 +92,7 @@ void DrawShadedMesh(FlatShaderData* shaderData, Model model)
 }
 
 
-void DrawFlatShadedModel(Transform transform, Model model,
+void DrawFlatShadedModel(const Transform& transform, const Model& model,
 FlatShaderData* shaderData)
 {
     rlPushMatrix();
@@ -103,7 +103,7 @@ FlatShaderData* shaderData)
     rlPopMatrix();
 }
 
-void DrawCollider(std::vector<Vector3> transformedVertices, Color color)
+void DrawCollider(const std::vector<Vector3>& transformedVertices, Color color)
 {
     switch (transformedVertices.size())
     {
@@ -141,4 +141,15 @@ void DrawCollider(std::vector<Vector3> transformedVertices, Color color)
     }
 
     
+}
+
+void DrawBullet(const Transform &transform)
+{
+    float scale = 4.0f;
+    rlPushMatrix();
+    const float* matrix = GetLocalMatrixTransform(transform).data();
+    rlMultMatrixf(matrix);
+    rlScalef(scale,scale,scale);
+    DrawCube({0,0,0},0.2,0.2,1,YELLOW);
+    rlPopMatrix();
 }

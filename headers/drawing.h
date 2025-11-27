@@ -26,6 +26,8 @@ FlatShaderData mLoadFlatShader(const char* shaderVs, const char* shaderFs, int s
 
 void mApplyFlatShader(FlatShaderData* shaderData, Model* model);
 
-void DrawFlatShadedModel(Transform transform, Model model, FlatShaderData* shaderData);
+void DrawFlatShadedModel(const Transform& transform, const Model& model, FlatShaderData* shaderData);
 
-void DrawCollider(std::vector<Vector3> transformedVertices, Color color);
+void DrawCollider(const std::vector<Vector3>& transformedVertices, Color color);
+
+void DrawBullet(const Transform& transform);

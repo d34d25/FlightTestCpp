@@ -62,7 +62,7 @@ Vector3 GetLocalRightVector(const Transform& transform)
 
     return right;
 }
-/*
+
 void VecFollowTarget(Vector3* position, const Vector3& offset, const Transform& targetTransform)
 {
     Vector3 rotatedOffset = Vector3RotateByQuaternion(offset,targetTransform.rotation);
@@ -70,7 +70,7 @@ void VecFollowTarget(Vector3* position, const Vector3& offset, const Transform& 
     position->x = targetTransform.translation.x + rotatedOffset.x;
     position->y = targetTransform.translation.y + rotatedOffset.y;
     position->z = targetTransform.translation.z + rotatedOffset.z;
-} */
+}
 
 void FollowTransform(Transform* transform_1, const Transform& transform_2, const Vector3& offset)
 {

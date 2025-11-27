@@ -1,0 +1,121 @@
+#include "bullet.h"
+#include "simpleTransform.h"
+#include <algorithm>
+#include <iostream>
+
+void Bullet::UpdateBullet(float dt, float amount)
+{
+    transform.translation.x += velocityVec.x * dt;
+    transform.translation.y += velocityVec.y * dt;
+    transform.translation.z += velocityVec.z * dt;
+    
+    velocityVec.y += -50.0 * dt;
+
+    velocityVec.x *= 1 - damping * dt;
+    velocityVec.y *= 1 - damping * dt;
+    velocityVec.z *= 1 - damping * dt;
+}
+
+std::vector<Bullet> InitBullets(int quantity, float lifetime ,float damping)
+{
+    std::vector<Bullet> bulletArray;
+
+    for (int i = 0; i < quantity; i++)
+    {
+        Bullet tempBullet = Bullet();
+
+        tempBullet.isAlive = false;
+        tempBullet.transform = {};
+        tempBullet.damping = damping;
+        tempBullet.lifetime = lifetime;
+        tempBullet.currentTime = 0.0f;
+        tempBullet.force = 0.0f;
+
+        bulletArray.push_back(tempBullet);
+    }
+
+    return bulletArray;
+}
+
+BulletPool::BulletPool(int quantity, float lifetime, float damping)
+{
+    this->bullets = InitBullets(quantity, lifetime, damping);
+
+    for (Bullet &bullet : this->bullets)
+    {
+        if(bullet.isAlive)
+        {
+            activeBullets.push_back(&bullet);
+        }
+        else
+        {
+            inactiveBullets.push_back(&bullet);
+        }
+    }
+}
+
+void BulletPool::UpdateBullets(float dt)
+{
+    for (Bullet* b : activeBullets)
+    {
+        if (b->isAlive)
+        {
+            b->currentTime += dt;
+            if (b->currentTime >= b->lifetime)
+            {
+                b->isAlive = false;
+            }
+
+            if(abs(Vector3Length(b->velocityVec)) <= 0.0f)
+            {
+                b->isAlive = false;
+            }
+
+            b->UpdateBullet(dt, b->force);
+        }
+    }
+
+    // Move dead bullets back to inactive
+    auto it = std::remove_if(activeBullets.begin(), activeBullets.end(),
+        [&](Bullet* b) {
+            if (!b->isAlive)
+            {
+                inactiveBullets.push_back(b);
+                return true; // remove from active
+            }
+            return false;
+        });
+
+    activeBullets.erase(it, activeBullets.end());
+}
+
+void BulletPool::FireBullet(const Transform &transform, float dt, float force)
+{
+    if (!inactiveBullets.empty())
+    {
+        Bullet* b = inactiveBullets.back();
+        inactiveBullets.pop_back();
+
+        // Start at player’s transform
+        b->transform = transform;
+        b->isAlive = true;
+        b->currentTime = 0.0f;
+        b->force = force;
+
+        // Compute initial velocity once
+        Vector3 localForward = GetLocalForwardVector(transform);
+
+        Vector3 worldDirection = Vector3RotateByQuaternion(localForward, transform.rotation);
+
+        b->velocityVec = { localForward.x * force,
+                           localForward.y * force,
+                           localForward.z * force };
+
+        activeBullets.push_back(b);
+
+        std::cout<<"pos x"<<b->transform.translation.x<<"\n";
+        std::cout<<"pos y"<<b->transform.translation.y<<"\n";
+        std::cout<<"pos z"<<b->transform.translation.z<<"\n";
+    }
+}
+

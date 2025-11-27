@@ -98,6 +98,10 @@ int main()
                 }
             }
 
+            player.bulletPool.UpdateBullets(dt);
+
+            player.Fire(dt);
+
             player.UpdateCamera(FIXED_DELTA_TIME);
             
             accumulator -= FIXED_DELTA_TIME;
@@ -127,11 +131,16 @@ int main()
         
         DrawFlatShadedModel(player.GetTransform(), planeModel, &shaderData);
 
-        DrawCollider(testCollider.GetTransformedVertices(player.GetHitboxTransform()), RED);
+        //DrawCollider(testCollider.GetTransformedVertices(player.GetHitboxTransform()), RED);
 
-        DrawSphere(player.GetTransform().translation, 2, MAGENTA);
+        //DrawSphere(player.GetTransform().translation, 2, MAGENTA);
 
         DrawCollider(obstacleCollider.GetTransformedVertices(obstacleColliderTransform), obstacleColliderColor);
+
+        for(int i = 0; i < player.bulletPool.activeBullets.size(); i++)
+        {
+            DrawBullet(player.bulletPool.activeBullets[i]->transform);
+        }
 
         EndMode3D();
         EndTextureMode();

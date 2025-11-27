@@ -15,6 +15,7 @@
                 "${workspaceFolder}/src/drawing.cpp",
                 "${workspaceFolder}/src/collider.cpp",
                 "${workspaceFolder}/src/collisions.cpp",
+                "${workspaceFolder}/src/bullet.cpp",
                 "-o",
                 "${fileDirname}/${fileBasenameNoExtension}",
                 "-I", "${workspaceFolder}/headers",

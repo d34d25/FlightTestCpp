@@ -9,7 +9,7 @@ void Bullet::UpdateBullet(float dt)
     transform.translation.y += velocityVec.y * dt;
     transform.translation.z += velocityVec.z * dt;
     
-    velocityVec.y += -50.0 * dt;
+    velocityVec.y += -30.0 * dt;
 
     velocityVec.x *= 1 - damping * dt;
     velocityVec.y *= 1 - damping * dt;
@@ -29,7 +29,7 @@ std::vector<Bullet> InitBullets(int quantity, float lifetime ,float damping)
         tempBullet.damping = damping;
         tempBullet.lifetime = lifetime;
         tempBullet.currentTime = 0.0f;
-        tempBullet.force = 0.0f;
+        tempBullet.force = {0,0,0};
 
         bulletArray.push_back(tempBullet);
     }
@@ -89,7 +89,7 @@ void BulletPool::UpdateBullets(float dt)
     activeBullets.erase(it, activeBullets.end());
 }
 
-void BulletPool::FireBullet(const Transform &transform, float force)
+void BulletPool::FireBullet(const Transform &transform, const Vector3& force)
 {
     if (!inactiveBullets.empty())
     {
@@ -103,13 +103,11 @@ void BulletPool::FireBullet(const Transform &transform, float force)
         b->force = force;
 
         // Compute initial velocity once
-        Vector3 localForward = GetLocalForwardVector(transform);
+        //Vector3 localForward = GetLocalForwardVector(transform);
 
-        Vector3 worldDirection = Vector3RotateByQuaternion(localForward, transform.rotation);
-
-        b->velocityVec = { localForward.x * force,
-                           localForward.y * force,
-                           localForward.z * force };
+        b->velocityVec = { force.x,
+                           force.y,
+                           force.z};
 
         activeBullets.push_back(b);
     }

@@ -16,7 +16,7 @@ public:
     float lifetime;
     float currentTime;
 
-    float force;
+    Vector3 force;
 
     Bullet() = default;
 
@@ -39,5 +39,5 @@ public:
 
     void UpdateBullets(float dt);
     
-    void FireBullet(const Transform& transform, float force);
+    void FireBullet(const Transform& transform, const Vector3& force);
 };

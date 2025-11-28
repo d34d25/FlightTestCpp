@@ -131,12 +131,6 @@ int main()
 
         //DrawSphere(player.GetTransform().translation, 2, MAGENTA);
 
-        Transform bulletTransform = {};
-        FollowTransform(&bulletTransform, player.GetTransform(),{-2.5f,0.0f,4.0f});
-        bulletTransform.scale = {1.0f,1.0f,1.0f};
-
-        DrawSphere(bulletTransform.translation, 1, Color{0,255,255,255});
-
         DrawCollider(obstacleCollider.GetTransformedVertices(obstacleColliderTransform), obstacleColliderColor);
 
         for(int i = 0; i < player.bulletPool.activeBullets.size(); i++)

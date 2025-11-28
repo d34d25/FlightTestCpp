@@ -16,7 +16,7 @@ Player::Player(float scale)
     params.maxThrust = 350000.0f;
     params.idleThrust = DEFAULT_IDLE_THRUST;
 
-    params.returnSpeedHigh = DEFAULT_RETURN_SPEED_HIGH * 1.25f;
+    params.returnSpeedHigh = DEFAULT_RETURN_SPEED_HIGH * 1.15f;
     params.returnSpeedLow = DEFAULT_RETURN_SPEED_LOW;
 
     params.acceleration = 21000.0f;
@@ -259,23 +259,33 @@ void Player::UpdateCamera(float dt)
 
 }
 
+//fix bullets getting launched with an up/down component 
+//when firing while pitching up/down, same with the 
+//x axis when yawing or rolling
 void Player::Fire(float dt)
 {
     int bulletspeed = 800;
 
     fireTimer += dt;
 
+    //make this an attribute of the plane
+    //call it gun position
     Transform bulletTransform = {};
-    FollowTransform(&bulletTransform, GetTransform(),{-2.5f,0.0f,4.0f});
+    FollowTransform(&bulletTransform, GetTransform(),{-2.75f,0.9f,4.0f});
     bulletTransform.scale = {1.0f,1.0f,1.0f};
 
     bool fireKey = (!globalCamera && IsKeyDown(KEY_LEFT_SHIFT)) || (globalCamera && IsKeyDown(KEY_SPACE));
 
+    Vector3 forward = GetLocalForwardVector(plane.body.transform);
+    float forwardSpeed = Vector3DotProduct(plane.body.linearVelocity, forward);
+
     if(fireKey)
     {
+        Vector3 bulletVelocity = Vector3Add(plane.body.linearVelocity, Vector3Scale(forward, bulletspeed));
+
         while (fireTimer >= firerate)
         {
-            bulletPool.FireBullet(bulletTransform, plane.GetSpeed() + bulletspeed);
+            bulletPool.FireBullet(bulletTransform, bulletVelocity);
             fireTimer -= firerate;
         }
     }

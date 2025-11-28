@@ -32,7 +32,7 @@ Vector3 GetLocalForwardVector(const Transform& transform)
     Vector3 localForward;
     localForward.x = 0.0f, localForward.y = 0.0f, localForward.z = 1.0f;
 
-    Vector3 forward = Vector3RotateByQuaternion(localForward, transform.rotation);
+    Vector3 forward = Vector3RotateByQuaternion(localForward, QuaternionNormalize(transform.rotation));
 
     forward = Vector3Normalize(forward);
 
@@ -44,7 +44,7 @@ Vector3 GetLocalUpVector(const Transform& transform)
     Vector3 localUp;
     localUp.x = 0.0f, localUp.y = 1.0f, localUp.z = 0.0f;
 
-    Vector3 up = Vector3RotateByQuaternion(localUp, transform.rotation);
+    Vector3 up = Vector3RotateByQuaternion(localUp, QuaternionNormalize(transform.rotation));
 
     up = Vector3Normalize(up);
 
@@ -56,7 +56,7 @@ Vector3 GetLocalRightVector(const Transform& transform)
     Vector3 localRight;
     localRight.x = 1.0f, localRight.y = 0.0f, localRight.z = 0.0f;
 
-    Vector3 right = Vector3RotateByQuaternion(localRight, transform.rotation);
+    Vector3 right = Vector3RotateByQuaternion(localRight, QuaternionNormalize(transform.rotation));
 
     right = Vector3Normalize(right);
 

@@ -3,7 +3,7 @@
 #include <algorithm>
 #include <iostream>
 
-void Bullet::UpdateBullet(float dt, float amount)
+void Bullet::UpdateBullet(float dt)
 {
     transform.translation.x += velocityVec.x * dt;
     transform.translation.y += velocityVec.y * dt;
@@ -71,7 +71,7 @@ void BulletPool::UpdateBullets(float dt)
                 b->isAlive = false;
             }
 
-            b->UpdateBullet(dt, b->force);
+            b->UpdateBullet(dt);
         }
     }
 
@@ -89,7 +89,7 @@ void BulletPool::UpdateBullets(float dt)
     activeBullets.erase(it, activeBullets.end());
 }
 
-void BulletPool::FireBullet(const Transform &transform, float dt, float force)
+void BulletPool::FireBullet(const Transform &transform, float force)
 {
     if (!inactiveBullets.empty())
     {
@@ -112,10 +112,6 @@ void BulletPool::FireBullet(const Transform &transform, float dt, float force)
                            localForward.z * force };
 
         activeBullets.push_back(b);
-
-        std::cout<<"pos x"<<b->transform.translation.x<<"\n";
-        std::cout<<"pos y"<<b->transform.translation.y<<"\n";
-        std::cout<<"pos z"<<b->transform.translation.z<<"\n";
     }
 }
 

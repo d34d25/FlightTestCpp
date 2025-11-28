@@ -145,11 +145,9 @@ void DrawCollider(const std::vector<Vector3>& transformedVertices, Color color)
 
 void DrawBullet(const Transform &transform)
 {
-    float scale = 4.0f;
     rlPushMatrix();
     const float* matrix = GetLocalMatrixTransform(transform).data();
     rlMultMatrixf(matrix);
-    rlScalef(scale,scale,scale);
-    DrawCube({0,0,0},0.2,0.2,1,YELLOW);
+    DrawCube({0,0,0},0.5f,0.5f,4.0f,{255,255,100,255});
     rlPopMatrix();
 }

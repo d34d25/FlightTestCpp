@@ -24,7 +24,8 @@ private:
     int maxEngineGlow = 1;
     float engineGlowChange;
 
-    
+    float fireTimer = 0.0f;
+    float firerate = 0.1f;
 
 public:
 

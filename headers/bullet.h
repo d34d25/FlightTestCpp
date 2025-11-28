@@ -20,7 +20,7 @@ public:
 
     Bullet() = default;
 
-    void UpdateBullet(float dt, float amount);
+    void UpdateBullet(float dt);
 };
 
 std::vector<Bullet> InitBullets(int quantity, float lifetime ,float damping);
@@ -39,5 +39,5 @@ public:
 
     void UpdateBullets(float dt);
     
-    void FireBullet(const Transform& transform, float dt, float force);
+    void FireBullet(const Transform& transform, float force);
 };

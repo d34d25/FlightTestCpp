@@ -82,7 +82,7 @@ Player::Player(float scale)
 
     engineGlowChange = 0.2f;
 
-    bulletPool = BulletPool(30,2,0.1f);
+    bulletPool = BulletPool(30,2,0.05f);
 }
 
 void Player::UpdatePlayer(float dt, int iterations)
@@ -171,18 +171,17 @@ void Player::UpdatePlayer(float dt, int iterations)
     plane.body.ApplyYaw(yawInput * plane.params.yawPower);
 
     plane.UpdatePlane(dt,iterations);
+
+    Fire(fdt);
+    bulletPool.UpdateBullets(fdt);
 }
 
 void Player::UpdateCamera(float dt)
 {
     Vector3 rotatedOffset = Vector3RotateByQuaternion(cameraOffset, GetOrientation());
 
-    if (IsKeyPressed(KEY_ONE))
-    {
-        globalCamera = !globalCamera;
-        std::cout<<"CAMERA MODE"<< globalCamera << "\n";
-    }
-
+    if (IsKeyPressed(KEY_ONE)) globalCamera = !globalCamera;
+    
     if(!globalCamera)
     {
         plane.returnToIdle = true;
@@ -262,31 +261,27 @@ void Player::UpdateCamera(float dt)
 
 void Player::Fire(float dt)
 {
-    int bulletspeed = 600;
+    int bulletspeed = 800;
+
+    fireTimer += dt;
 
     Transform bulletTransform = {};
+    FollowTransform(&bulletTransform, GetTransform(),{-2.5f,0.0f,4.0f});
+    bulletTransform.scale = {1.0f,1.0f,1.0f};
 
-    FollowTransform(&bulletTransform, GetTransform(),{-2.5f,0,4});
-    bulletTransform.scale = GetTransform().scale;
+    bool fireKey = (!globalCamera && IsKeyDown(KEY_LEFT_SHIFT)) || (globalCamera && IsKeyDown(KEY_SPACE));
 
-    if(!globalCamera)
+    if(fireKey)
     {
-        if(IsKeyPressed(KEY_LEFT_SHIFT))
+        while (fireTimer >= firerate)
         {
-            bulletPool.FireBullet(bulletTransform, dt, plane.GetSpeed() + bulletspeed);
+            bulletPool.FireBullet(bulletTransform, plane.GetSpeed() + bulletspeed);
+            fireTimer -= firerate;
         }
     }
     else
     {
-        if(IsKeyPressed(KEY_SPACE))
-        {
-            bulletPool.FireBullet(bulletTransform, dt, plane.GetSpeed() + bulletspeed);
-        }
+        fireTimer = 0.0f;
     }
     
 }
-
-/*
-bullet.transform = GetTransform();
-bullet.FireBullet(dt, plane.GetSpeed() + 800);
-*/

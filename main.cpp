@@ -95,12 +95,8 @@ int main()
                 else
                 {
                     obstacleColliderColor = GREEN;
-                }
+                }                
             }
-
-            player.bulletPool.UpdateBullets(dt);
-
-            player.Fire(dt);
 
             player.UpdateCamera(FIXED_DELTA_TIME);
             
@@ -134,6 +130,12 @@ int main()
         //DrawCollider(testCollider.GetTransformedVertices(player.GetHitboxTransform()), RED);
 
         //DrawSphere(player.GetTransform().translation, 2, MAGENTA);
+
+        Transform bulletTransform = {};
+        FollowTransform(&bulletTransform, player.GetTransform(),{-2.5f,0.0f,4.0f});
+        bulletTransform.scale = {1.0f,1.0f,1.0f};
+
+        DrawSphere(bulletTransform.translation, 1, Color{0,255,255,255});
 
         DrawCollider(obstacleCollider.GetTransformedVertices(obstacleColliderTransform), obstacleColliderColor);
 

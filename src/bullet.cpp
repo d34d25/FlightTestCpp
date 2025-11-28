@@ -96,14 +96,10 @@ void BulletPool::FireBullet(const Transform &transform, const Vector3& force)
         Bullet* b = inactiveBullets.back();
         inactiveBullets.pop_back();
 
-        // Start at player’s transform
         b->transform = transform;
         b->isAlive = true;
         b->currentTime = 0.0f;
         b->force = force;
-
-        // Compute initial velocity once
-        //Vector3 localForward = GetLocalForwardVector(transform);
 
         b->velocityVec = { force.x,
                            force.y,

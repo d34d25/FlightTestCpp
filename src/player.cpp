@@ -259,9 +259,7 @@ void Player::UpdateCamera(float dt)
 
 }
 
-//fix bullets getting launched with an up/down component 
-//when firing while pitching up/down, same with the 
-//x axis when yawing or rolling
+
 void Player::Fire(float dt)
 {
     int bulletspeed = 800;

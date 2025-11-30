@@ -7,6 +7,12 @@ class Player
 {
 private:
 
+    bool stalling = false;
+
+    float originalMaxPitchSpeed;
+    float originalMaxRollSpeed;
+    float originalMaxYawSpeed;
+
     int pitchInput = 0;
     int rollInput = 0;
     int yawInput = 0;
@@ -27,15 +33,22 @@ private:
     float fireTimer = 0.0f;
     float firerate = 0.1f;
 
+    bool returnToIdle = true;
+    bool hasInput = false;
+
 public:
 
-    Plane plane;
+    PlaneParams params;
+
+    Body3D body;
 
     Camera3D camera;
 
     Vector3 cameraOffset;
 
     BulletPool bulletPool;
+
+    float thrust = 0.0f;
 
     Player(float scale);
 
@@ -53,12 +66,12 @@ public:
 
     inline Body3D GetBody()
     {
-        return plane.body;
+        return body;
     }
 
     inline Transform GetTransform()
     {
-        return plane.body.transform;
+        return body.transform;
     }
 
     inline Transform GetHitboxTransform()
@@ -72,26 +85,51 @@ public:
 
     inline Vector3 GetPosition()
     {
-        return plane.body.transform.translation;
+        return body.transform.translation;
     }
 
     inline Quaternion GetOrientation()
     {
-        return plane.body.transform.rotation;
+        return body.transform.rotation;
     }
 
     inline int GetWidth()
     {
-        return plane.params.hitboxWidth;
+        return params.hitboxWidth;
     }
 
     inline int GetHeight()
     {
-        return plane.params.hitboxHeight;
+        return params.hitboxHeight;
     }
 
     inline int GetLength()
     {
-        return plane.params.hitboxLength;
-    }    
+        return params.hitboxLength;
+    }
+    
+    inline float GetMaxSpeed()
+    {
+        float maxThrust = params.idleThrust + (params.maxThrust - params.idleThrust);
+
+        float maxVelocity = maxThrust  / body.GetMass();
+
+        float correctionFactor = 0.97f;
+
+        return (maxVelocity / body.linearDamping) * correctionFactor;
+    }
+
+    inline float GetIdleSpeed()
+    {
+        float maxVelocityIdle = params.idleThrust / body.GetMass();
+
+        float correctionFactor = 0.97f;
+
+        return(maxVelocityIdle / body.linearDamping) * correctionFactor;
+    }
+
+    inline float GetSpeed()
+    {
+        return Vector3Length(body.linearVelocity);
+    }
 };

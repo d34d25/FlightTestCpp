@@ -103,7 +103,7 @@ FlatShaderData* shaderData)
     rlPopMatrix();
 }
 
-void DrawCollider(const std::vector<Vector3>& transformedVertices, Color color)
+void DrawColliderWire(const std::vector<Vector3>& transformedVertices, Color color)
 {
     switch (transformedVertices.size())
     {
@@ -141,6 +141,47 @@ void DrawCollider(const std::vector<Vector3>& transformedVertices, Color color)
     }
 
     
+}
+
+void DrawCollider(const std::vector<Vector3> &v, Color color)
+{
+    if (v.size() == 8)
+    {
+        // Bottom face (0,1,2,3)
+        DrawTriangle3D(v[0], v[1], v[2], color);
+        DrawTriangle3D(v[0], v[2], v[3], color);
+
+        // Top face (4,5,6,7)
+        DrawTriangle3D(v[4], v[5], v[6], color);
+        DrawTriangle3D(v[4], v[6], v[7], color);
+
+        // Sides
+        DrawTriangle3D(v[0], v[1], v[5], color);
+        DrawTriangle3D(v[0], v[5], v[4], color);
+
+        DrawTriangle3D(v[1], v[2], v[6], color);
+        DrawTriangle3D(v[1], v[6], v[5], color);
+
+        DrawTriangle3D(v[2], v[3], v[7], color);
+        DrawTriangle3D(v[2], v[7], v[6], color);
+
+        DrawTriangle3D(v[3], v[0], v[4], color);
+        DrawTriangle3D(v[3], v[4], v[7], color);
+    }
+
+    // --- PYRAMID (5 vertices) ---
+    else if (v.size() == 5)
+    {
+        // Base quad (0,1,2,3)
+        DrawTriangle3D(v[0], v[1], v[2], color);
+        DrawTriangle3D(v[0], v[2], v[3], color);
+
+        // Sides (triangles to apex 4)
+        DrawTriangle3D(v[0], v[1], v[4], color);
+        DrawTriangle3D(v[1], v[2], v[4], color);
+        DrawTriangle3D(v[2], v[3], v[4], color);
+        DrawTriangle3D(v[3], v[0], v[4], color);
+    }
 }
 
 void DrawBullet(const Transform &transform)

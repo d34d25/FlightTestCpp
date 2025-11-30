@@ -9,6 +9,10 @@ uniform float maxIntensity;
 
 out vec4 finalColor;
 
+//try adding a threshold for faces normal
+//so faces that somewhat point to the same direction
+//get the same level of lighting
+
 void main() 
 {
     vec3 norm = normalize(fragNormal);

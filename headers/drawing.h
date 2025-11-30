@@ -28,6 +28,8 @@ void mApplyFlatShader(FlatShaderData* shaderData, Model* model);
 
 void DrawFlatShadedModel(const Transform& transform, const Model& model, FlatShaderData* shaderData);
 
-void DrawCollider(const std::vector<Vector3>& transformedVertices, Color color);
+void DrawColliderWire(const std::vector<Vector3>& transformedVertices, Color color);
+
+void DrawCollider(const std::vector<Vector3>& v, Color color);
 
 void DrawBullet(const Transform& transform);

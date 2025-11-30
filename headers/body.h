@@ -27,6 +27,9 @@ public:
     Vector3 linearVelocity;
     Vector3 angularVelocity;
 
+    float stallAngularTorque;
+    float stallAngularSpeed;
+
     Vector3 force;
     Vector3 torque;
 
@@ -49,7 +52,7 @@ public:
 
     void ApplyYaw(float amount);
 
-    void ApplyWorldTorque(float speed, float torque, Vector3 axis, float dt, int iterations);
+    void ApplyWorldTorque(Vector3 axis, float dt);
 
     void UpdateBody(float dt, int iterations);
 

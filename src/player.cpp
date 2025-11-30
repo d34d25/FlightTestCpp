@@ -2,9 +2,12 @@
 #include <cmath>
 #include <iostream>
 
+
+//merge plane and player into one class
+//because the enemy AI won't use the 
+//flight model or any plane phyisics
 Player::Player(float scale)
 {
-    PlaneParams params = PlaneParams();
     params.position.x = 0.0f;
     params.position.y = 400.0f;
     params.position.z = -700.0f;
@@ -34,17 +37,28 @@ Player::Player(float scale)
     params.hitboxLength = 23;
     params.hitboxHeight = 2;
 
+    thrust = 0.0f;
+
+    originalMaxPitchSpeed = params.maxPitchSpeed;
+    originalMaxRollSpeed = params.maxRollSpeed;
+    originalMaxYawSpeed = params.maxYawSpeed;
+
+    body = Body3D(this->params.linearDamping,
+    this->params.angularDamping);
+
+    body.transform.translation.x = this->params.position.x;
+    body.transform.translation.y = this->params.position.y;
+    body.transform.translation.z = this->params.position.z;
+
     //params.stallSpeed = 0;
 
     params.modelPath = "assets/sf15b.obj";
 
-    plane = Plane(params);
+    body.transform.scale.x = scale;
+    body.transform.scale.y = scale;
+    body.transform.scale.z = scale;
 
-    plane.body.transform.scale.x = scale;
-    plane.body.transform.scale.y = scale;
-    plane.body.transform.scale.z = scale;
-
-    plane.thrust = plane.params.idleThrust * 1.25f;
+    thrust = params.idleThrust * 1.25f;
 
     //camera
     camera.fovy = 60.0f;
@@ -82,7 +96,7 @@ Player::Player(float scale)
 
     engineGlowChange = 0.2f;
 
-    bulletPool = BulletPool(30,2,0.05f);
+    bulletPool = BulletPool(60,6,0.05f);
 }
 
 void Player::UpdatePlayer(float dt, int iterations)
@@ -94,31 +108,31 @@ void Player::UpdatePlayer(float dt, int iterations)
     {
         if (IsKeyDown(KEY_W))
         {
-            plane.thrust += plane.params.acceleration * fdt;
+            thrust += params.acceleration * fdt;
 
-            engineGlow += engineGlowChange * dt;
+            engineGlow += engineGlowChange * fdt;
 
-            plane.hasInput = true;
+            hasInput = true;
         }
         else if (IsKeyDown(KEY_S))
         {
-            plane.thrust -= plane.params.brake * fdt;
+            thrust -= params.brake * fdt;
 
-            engineGlow -= engineGlowChange * dt;
+            engineGlow -= engineGlowChange * fdt;
 
-            plane.hasInput = true;
+            hasInput = true;
         }
         else
         {
-            plane.hasInput = false;
+            hasInput = false;
 
             if (engineGlow < idleEngineGlow)
             {
-                engineGlow += engineGlowChange * dt;
+                engineGlow += engineGlowChange * fdt;
             } 
             else if (engineGlow > idleEngineGlow)
             {
-                engineGlow -= engineGlowChange * dt;
+                engineGlow -= engineGlowChange * fdt;
             } 
             else
             {
@@ -142,15 +156,15 @@ void Player::UpdatePlayer(float dt, int iterations)
     }
     else
     {
-        engineGlow = plane.thrust / plane.params.maxThrust;
+        engineGlow = thrust / params.maxThrust;
         
         if (IsKeyDown(KEY_LEFT_SHIFT))
         {
-            plane.thrust += plane.params.acceleration * fdt;
+            thrust += params.acceleration * fdt;
         }
         else if (IsKeyDown(KEY_LEFT_CONTROL))
         {
-            plane.thrust -= plane.params.brake * fdt;
+            thrust -= params.brake * fdt;
         }
 
         if (IsKeyDown(KEY_E))  yawInput = -1;
@@ -166,11 +180,156 @@ void Player::UpdatePlayer(float dt, int iterations)
         else pitchInput = 0;
     }
 
-    plane.body.ApplyPitch(pitchInput * plane.params.pitchPower);
-    plane.body.ApplyRoll(rollInput * plane.params.rollPower);
-    plane.body.ApplyYaw(yawInput * plane.params.yawPower);
+    body.ApplyPitch(pitchInput * params.pitchPower);
+    body.ApplyRoll(rollInput * params.rollPower);
+    body.ApplyYaw(yawInput * params.yawPower);
 
-    plane.UpdatePlane(dt,iterations);
+    //plane
+    if (body.angularVelocity.x >= params.maxPitchSpeed) body.angularVelocity.x = params.maxPitchSpeed;
+    else if (body.angularVelocity.x <= -params.maxPitchSpeed) body.angularVelocity.x = -params.maxPitchSpeed;
+ 
+    if (body.angularVelocity.y >= params.maxYawSpeed) body.angularVelocity.y = params.maxYawSpeed;
+    else if (body.angularVelocity.y <= -params.maxYawSpeed) body.angularVelocity.y = -params.maxYawSpeed;
+   
+    if (body.angularVelocity.z >= params.maxRollSpeed) body.angularVelocity.z = params.maxRollSpeed;
+    else if (body.angularVelocity.z <= -params.maxRollSpeed) body.angularVelocity.z = -params.maxRollSpeed;
+
+    if (!hasInput && returnToIdle)
+    {
+        if(thrust <= params.idleThrust)
+        {
+            thrust += params.returnSpeedLow * fdt;
+            if (thrust >= params.idleThrust) thrust = params.idleThrust;
+        }
+        else
+        {
+            thrust -= params.returnSpeedHigh * fdt;
+            if (thrust <= params.idleThrust) thrust = params.idleThrust;
+        }
+    }
+    else
+    {
+        if (thrust >= params.maxThrust) thrust = params.maxThrust;
+        else if (thrust <= 0.0f) thrust = 0.0f;
+    }
+
+    //move this outside the function
+    Vector3 forwardDir;
+    forwardDir.x = 0.0f, forwardDir.y = 0.0f, forwardDir.z = 1.0f;
+
+    Vector3 upDir;
+    upDir.x = 0.0f, upDir.y = 1.0f, upDir.z = 0.0f;
+
+    Vector3 backDir;
+    backDir.x = 0.0f, backDir.y = 0.0f, backDir.z = -1.0f;
+
+    Vector3 rightDir;
+    rightDir.x = 1.0f, rightDir.y = 0.0f, rightDir.z = 0.0f;
+
+    Vector3 downDir;
+    downDir.x = 0.0f, downDir.y = -1.0f, downDir.z = 0.0f;
+
+
+    body.ApplyLocalForce(forwardDir, thrust);
+
+    //drag / fake gravity
+
+    Vector3 forward = GetLocalForwardVector(body.transform);
+    forward = Vector3Normalize(forward);
+
+    float dotFU = Vector3DotProduct(forward, upDir);
+
+    float fakeGravity = 15000;
+
+    float forwardSpeed = Vector3DotProduct(body.linearVelocity, forward);
+
+    if (dotFU > 0.1)
+    {
+        if(forwardSpeed > 0.0f) body.ApplyLocalForce(backDir, fakeGravity * dotFU); 
+    }
+    else if (dotFU < -0.1)
+    {
+        body.ApplyLocalForce(backDir, fakeGravity * dotFU);
+    }
+
+    //fake banking
+
+    float maxBankTorque = 5.0f;
+
+    Vector3 right = GetLocalRightVector(body.transform);
+    right = Vector3Normalize(right);
+
+    float rDot = Vector3DotProduct(upDir, right);
+
+    body.ApplyYaw(maxBankTorque * - rDot);
+    
+    //upside down case
+
+    Vector3 up = GetLocalUpVector(body.transform);
+    up = Vector3Normalize(up);
+
+    float uDot = Vector3DotProduct(upDir, up);
+    
+    if (uDot <= -0.1)
+    {
+        body.ApplyPitch(maxBankTorque * uDot);
+    }
+    
+    //fake stall
+
+    float speed = GetSpeed();
+
+    float fDot = Vector3DotProduct(downDir, forward);
+
+    float fDotTarget = 0.6f;
+
+    if (speed < params.stallSpeed)
+    {
+        stalling = true;
+    }
+    else if (speed >= params.recoverySpeed)
+    {
+        stalling = false;
+    }
+
+    float factor = 1.0f;
+
+    if (speed <= params.mobilityLooseStartSpeed)
+    {
+        factor = 1 - (1 - params.proportionLow) * (speed - params.mobilityLooseStartSpeed) / (params.stallSpeed - params.mobilityLooseStartSpeed);
+        factor = Clamp(factor, params.proportionLow, 1.0f);
+    }
+    else
+    {
+        factor = 1 - (1 - params.proportionHigh) * (speed - params.mobilityLooseStartSpeed) / (GetMaxSpeed() - params.mobilityLooseStartSpeed);
+        factor = Clamp(factor, params.proportionHigh, 1.0f);
+    }
+
+    params.maxPitchSpeed = originalMaxPitchSpeed * factor;
+    params.maxRollSpeed = originalMaxRollSpeed * factor;
+    params.maxYawSpeed = originalMaxYawSpeed * factor;
+
+    if (stalling)
+    {
+        body.torque.x = 0.0f;
+        body.torque.y = 0.0f;
+        body.torque.z = 0.0f;
+
+        body.ApplyForce(downDir, 4000);
+    }
+
+    Vector3 axisOfRotation = Vector3CrossProduct(forward, downDir);
+
+    axisOfRotation = Vector3Normalize(axisOfRotation);
+
+    if(stalling && fDot < fDotTarget)
+    {
+        body.stallAngularTorque = params.stallTorqueSpeed;
+    }
+
+    body.ApplyWorldTorque(axisOfRotation, fdt);
+
+    body.UpdateBody(dt, iterations);
 
     Fire(fdt);
     bulletPool.UpdateBullets(fdt);
@@ -184,7 +343,7 @@ void Player::UpdateCamera(float dt)
     
     if(!globalCamera)
     {
-        plane.returnToIdle = true;
+        returnToIdle = true;
 
         float alpha = 10.0f * dt;
 
@@ -216,9 +375,9 @@ void Player::UpdateCamera(float dt)
     }
     else
     {
-        plane.returnToIdle = false;
+        returnToIdle = false;
 
-        plane.hasInput = true;
+        hasInput = true;
 
         HideCursor();
         
@@ -230,7 +389,7 @@ void Player::UpdateCamera(float dt)
         float wheel = GetMouseWheelMove();
 
         orbitDistance += wheel * 2.0f;
-        orbitDistance = Clamp(orbitDistance, -100.0f,-10.0f);
+        orbitDistance = Clamp(orbitDistance, -200.0f,-10.0f);
 
         orbitYaw -= delta.x * 0.4f * dt;
         orbitPitch -= delta.y * 0.4f * dt;
@@ -262,7 +421,7 @@ void Player::UpdateCamera(float dt)
 
 void Player::Fire(float dt)
 {
-    int bulletspeed = 800;
+    int bulletspeed = 800; //800
 
     fireTimer += dt;
 
@@ -274,12 +433,12 @@ void Player::Fire(float dt)
 
     bool fireKey = (!globalCamera && IsKeyDown(KEY_LEFT_SHIFT)) || (globalCamera && IsKeyDown(KEY_SPACE));
 
-    Vector3 forward = GetLocalForwardVector(plane.body.transform);
-    float forwardSpeed = Vector3DotProduct(plane.body.linearVelocity, forward);
+    Vector3 forward = GetLocalForwardVector(body.transform);
+    float forwardSpeed = Vector3DotProduct(body.linearVelocity, forward);
 
     if(fireKey)
     {
-        Vector3 bulletVelocity = Vector3Add(plane.body.linearVelocity, Vector3Scale(forward, bulletspeed));
+        Vector3 bulletVelocity = Vector3Add(body.linearVelocity, Vector3Scale(forward, bulletspeed));
 
         while (fireTimer >= firerate)
         {

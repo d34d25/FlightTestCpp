@@ -80,26 +80,20 @@ void Body3D::ApplyYaw(float amount)
     torque.y += amount;
 }
 
-void Body3D::ApplyWorldTorque(float speed, float torque, Vector3 axis, float dt, int iterations)
+void Body3D::ApplyWorldTorque(Vector3 axis, float dt)
 {
-    if(iterations <= 0) return;
-    
-    dt /= iterations;
-
-    float lSpeed = speed;
-
     float aAcc = 0.0f;
 
     if (inertia.x != 0.0f)
     {
-        aAcc = torque / inertia.x;
+        aAcc = stallAngularTorque / inertia.x;
     }
 
-    lSpeed += aAcc * dt;
+    stallAngularSpeed += aAcc * dt;
 
-    if (lSpeed > 0.0001f)
+    if (stallAngularSpeed > 0.0001f)
     {
-        float angle = lSpeed * dt;
+        float angle = stallAngularSpeed * dt;
 
         Quaternion deltaQ = QuaternionFromAxisAngle(axis, angle);
 
@@ -108,7 +102,9 @@ void Body3D::ApplyWorldTorque(float speed, float torque, Vector3 axis, float dt,
         transform.rotation = QuaternionNormalize(transform.rotation);
     }
 
-    lSpeed *= Clamp(1 - angularDamping.x * dt, 0, 1);
+    stallAngularSpeed *= Clamp(1 - angularDamping.x * dt, 0, 1);
+
+    stallAngularTorque = 0.0f;
 }
 
 void Body3D::UpdateBody(float dt, int iterations)

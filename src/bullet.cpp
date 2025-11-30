@@ -71,6 +71,11 @@ void BulletPool::UpdateBullets(float dt)
                 b->isAlive = false;
             }
 
+            if(b->didHit)
+            {
+                b->isAlive = false;
+            }
+
             b->UpdateBullet(dt);
         }
     }
@@ -98,14 +103,12 @@ void BulletPool::FireBullet(const Transform &transform, const Vector3& force)
 
         b->transform = transform;
         b->isAlive = true;
+        b->didHit = false;
         b->currentTime = 0.0f;
         b->force = force;
 
-        b->velocityVec = { force.x,
-                           force.y,
-                           force.z};
+        b->velocityVec = { force.x,force.y,force.z};
 
         activeBullets.push_back(b);
     }
 }
-

@@ -7,11 +7,14 @@ class Bullet
 {
 public:
 
-    Ray raycast;
     Transform transform;
     Vector3 velocityVec;
     float damping;
     bool isAlive;
+
+    float radius = 2.0f;
+
+    bool didHit = false;
 
     float lifetime;
     float currentTime;

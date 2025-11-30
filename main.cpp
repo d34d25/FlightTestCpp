@@ -27,11 +27,11 @@ int main()
     Collider testCollider = Collider();
 
     testCollider.CreatePrismatoidForward(
-        player.plane.params.hitboxWidth,
-        player.plane.params.hitboxHeight,
-        player.plane.params.hitboxWidth / 6,
-        player.plane.params.hitboxHeight,
-        player.plane.params.hitboxLength);
+        player.params.hitboxWidth,
+        player.params.hitboxHeight,
+        player.params.hitboxWidth / 6,
+        player.params.hitboxHeight,
+        player.params.hitboxLength);
 
     Collider obstacleCollider = Collider();
 
@@ -42,7 +42,9 @@ int main()
     Transform obstacleColliderTransform = {};
     obstacleColliderTransform.translation = obstacleColliderPos;
 
-    Color obstacleColliderColor = GREEN;
+    Color ogObstacleColliderColor = {100,100,100,255};
+
+    Color obstacleColliderColor = ogObstacleColliderColor;
 
     InitWindow(SCREEN_WIDTH,SCREEN_HEIGHT,"");
 
@@ -60,13 +62,14 @@ int main()
 
     SetTargetFPS(60);
     
-    rlSetClipPlanes(10,7000);
+    rlSetClipPlanes(10,10000);
 
     float accumulator = 0.0f;
     float FIXED_DELTA_TIME = 1.0f/60.0f;
 
     while (!WindowShouldClose())
     { 
+        int iterations = 10;
         float dt = GetFrameTime();
         //update
         accumulator += dt;
@@ -75,27 +78,38 @@ int main()
         {
             CollisionResult r;
 
-            int iterations = 4;
-
             shaderData.skipIntensity = player.GetEngineGlow();
 
             for(int i = 0; i < iterations; i++)
             {
                 player.UpdatePlayer(FIXED_DELTA_TIME, iterations);
                 
-                r = SAT3D(player.GetPosition(), testCollider.GetTransformedVertices(player.GetHitboxTransform()), 
+                r = SAT3DPrism(player.GetPosition(), testCollider.GetTransformedVertices(player.GetHitboxTransform()), 
                 obstacleColliderPos, obstacleCollider.GetTransformedVertices(obstacleColliderTransform));
+
+                for (int b = 0; b < player.bulletPool.activeBullets.size(); b++)
+                {
+                    Bullet* currentBullet = player.bulletPool.activeBullets[b];
+                    
+                    CollisionResult rb;
+
+                    rb = PrismVsSphere(obstacleColliderPos,obstacleCollider.GetTransformedVertices(obstacleColliderTransform),
+                    currentBullet->transform.translation, currentBullet->radius);
+                    
+                    if(rb.collision)
+                    {
+                        std::cout<<"BULLET HIT at: "<<Vector3Length(currentBullet->velocityVec)<<"\n";
+                        currentBullet->didHit = true;
+                        break;
+                    }
+                }
 
                 if (r.collision)
                 {
-                    obstacleColliderColor = RED;
-                    std::cout<<"HIT! "<<"\n";
-                    std::cout<<"HIT at: "<<player.plane.GetSpeed()<<"\n";
-                }
-                else
-                {
-                    obstacleColliderColor = GREEN;
-                }                
+                    std::cout<<"PLAYER HIT at: "<<player.GetSpeed()<<"\n";
+                }       
+
+                obstacleColliderColor = ogObstacleColliderColor;
             }
 
             player.UpdateCamera(FIXED_DELTA_TIME);
@@ -109,8 +123,6 @@ int main()
         ClearBackground(background);
 
         BeginMode3D(player.camera);
-
-        DrawPlane({0,0,0},{1000,1000},GREEN);
 
         rlPushMatrix();
         rlRotatef(90,1,0,0);
@@ -131,12 +143,19 @@ int main()
 
         //DrawSphere(player.GetTransform().translation, 2, MAGENTA);
 
-        DrawCollider(obstacleCollider.GetTransformedVertices(obstacleColliderTransform), obstacleColliderColor);
-
         for(int i = 0; i < player.bulletPool.activeBullets.size(); i++)
         {
-            DrawBullet(player.bulletPool.activeBullets[i]->transform);
+            Bullet* currentBullet = player.bulletPool.activeBullets[i];
+
+            if(currentBullet->isAlive)
+            {
+                DrawBullet(currentBullet->transform);
+                //DrawSphere(currentBullet->transform.translation, currentBullet->radius, {255,255,100,255});
+            }
+            
         }
+
+        DrawColliderWire(obstacleCollider.GetTransformedVertices(obstacleColliderTransform), obstacleColliderColor);
 
         EndMode3D();
         EndTextureMode();
@@ -155,13 +174,13 @@ int main()
         DrawFPS(10,10);
 
 
-        DrawText(TextFormat("MAX SPEED: %0.2f", player.plane.GetMaxSpeed()),SCREEN_WIDTH * 0.25, SCREEN_HEIGHT * 0.15, 20, GREEN);
-        DrawText(TextFormat("IDLE SPEED: %0.2f", player.plane.GetIdleSpeed()),SCREEN_WIDTH * 0.75, SCREEN_HEIGHT * 0.15, 20, GREEN);
-        DrawText(TextFormat("SPEED: %0.2f", player.plane.GetSpeed()),SCREEN_WIDTH * 0.25, SCREEN_HEIGHT * 0.5, 20, GREEN);
-        DrawText(TextFormat("THRUST: %0.2f", player.plane.thrust),SCREEN_WIDTH * 0.25, SCREEN_HEIGHT * 0.25, 20, GREEN);
+        DrawText(TextFormat("MAX SPEED: %0.2f", player.GetMaxSpeed()),SCREEN_WIDTH * 0.25, SCREEN_HEIGHT * 0.15, 20, GREEN);
+        DrawText(TextFormat("IDLE SPEED: %0.2f", player.GetIdleSpeed()),SCREEN_WIDTH * 0.75, SCREEN_HEIGHT * 0.15, 20, GREEN);
+        DrawText(TextFormat("SPEED: %0.2f", player.GetSpeed()),SCREEN_WIDTH * 0.25, SCREEN_HEIGHT * 0.5, 20, GREEN);
+        DrawText(TextFormat("THRUST: %0.2f", player.thrust),SCREEN_WIDTH * 0.25, SCREEN_HEIGHT * 0.25, 20, GREEN);
 
 
-        DrawText(TextFormat("ALTITUDE: %0.2f", player.plane.GetSpeed()),SCREEN_WIDTH * 0.7f, SCREEN_HEIGHT / 2, 20, GREEN);
+        DrawText(TextFormat("ALTITUDE: %0.2f", player.GetSpeed()),SCREEN_WIDTH * 0.7f, SCREEN_HEIGHT / 2, 20, GREEN);
 
 
         EndDrawing();

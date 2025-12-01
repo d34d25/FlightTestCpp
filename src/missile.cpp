@@ -97,7 +97,7 @@ void MissilePool::UpdateMissiles(float dt, int iterations)
     
 }
 
-void MissilePool::FireMissile(const Transform &transform, float initialSpeed)
+void MissilePool::FireMissile(const Transform &transform, Vector3 initialSpeed)
 {
     if(!inactiveMissiles.empty())
     {
@@ -112,8 +112,7 @@ void MissilePool::FireMissile(const Transform &transform, float initialSpeed)
         m->body.linearVelocity = {0,0,0};
         m->body.angularVelocity = {0,0,0};
 
-        Vector3 forward = GetLocalForwardVector(m->body.transform);
-        m->body.linearVelocity = Vector3Scale(forward, initialSpeed);
+        m->body.linearVelocity = {initialSpeed.x, initialSpeed.y, initialSpeed.z};
 
         Vector3 worldUp = GetLocalUpVector(m->body.transform);
         m->body.linearVelocity = Vector3Add(m->body.linearVelocity, Vector3Scale(worldUp, -7.0f));

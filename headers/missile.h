@@ -47,6 +47,6 @@ public:
 
     void UpdateMissiles(float dt, int iterations);
 
-    void FireMissile(const Transform& transform, float initialSpeed);
+    void FireMissile(const Transform& transform, Vector3 initialSpeed);
 };
 

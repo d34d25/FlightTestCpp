@@ -465,7 +465,10 @@ void Player::FireM(float dt, int iterations)
         {
             FollowTransform(&missileTransform, GetTransform(), {0,-1,0});
 
-            missilePool.FireMissile(missileTransform, GetSpeed());
+            Vector3 forward = GetLocalForwardVector(body.transform);
+            Vector3 missileInitialSpeed = Vector3Scale(forward, GetSpeed());
+
+            missilePool.FireMissile(missileTransform, missileInitialSpeed);
             fireTimerMissile += firerateMissile;
         }
         

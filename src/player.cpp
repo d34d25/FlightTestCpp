@@ -96,7 +96,7 @@ Player::Player(float scale)
     bulletTransform = {};
     bulletTransform.scale = {1.0f,1.0f,1.0f};
 
-    missilePool = MissilePool(30,7,1200, 100, DEFAULT_MAX_THRUST * 1.25f);
+    missilePool = MissilePool(2,7,1200, DEFAULT_MAX_THRUST * 1.25f);
     missileTransform = {};
     missileTransform.scale = {1.0f,1.0f,1.0f};
 }

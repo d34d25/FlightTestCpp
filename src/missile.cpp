@@ -11,7 +11,7 @@ void Missile::UpdateMissile(float dt, float iterations)
 }
 
 
-std::vector<Missile> InitMissiles(int quantity, float lifetime, float lockDistance, float hitDistance ,float thrust)
+std::vector<Missile> InitMissiles(int quantity, float lifetime, float lockDistance, float thrust)
 {
     std::vector<Missile> missileArray;
 
@@ -29,8 +29,6 @@ std::vector<Missile> InitMissiles(int quantity, float lifetime, float lockDistan
         tempMissile.lifetime = lifetime;
         tempMissile.currentTime = 0.0f;
 
-        tempMissile.hitDistance = hitDistance;
-
         tempMissile.body = Body3D(DEFAULT_LINEAR_DAMPING, 
         {DEFAULT_ANGULAR_DAMPING,DEFAULT_ANGULAR_DAMPING,DEFAULT_ANGULAR_DAMPING});
 
@@ -41,9 +39,9 @@ std::vector<Missile> InitMissiles(int quantity, float lifetime, float lockDistan
     return missileArray;
 }
 
-MissilePool::MissilePool(int quantity, float lifetime, float lockDistance, float hitDistance, float thrust)
+MissilePool::MissilePool(int quantity, float lifetime, float lockDistance, float thrust)
 {
-    this->missiles = InitMissiles(quantity, lifetime, lockDistance, hitDistance, thrust);
+    this->missiles = InitMissiles(quantity, lifetime, lockDistance, thrust);
 
     for (Missile &missile : this->missiles)
     {

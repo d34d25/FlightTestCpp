@@ -115,7 +115,23 @@ int main()
                 if (r.collision)
                 {
                     std::cout<<"PLAYER HIT at: "<<player.GetSpeed()<<"\n";
-                }       
+                }
+                
+                for (int m = 0; m < player.missilePool.activeMissiles.size(); m++)
+                {
+                    Missile* currentMissile = player.missilePool.activeMissiles[m];
+
+                    CollisionResult rm;
+
+                    rm = PrismVsSphere(obstacleColliderPos,obstacleCollider.GetTransformedVertices(obstacleColliderTransform),
+                    currentMissile->body.transform.translation, currentMissile->radius);
+
+                    if(rm.collision)
+                    {
+                        std::cout<<"MISSILE HIT at: "<<Vector3Length(currentMissile->body.linearVelocity)<<"\n";
+                        currentMissile->didHit = true;
+                    }
+                }
 
                 obstacleColliderColor = ogObstacleColliderColor;
             }
@@ -148,7 +164,7 @@ int main()
 
             if(currentBullet->isAlive)
             {
-                DrawBullet(currentBullet->transform);
+                DrawBullet(currentBullet->transform, currentBullet->radius);
                 //DrawSphere(currentBullet->transform.translation, currentBullet->radius, {255,255,100,255});
             }
             
@@ -160,7 +176,7 @@ int main()
 
             if(currentMissile->isAlive)
             {
-                DrawMissile(currentMissile->body.transform);
+                DrawMissile(currentMissile->body.transform, currentMissile->radius);
             }
         }
 

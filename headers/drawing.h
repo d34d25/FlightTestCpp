@@ -43,21 +43,20 @@ void DrawColliderWire(const std::vector<Vector3>& transformedVertices, Color col
 
 void DrawCollider(const std::vector<Vector3>& v, Color color);
 
-inline void DrawBullet(const Transform& transform)
+inline void DrawBullet(const Transform& transform, float radius)
 {
     rlPushMatrix();
     const float* matrix = GetLocalMatrixTransform(transform).data();
     rlMultMatrixf(matrix);
-    DrawCube({0,0,0},0.5f,0.5f,4.0f,{255,255,100,255});
+    DrawCube({0,0,0},0.5f,0.5f,radius * 2.0f,{255,255,100,255});
     rlPopMatrix();
 }
 
-
-inline void DrawMissile(const Transform& transform)
+inline void DrawMissile(const Transform& transform, float radius)
 {
     rlPushMatrix();
     const float* matrix = GetLocalMatrixTransform(transform).data();
     rlMultMatrixf(matrix);
-    DrawCube({0,0,0},1.5f,1.5f,4.0f,{200,200,200,255});
+    DrawCube({0,0,0},1.0f,1.0f,radius * 2.0f,{200,200,200,255});
     rlPopMatrix();
 }

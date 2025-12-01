@@ -20,7 +20,7 @@ public:
     float lifetime;
     float currentTime;
 
-    float hitDistance; //minimum distance that the missile has to be from the enmey to count a hit
+    float radius = 3.0f;
 
     Body3D body;
 
@@ -31,7 +31,7 @@ public:
 };
 
 
-std::vector<Missile> InitMissiles(int quantity, float lifetime, float lockDistance, float hitDistance, float thrust);
+std::vector<Missile> InitMissiles(int quantity, float lifetime, float lockDistance, float thrust);
 
 class MissilePool
 {
@@ -43,7 +43,7 @@ public:
     
     MissilePool() = default;
 
-    MissilePool(int quantity, float lifetime, float lockDistance, float hitDistance, float thrust);
+    MissilePool(int quantity, float lifetime, float lockDistance, float thrust);
 
     void UpdateMissiles(float dt, int iterations);
 

@@ -1,5 +1,7 @@
 #include "body.h"
 
+const float DEFAULT_ANGULAR_DAMPING = 3.0f;
+
 Body3D::Body3D(float linearDamping, Vector3 angularDamping)
 {
     force.x = 0.0f, force.y = 0.0f, force.z = 0.0f;
@@ -72,7 +74,7 @@ void Body3D::ApplyWorldTorque(Vector3 axis, float dt)
         transform.rotation = QuaternionNormalize(transform.rotation);
     }
 
-    stallAngularSpeed *= Clamp(1 - angularDamping.x * dt, 0, 1);
+    stallAngularSpeed *= Clamp(1 - DEFAULT_ANGULAR_DAMPING * dt, 0, 1);
 
     stallAngularTorque = 0.0f;
 }

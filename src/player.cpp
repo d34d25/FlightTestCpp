@@ -8,22 +8,30 @@ Player::Player(float scale)
     params.position.y = 400.0f;
     params.position.z = -700.0f;
 
+    params.linearDamping = 5.0f;
+
     params.angularDamping.x = DEFAULT_ANGULAR_DAMPING;
     params.angularDamping.y = DEFAULT_ANGULAR_DAMPING;
     params.angularDamping.z = DEFAULT_ANGULAR_DAMPING;
 
-    params.maxThrust = DEFAULT_MAX_THRUST;
-    params.idleThrust = DEFAULT_IDLE_THRUST;
+    params.maxThrust = GetNormalizedForce(DEFAULT_MAX_THRUST);
+    params.idleThrust = GetNormalizedForce(DEFAULT_IDLE_THRUST);
 
-    params.returnSpeedHigh = DEFAULT_RETURN_SPEED_HIGH * 1.15f;
-    params.returnSpeedLow = DEFAULT_RETURN_SPEED_LOW;
+    params.returnSpeedHigh = GetNormalizedForce(DEFAULT_RETURN_SPEED_HIGH * 1.15f);
+    params.returnSpeedLow = GetNormalizedForce(DEFAULT_RETURN_SPEED_LOW);
 
-    params.acceleration = 21000.0f;
-    params.brake = 19000.0f; //18000
+    params.acceleration = GetNormalizedForce(21000.0f);
+    params.brake = GetNormalizedForce(19000.0f); //18000
 
-    params.pitchPower = 70.0f;
-    params.rollPower = 190.0f;
-    params.yawPower = 25.0f;
+    params.pitchPower = GetNormalizedPitch(70.0f);
+    params.rollPower = GetNormalizedRoll(190.0f);
+    params.yawPower = GetNormalizedYaw(25.0f);
+
+    fakeGravity = GetNormalizedForce(15000);
+    stallDownwardForce = GetNormalizedForce(8000);
+
+    maxBankTorquePitch = GetNormalizedPitch(5.0f);
+    maxBankTorqueYaw = GetNormalizedYaw(5.0f);
     
     params.maxPitchSpeed = 1.0f;
     params.maxRollSpeed = 1.8f;
@@ -231,7 +239,6 @@ void Player::UpdatePlayer(float dt, int iterations)
     Vector3 downDir;
     downDir.x = 0.0f, downDir.y = -1.0f, downDir.z = 0.0f;
 
-
     body.ApplyLocalForce(forwardDir, thrust);
 
     //drag / fake gravity
@@ -240,8 +247,6 @@ void Player::UpdatePlayer(float dt, int iterations)
     forward = Vector3Normalize(forward);
 
     float dotFU = Vector3DotProduct(forward, upDir);
-
-    float fakeGravity = 15000;
 
     float forwardSpeed = Vector3DotProduct(body.linearVelocity, forward);
 
@@ -256,14 +261,12 @@ void Player::UpdatePlayer(float dt, int iterations)
 
     //fake banking
 
-    float maxBankTorque = 5.0f;
-
     Vector3 right = GetLocalRightVector(body.transform);
     right = Vector3Normalize(right);
 
     float rDot = Vector3DotProduct(upDir, right);
 
-    body.ApplyYaw(maxBankTorque * - rDot);
+    body.ApplyYaw(maxBankTorqueYaw * - rDot);
     
     //upside down case
 
@@ -274,7 +277,7 @@ void Player::UpdatePlayer(float dt, int iterations)
     
     if (uDot <= -0.1)
     {
-        body.ApplyPitch(maxBankTorque * uDot);
+        body.ApplyPitch(maxBankTorquePitch * uDot);
     }
     
     //fake stall
@@ -317,7 +320,7 @@ void Player::UpdatePlayer(float dt, int iterations)
         body.torque.y = 0.0f;
         body.torque.z = 0.0f;
 
-        body.ApplyForce(downDir, 8000);
+        body.ApplyForce(downDir, stallDownwardForce);
     }
 
     Vector3 axisOfRotation = Vector3CrossProduct(forward, downDir);

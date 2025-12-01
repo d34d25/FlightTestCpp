@@ -79,7 +79,6 @@ void Body3D::ApplyWorldTorque(Vector3 axis, float dt)
 
 void Body3D::UpdateBody(float dt, int iterations)
 {
-    if(iterations <= 0) return; 
     if(isStatic) return;
 
     dt /= iterations;

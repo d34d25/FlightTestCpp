@@ -68,9 +68,17 @@ int main()
     float accumulator = 0.0f;
     float FIXED_DELTA_TIME = 1.0f/60.0f;
 
+    int iterations = 10;
+
+    if (iterations < 1)
+    {
+        std::cerr<<"ITERATIONS CAN'T BE LESS THAN 1"<< std::endl;
+        return 0;
+    }
+
     while (!WindowShouldClose())
     { 
-        int iterations = 10;
+        
         float dt = GetFrameTime();
         //update
         accumulator += dt;

@@ -10,6 +10,7 @@ void Missile::UpdateMissile(float dt, float iterations)
     body.UpdateBody(dt, iterations);
 }
 
+
 std::vector<Missile> InitMissiles(int quantity, float lifetime, float lockDistance, float hitDistance ,float thrust)
 {
     std::vector<Missile> missileArray;
@@ -60,7 +61,7 @@ MissilePool::MissilePool(int quantity, float lifetime, float lockDistance, float
 void MissilePool::UpdateMissiles(float dt, int iterations)
 {
     float fdt = dt;
-    if(iterations > 0) fdt /= iterations;
+    fdt /= iterations;
 
     for (Missile* m : activeMissiles)
     {
@@ -113,6 +114,9 @@ void MissilePool::FireMissile(const Transform &transform, float initialSpeed)
 
         Vector3 forward = GetLocalForwardVector(m->body.transform);
         m->body.linearVelocity = Vector3Scale(forward, initialSpeed);
+
+        Vector3 worldUp = GetLocalUpVector(m->body.transform);
+        m->body.linearVelocity = Vector3Add(m->body.linearVelocity, Vector3Scale(worldUp, -7.0f));
 
         activeMissiles.push_back(m);
     }

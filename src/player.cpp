@@ -96,7 +96,7 @@ Player::Player(float scale)
     bulletTransform = {};
     bulletTransform.scale = {1.0f,1.0f,1.0f};
 
-    missilePool = MissilePool(30,7,1200, 100, DEFAULT_MAX_THRUST);
+    missilePool = MissilePool(30,7,1200, 100, DEFAULT_MAX_THRUST * 1.25f);
     missileTransform = {};
     missileTransform.scale = {1.0f,1.0f,1.0f};
 }
@@ -104,7 +104,7 @@ Player::Player(float scale)
 void Player::UpdatePlayer(float dt, int iterations)
 {
     float fdt = dt;
-    if(iterations > 0) fdt /= iterations;
+    fdt /= iterations;
 
     if(!globalCamera)
     {
@@ -463,7 +463,7 @@ void Player::FireM(float dt, int iterations)
     {   
         while (fireTimerMissile <= 0.0f)
         {
-            FollowTransform(&missileTransform, GetTransform(), {0,0,0});
+            FollowTransform(&missileTransform, GetTransform(), {0,-1,0});
 
             missilePool.FireMissile(missileTransform, GetSpeed());
             fireTimerMissile += firerateMissile;

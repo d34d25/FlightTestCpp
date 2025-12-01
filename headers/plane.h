@@ -23,6 +23,8 @@ extern const float DEFAULT_PROPORTION_HIGH;
 extern const float DEFAULT_RETURN_SPEED_HIGH;
 extern const float DEFAULT_RETURN_SPEED_LOW;
 
+extern const float DEFAULT_MAX_THRUST;
+
 using namespace std;
 
 struct PlaneParams

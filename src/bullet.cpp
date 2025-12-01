@@ -82,7 +82,8 @@ void BulletPool::UpdateBullets(float dt)
 
     // Move dead bullets back to inactive
     auto it = std::remove_if(activeBullets.begin(), activeBullets.end(),
-        [&](Bullet* b) {
+        [&](Bullet* b)
+        {
             if (!b->isAlive)
             {
                 inactiveBullets.push_back(b);
@@ -107,7 +108,7 @@ void BulletPool::FireBullet(const Transform &transform, const Vector3& force)
         b->currentTime = 0.0f;
         b->force = force;
 
-        b->velocityVec = { force.x,force.y,force.z};
+        b->velocityVec = {force.x,force.y,force.z};
 
         activeBullets.push_back(b);
     }

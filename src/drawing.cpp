@@ -1,6 +1,6 @@
 #include "drawing.h"
 #include<iostream>
-#include <simpleTransform.h>
+
 
 FlatShaderData mLoadFlatShader(const char* shaderVs, const char* shaderFs, int skipIndex)
 {
@@ -92,17 +92,6 @@ void DrawShadedMesh(FlatShaderData* shaderData, Model model)
 }
 
 
-void DrawFlatShadedModel(const Transform& transform, const Model& model,
-FlatShaderData* shaderData)
-{
-    rlPushMatrix();
-    const float* matrix = GetLocalMatrixTransform(transform).data();
-    rlMultMatrixf(matrix);
-    rlScalef(transform.scale.x, transform.scale.y, transform.scale.z);
-    DrawShadedMesh(shaderData, model);
-    rlPopMatrix();
-}
-
 void DrawColliderWire(const std::vector<Vector3>& transformedVertices, Color color)
 {
     switch (transformedVertices.size())
@@ -182,13 +171,4 @@ void DrawCollider(const std::vector<Vector3> &v, Color color)
         DrawTriangle3D(v[2], v[3], v[4], color);
         DrawTriangle3D(v[3], v[0], v[4], color);
     }
-}
-
-void DrawBullet(const Transform &transform)
-{
-    rlPushMatrix();
-    const float* matrix = GetLocalMatrixTransform(transform).data();
-    rlMultMatrixf(matrix);
-    DrawCube({0,0,0},0.5f,0.5f,4.0f,{255,255,100,255});
-    rlPopMatrix();
 }

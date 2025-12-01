@@ -49,36 +49,6 @@ Body3D::Body3D(float linearDamping, Vector3 angularDamping)
     inertia.z = static_cast<float>((1.0f/12.0f) * mass * (width * width + height * height));
 }
 
-void Body3D::ApplyForce(Vector3 direction, float amount)
-{
-    force.x += direction.x * amount;
-    force.y += direction.y * amount;
-    force.z += direction.z * amount;
-}
-
-void Body3D::ApplyLocalForce(Vector3 direction, float amount)
-{
-    Vector3 worldDirection = Vector3RotateByQuaternion(direction, transform.rotation);
-
-    force.x += worldDirection.x * amount;
-    force.y += worldDirection.y * amount;
-    force.z += worldDirection.z * amount;
-}
-
-void Body3D::ApplyPitch(float amount)
-{
-    torque.x += amount;
-}
-
-void Body3D::ApplyRoll(float amount)
-{
-    torque.z += amount;
-}
-
-void Body3D::ApplyYaw(float amount)
-{
-    torque.y += amount;
-}
 
 void Body3D::ApplyWorldTorque(Vector3 axis, float dt)
 {

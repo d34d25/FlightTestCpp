@@ -2,6 +2,7 @@
 
 #include "plane.h"
 #include "bullet.h"
+#include "missile.h"
 
 class Player
 {
@@ -30,8 +31,13 @@ private:
     int maxEngineGlow = 1;
     float engineGlowChange;
 
-    float fireTimer = 0.0f;
-    float firerate = 0.1f;
+    Transform bulletTransform;
+    float fireTimerBullet = 0.0f;
+    float firerateBullet = 0.1f;
+    
+    Transform missileTransform;
+    float fireTimerMissile = 0.0f;
+    float firerateMissile = 1.5f;
 
     bool returnToIdle = true;
     bool hasInput = false;
@@ -48,6 +54,8 @@ public:
 
     BulletPool bulletPool;
 
+    MissilePool missilePool;
+
     float thrust = 0.0f;
 
     Player(float scale);
@@ -56,7 +64,9 @@ public:
     
     void UpdateCamera(float dt);
 
-    void Fire(float dt);
+    void FireB(float dt);
+
+    void FireM(float dt, int iterations);
     //getters
 
     inline float GetEngineGlow()

@@ -2,6 +2,7 @@
 #include "raylib.h"
 #include "rlgl.h"
 #include <vector>
+#include "simpleTransform.h"
 
 struct FlatShaderData
 {
@@ -26,10 +27,37 @@ FlatShaderData mLoadFlatShader(const char* shaderVs, const char* shaderFs, int s
 
 void mApplyFlatShader(FlatShaderData* shaderData, Model* model);
 
-void DrawFlatShadedModel(const Transform& transform, const Model& model, FlatShaderData* shaderData);
+void DrawShadedMesh(FlatShaderData* shaderData, Model model);
+
+inline void DrawFlatShadedModel(const Transform& transform, const Model& model, FlatShaderData* shaderData)
+{
+    rlPushMatrix();
+    const float* matrix = GetLocalMatrixTransform(transform).data();
+    rlMultMatrixf(matrix);
+    rlScalef(transform.scale.x, transform.scale.y, transform.scale.z);
+    DrawShadedMesh(shaderData, model);
+    rlPopMatrix();
+}
 
 void DrawColliderWire(const std::vector<Vector3>& transformedVertices, Color color);
 
 void DrawCollider(const std::vector<Vector3>& v, Color color);
 
-void DrawBullet(const Transform& transform);
+inline void DrawBullet(const Transform& transform)
+{
+    rlPushMatrix();
+    const float* matrix = GetLocalMatrixTransform(transform).data();
+    rlMultMatrixf(matrix);
+    DrawCube({0,0,0},0.5f,0.5f,4.0f,{255,255,100,255});
+    rlPopMatrix();
+}
+
+
+inline void DrawMissile(const Transform& transform)
+{
+    rlPushMatrix();
+    const float* matrix = GetLocalMatrixTransform(transform).data();
+    rlMultMatrixf(matrix);
+    DrawCube({0,0,0},1.5f,1.5f,4.0f,{200,200,200,255});
+    rlPopMatrix();
+}

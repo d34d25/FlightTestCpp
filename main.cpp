@@ -26,6 +26,7 @@ int main()
     Player player = Player(2.0f);
     Collider testCollider = Collider();
 
+    //the parameters passed are the half size, so the height is actually 4
     testCollider.CreatePrismatoidForward(
         player.params.hitboxWidth,
         player.params.hitboxHeight,
@@ -35,7 +36,7 @@ int main()
 
     Collider obstacleCollider = Collider();
 
-    obstacleCollider.CreatePrismatoidUp(10500,25,10500,25,10300);
+    obstacleCollider.CreatePrismatoidUp(10500,4,10500,4,10300);
 
     Vector3 obstacleColliderPos = {0,300,7000};
 
@@ -100,7 +101,6 @@ int main()
                     {
                         std::cout<<"BULLET HIT at: "<<Vector3Length(currentBullet->velocityVec)<<"\n";
                         currentBullet->didHit = true;
-                        break;
                     }
                 }
 
@@ -123,15 +123,6 @@ int main()
         ClearBackground(background);
 
         BeginMode3D(player.camera);
-
-        rlPushMatrix();
-        rlRotatef(90,1,0,0);
-        int scale = 100;
-        Vector2 grpos;
-        grpos.x = -(groundTexture.width / 2) * scale;
-        grpos.y = -(groundTexture.height / 2) * scale; 
-        DrawTextureEx(groundTexture, grpos, 0.0f,scale,WHITE);
-        rlPopMatrix();
         
         rlPushMatrix();
         rlScalef(-1,-1,-1);
@@ -139,7 +130,7 @@ int main()
         
         DrawFlatShadedModel(player.GetTransform(), planeModel, &shaderData);
 
-        //DrawCollider(testCollider.GetTransformedVertices(player.GetHitboxTransform()), RED);
+        //DrawColliderWire(testCollider.GetTransformedVertices(player.GetHitboxTransform()), RED);
 
         //DrawSphere(player.GetTransform().translation, 2, MAGENTA);
 
@@ -155,8 +146,28 @@ int main()
             
         }
 
-        DrawColliderWire(obstacleCollider.GetTransformedVertices(obstacleColliderTransform), obstacleColliderColor);
+        for(int i = 0; i < player.missilePool.activeMissiles.size(); i++)
+        {
+            Missile* currentMissile = player.missilePool.activeMissiles[i];
 
+            if(currentMissile->isAlive)
+            {
+                DrawMissile(currentMissile->body.transform);
+            }
+        }
+
+        rlPushMatrix();
+        rlRotatef(90,1,0,0);
+        int scale = 100;
+        Vector2 grpos;
+        grpos.x = -(groundTexture.width / 2) * scale;
+        grpos.y = -(groundTexture.height / 2) * scale; 
+        DrawTextureEx(groundTexture, grpos, 0.0f,scale,WHITE);
+        rlPopMatrix();
+        
+        DrawCollider(obstacleCollider.GetTransformedVertices(obstacleColliderTransform), {255,255,0,100});
+        DrawColliderWire(obstacleCollider.GetTransformedVertices(obstacleColliderTransform), obstacleColliderColor);
+        
         EndMode3D();
         EndTextureMode();
         
@@ -180,7 +191,7 @@ int main()
         DrawText(TextFormat("THRUST: %0.2f", player.thrust),SCREEN_WIDTH * 0.25, SCREEN_HEIGHT * 0.25, 20, GREEN);
 
 
-        DrawText(TextFormat("ALTITUDE: %0.2f", player.GetSpeed()),SCREEN_WIDTH * 0.7f, SCREEN_HEIGHT / 2, 20, GREEN);
+        DrawText(TextFormat("ALTITUDE: %0.2f", player.GetPosition().y),SCREEN_WIDTH * 0.7f, SCREEN_HEIGHT / 2, 20, GREEN);
 
 
         EndDrawing();

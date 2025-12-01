@@ -2,10 +2,6 @@
 #include <cmath>
 #include <iostream>
 
-
-//merge plane and player into one class
-//because the enemy AI won't use the 
-//flight model or any plane phyisics
 Player::Player(float scale)
 {
     params.position.x = 0.0f;
@@ -16,14 +12,14 @@ Player::Player(float scale)
     params.angularDamping.y = DEFAULT_ANGULAR_DAMPING;
     params.angularDamping.z = DEFAULT_ANGULAR_DAMPING;
 
-    params.maxThrust = 350000.0f;
+    params.maxThrust = DEFAULT_MAX_THRUST;
     params.idleThrust = DEFAULT_IDLE_THRUST;
 
     params.returnSpeedHigh = DEFAULT_RETURN_SPEED_HIGH * 1.15f;
     params.returnSpeedLow = DEFAULT_RETURN_SPEED_LOW;
 
     params.acceleration = 21000.0f;
-    params.brake = 18000.0f;
+    params.brake = 19000.0f; //18000
 
     params.pitchPower = 70.0f;
     params.rollPower = 190.0f;
@@ -96,7 +92,13 @@ Player::Player(float scale)
 
     engineGlowChange = 0.2f;
 
-    bulletPool = BulletPool(60,6,0.05f);
+    bulletPool = BulletPool(60,4,0.05f);
+    bulletTransform = {};
+    bulletTransform.scale = {1.0f,1.0f,1.0f};
+
+    missilePool = MissilePool(30,7,1200, 100, DEFAULT_MAX_THRUST);
+    missileTransform = {};
+    missileTransform.scale = {1.0f,1.0f,1.0f};
 }
 
 void Player::UpdatePlayer(float dt, int iterations)
@@ -315,7 +317,7 @@ void Player::UpdatePlayer(float dt, int iterations)
         body.torque.y = 0.0f;
         body.torque.z = 0.0f;
 
-        body.ApplyForce(downDir, 4000);
+        body.ApplyForce(downDir, 8000);
     }
 
     Vector3 axisOfRotation = Vector3CrossProduct(forward, downDir);
@@ -330,13 +332,18 @@ void Player::UpdatePlayer(float dt, int iterations)
     body.ApplyWorldTorque(axisOfRotation, fdt);
 
     body.UpdateBody(dt, iterations);
-
-    Fire(fdt);
+    FireB(fdt);
     bulletPool.UpdateBullets(fdt);
+
+    //pass just dt to missiles;
+    FireM(dt, iterations);
+    missilePool.UpdateMissiles(dt, iterations);
 }
 
 void Player::UpdateCamera(float dt)
 {
+    HideCursor(); //when I have scenes this should be called once in the init of the scene
+
     Vector3 rotatedOffset = Vector3RotateByQuaternion(cameraOffset, GetOrientation());
 
     if (IsKeyPressed(KEY_ONE)) globalCamera = !globalCamera;
@@ -378,8 +385,6 @@ void Player::UpdateCamera(float dt)
         returnToIdle = false;
 
         hasInput = true;
-
-        HideCursor();
         
         int centerX = GetScreenWidth() / 2;
         int centerY = GetScreenHeight() / 2;
@@ -419,36 +424,50 @@ void Player::UpdateCamera(float dt)
 }
 
 
-void Player::Fire(float dt)
+void Player::FireB(float dt)
 {
     int bulletspeed = 800; //800
 
-    fireTimer += dt;
-
     //make this an attribute of the plane
-    //call it gun position
-    Transform bulletTransform = {};
-    FollowTransform(&bulletTransform, GetTransform(),{-2.75f,0.9f,4.0f});
-    bulletTransform.scale = {1.0f,1.0f,1.0f};
-
+    //call it gun position    
+    if (fireTimerBullet > 0.0f) fireTimerBullet -= dt;
+    
     bool fireKey = (!globalCamera && IsKeyDown(KEY_LEFT_SHIFT)) || (globalCamera && IsKeyDown(KEY_SPACE));
 
-    Vector3 forward = GetLocalForwardVector(body.transform);
-    float forwardSpeed = Vector3DotProduct(body.linearVelocity, forward);
-
-    if(fireKey)
+    if(fireKey && fireTimerBullet <= 0.0f)
     {
-        Vector3 bulletVelocity = Vector3Add(body.linearVelocity, Vector3Scale(forward, bulletspeed));
-
-        while (fireTimer >= firerate)
+        while (fireTimerBullet <= 0.0f)
         {
+            FollowTransform(&bulletTransform, GetTransform(), {-2.75f, 0.9f, 4.0f});
+
+            Vector3 forward = GetLocalForwardVector(body.transform);
+            Vector3 bulletVelocity = Vector3Add(body.linearVelocity, Vector3Scale(forward, bulletspeed));
+
             bulletPool.FireBullet(bulletTransform, bulletVelocity);
-            fireTimer -= firerate;
+
+            fireTimerBullet += firerateBullet;
         }
+    } 
+}
+
+void Player::FireM(float dt, int iterations)
+{
+    float fdt = dt;
+    if(iterations > 0) fdt /= iterations;
+
+    if(fireTimerMissile > 0.0f) fireTimerMissile -= fdt;
+
+    bool fireKey = (!globalCamera && IsKeyPressed(KEY_SPACE)) || (globalCamera && IsKeyPressed(KEY_LEFT_ALT));
+
+    if (fireKey && fireTimerMissile <= 0.0f)
+    {   
+        while (fireTimerMissile <= 0.0f)
+        {
+            FollowTransform(&missileTransform, GetTransform(), {0,0,0});
+
+            missilePool.FireMissile(missileTransform, GetSpeed());
+            fireTimerMissile += firerateMissile;
+        }
+        
     }
-    else
-    {
-        fireTimer = 0.0f;
-    }
-    
 }

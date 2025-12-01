@@ -33,7 +33,7 @@ public:
     Vector3 force;
     Vector3 torque;
 
-    float linearDamping = 3;
+    float linearDamping;
     Vector3 angularDamping;
 
     bool isStatic = false;
@@ -42,15 +42,36 @@ public:
 
     Body3D(float linearDamping, Vector3 angularDamping);
 
-    void ApplyForce(Vector3 direction, float amount);
+    inline void ApplyForce(Vector3 direction, float amount)
+    {
+        force.x += direction.x * amount;
+        force.y += direction.y * amount;
+        force.z += direction.z * amount;
+    }
 
-    void ApplyLocalForce(Vector3 direction, float amount);
+    inline void ApplyLocalForce(Vector3 direction, float amount)
+    {
+        Vector3 worldDirection = Vector3RotateByQuaternion(direction, transform.rotation);
 
-    void ApplyPitch(float amount);
+        force.x += worldDirection.x * amount;
+        force.y += worldDirection.y * amount;
+        force.z += worldDirection.z * amount;
+    }
 
-    void ApplyRoll(float amount);
+    inline void ApplyPitch(float amount)
+    {
+        torque.x += amount;
+    }
 
-    void ApplyYaw(float amount);
+    inline void ApplyRoll(float amount)
+    {
+        torque.z += amount;
+    }
+
+    inline void ApplyYaw(float amount)
+    {
+        torque.y += amount;
+    }
 
     void ApplyWorldTorque(Vector3 axis, float dt);
 
@@ -84,5 +105,10 @@ public:
     inline float GetMass()
     {
         return mass;
+    }
+
+    inline Vector3 GetInertia()
+    {
+        return inertia;
     }
 };

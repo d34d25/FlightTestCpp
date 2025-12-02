@@ -151,21 +151,21 @@ public:
 
     inline float GetNormalizedForce(float force)
     {
-        return (force / DEFAULT_LINEAR_DAMPING) * params.linearDamping;
+        return force * params.linearDamping;
     }
 
     inline float GetNormalizedPitch(float pitch)
     {
-        return (pitch / DEFAULT_ANGULAR_DAMPING) * params.angularDamping.x;
+        return pitch * params.angularDamping.x;
     }
 
     inline float GetNormalizedRoll(float roll)
     {
-        return (roll / DEFAULT_ANGULAR_DAMPING) * params.angularDamping.z;
+        return roll * params.angularDamping.z;
     }
 
     inline float GetNormalizedYaw(float yaw)
     {
-        return (yaw / DEFAULT_ANGULAR_DAMPING) * params.angularDamping.y;
+        return yaw * params.angularDamping.y;
     }
 };

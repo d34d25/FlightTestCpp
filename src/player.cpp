@@ -10,9 +10,9 @@ Player::Player(float scale)
 
     params.linearDamping = 5.0f;
 
-    params.angularDamping.x = DEFAULT_ANGULAR_DAMPING;
-    params.angularDamping.y = DEFAULT_ANGULAR_DAMPING;
-    params.angularDamping.z = DEFAULT_ANGULAR_DAMPING;
+    params.angularDamping.x = 3.0f;
+    params.angularDamping.y = 3.0f;
+    params.angularDamping.z = 3.0f;
 
     params.maxThrust = GetNormalizedForce(DEFAULT_MAX_THRUST);
     params.idleThrust = GetNormalizedForce(DEFAULT_IDLE_THRUST);
@@ -20,18 +20,20 @@ Player::Player(float scale)
     params.returnSpeedHigh = GetNormalizedForce(DEFAULT_RETURN_SPEED_HIGH * 1.15f);
     params.returnSpeedLow = GetNormalizedForce(DEFAULT_RETURN_SPEED_LOW);
 
-    params.acceleration = GetNormalizedForce(21000.0f);
-    params.brake = GetNormalizedForce(19000.0f); //18000
+    params.acceleration = GetNormalizedForce(10500.0f);
+    params.brake = GetNormalizedForce(9500.0f); //18000
 
-    params.pitchPower = GetNormalizedPitch(70.0f);
-    params.rollPower = GetNormalizedRoll(190.0f);
-    params.yawPower = GetNormalizedYaw(25.0f);
+    //forces and torques that rely on non constant multipliers
+    //must be scaled inline at the point of use
+    params.pitchPower = 35.0f;
+    params.rollPower = 90.0f;
+    params.yawPower = 12.5f;
 
-    fakeGravity = GetNormalizedForce(15000);
-    stallDownwardForce = GetNormalizedForce(8000);
+    fakeGravity = 7500;
+    stallDownwardForce = GetNormalizedForce(4000);
 
-    maxBankTorquePitch = GetNormalizedPitch(5.0f);
-    maxBankTorqueYaw = GetNormalizedYaw(5.0f);
+    maxBankTorquePitch = 2.5f;
+    maxBankTorqueYaw = 2.5f;
     
     params.maxPitchSpeed = 1.0f;
     params.maxRollSpeed = 1.8f;
@@ -190,9 +192,9 @@ void Player::UpdatePlayer(float dt, int iterations)
         else pitchInput = 0;
     }
 
-    body.ApplyPitch(pitchInput * params.pitchPower);
-    body.ApplyRoll(rollInput * params.rollPower);
-    body.ApplyYaw(yawInput * params.yawPower);
+    body.ApplyPitch(params.pitchPower * pitchInput * body.angularDamping.x);
+    body.ApplyRoll(params.rollPower * rollInput * body.angularDamping.z);
+    body.ApplyYaw(params.yawPower * yawInput * body.angularDamping.y);
 
     //plane
     if (body.angularVelocity.x >= params.maxPitchSpeed) body.angularVelocity.x = params.maxPitchSpeed;
@@ -250,13 +252,15 @@ void Player::UpdatePlayer(float dt, int iterations)
 
     float forwardSpeed = Vector3DotProduct(body.linearVelocity, forward);
 
+    float gravForce = fakeGravity * dotFU * params.linearDamping;
+
     if (dotFU > 0.1)
     {
-        if(forwardSpeed > 0.0f) body.ApplyLocalForce(backDir, fakeGravity * dotFU); 
+        if(forwardSpeed > 0.0f) body.ApplyLocalForce(backDir, gravForce); 
     }
     else if (dotFU < -0.1)
     {
-        body.ApplyLocalForce(backDir, fakeGravity * dotFU);
+        body.ApplyLocalForce(backDir, gravForce);
     }
 
     //fake banking
@@ -266,7 +270,7 @@ void Player::UpdatePlayer(float dt, int iterations)
 
     float rDot = Vector3DotProduct(upDir, right);
 
-    body.ApplyYaw(maxBankTorqueYaw * - rDot);
+    body.ApplyYaw(maxBankTorqueYaw * - rDot * params.angularDamping.y);
     
     //upside down case
 
@@ -277,7 +281,7 @@ void Player::UpdatePlayer(float dt, int iterations)
     
     if (uDot <= -0.1)
     {
-        body.ApplyPitch(maxBankTorquePitch * uDot);
+        body.ApplyPitch(maxBankTorquePitch * uDot * params.angularDamping.x);
     }
     
     //fake stall

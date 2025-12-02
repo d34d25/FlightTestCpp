@@ -3,7 +3,6 @@
 #include "body.h"
 #include "../headers/simpleTransform.h"
 
-extern const float FIXED_LINEAR_DAMPING;
 extern const float DEFAULT_ANGULAR_DAMPING;
 
 extern const float DEFAULT_IDLE_THRUST;
@@ -32,8 +31,6 @@ struct PlaneParams
     float hitboxWidth = 11;
     float hitboxHeight = 1;
     float hitboxLength = 20;
-
-    float linearDamping = FIXED_LINEAR_DAMPING;
 
     Vector3 angularDamping;
     Vector3 position;

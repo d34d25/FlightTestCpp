@@ -30,11 +30,11 @@ Player::Player(float scale)
     params.returnSpeedHigh = DEFAULT_RETURN_SPEED_HIGH;
     params.returnSpeedLow = DEFAULT_RETURN_SPEED_LOW;
 
-    params.acceleration = 52500.0f * 0.2f;
-    params.brake = 47500.0f * 0.2f;
+    params.acceleration = 10500 * multiplier;
+    params.brake = 9500 * multiplier;
 
-    fakeGravity = 37500 * 0.3f;
-    stallDownwardForce = 20000 * 0.3f;
+    fakeGravity = 7500 * multiplier;
+    stallDownwardForce = 4000 * multiplier;
 
     params.lateralDragFactor = 450.0f;
 
@@ -62,7 +62,7 @@ Player::Player(float scale)
     originalMaxRollSpeed = params.maxRollSpeed;
     originalMaxYawSpeed = params.maxYawSpeed;
 
-    body = Body3D(this->params.linearDamping,
+    body = Body3D(this->params.lateralDragFactor,
     this->params.angularDamping);
 
     body.transform.translation.x = this->params.position.x;
@@ -129,6 +129,10 @@ void Player::UpdatePlayer(float dt, int iterations)
 {
     float fdt = dt;
     fdt /= iterations;
+
+    Vector3 forward = GetLocalForwardVector(body.transform);
+    forward = Vector3Normalize(forward);
+    float forwardSpeed = Vector3DotProduct(body.linearVelocity, forward);
 
     if(!globalCamera)
     {
@@ -212,11 +216,6 @@ void Player::UpdatePlayer(float dt, int iterations)
 
     //plane
 
-    Vector3 forward = GetLocalForwardVector(body.transform);
-    forward = Vector3Normalize(forward);
-    float forwardSpeed = Vector3DotProduct(body.linearVelocity, forward);
-
-
     if (body.angularVelocity.x >= params.maxPitchSpeed) body.angularVelocity.x = params.maxPitchSpeed;
     else if (body.angularVelocity.x <= -params.maxPitchSpeed) body.angularVelocity.x = -params.maxPitchSpeed;
  
@@ -238,15 +237,6 @@ void Player::UpdatePlayer(float dt, int iterations)
             thrust -= params.returnSpeedHigh * fdt;
             if (thrust <= params.idleThrust) thrust = params.idleThrust;
         }
-
-        float targetspeed = GetIdleSpeed();
-
-        float speedDiff = targetspeed - forwardSpeed;
-        float correction = 50.0f;
-        
-        Vector3 correctionForce = Vector3Scale(forward, speedDiff * correction);
-
-        body.force = Vector3Add(body.force, correctionForce);
     }
     else
     {
@@ -346,28 +336,6 @@ void Player::UpdatePlayer(float dt, int iterations)
     }
 
     body.ApplyWorldTorque(axisOfRotation, fdt);
-
-    //directional drag
-    Vector3 fwd = GetLocalForwardVector(body.transform);
-    fwd = Vector3Normalize(fwd);
-    float fwdSpeed = Vector3DotProduct(body.linearVelocity, fwd);
-
-    Vector3 fwdVel = Vector3Scale(fwd, fwdSpeed);
-    Vector3 lateralVel = Vector3Subtract(body.linearVelocity, fwdVel);
-    float lateralDragFactor = params.lateralDragFactor;
-    float maxLateralDragFactor = body.GetMass() / fdt;
-
-    if(lateralDragFactor > maxLateralDragFactor) 
-    {
-        lateralDragFactor = maxLateralDragFactor;
-    }
-
-    if(!stalling)
-    {
-        Vector3 lateralForce = Vector3Scale(lateralVel, -lateralDragFactor);
-        body.force = Vector3Add(body.force, lateralForce);
-    }
-
 
     body.UpdateBody(dt, iterations);
     

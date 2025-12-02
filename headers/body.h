@@ -2,6 +2,8 @@
 
 #include "simpleTransform.h"
 
+extern float multiplier;
+
 class Body3D
 {
 private:
@@ -18,6 +20,8 @@ private:
     Vector3 linearAcceleration;
     Vector3 angularAcceleration;
 
+    float forwardDragFactor = 100.0f; //same as mass
+
 public:
 
     Transform transform;
@@ -31,14 +35,15 @@ public:
     Vector3 force;
     Vector3 torque;
 
-    float linearDamping;
+    float sideDragFactor;
+
     Vector3 angularDamping;
 
     bool isStatic = false;
 
     Body3D() = default;
 
-    Body3D(float linearDamping, Vector3 angularDamping);
+    Body3D(float sideDrag, Vector3 angularDamping);
 
     inline void ApplyForce(Vector3 direction, float amount)
     {
@@ -108,5 +113,10 @@ public:
     inline Vector3 GetInertia()
     {
         return inertia;
+    }
+
+    inline float GetForwardDragFactor()
+    {
+        return forwardDragFactor * multiplier;
     }
 };

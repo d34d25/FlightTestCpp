@@ -1,17 +1,20 @@
 #include "body.h"
 #include <iostream>
 
+float multiplier = 3.0f; //used for scaling forces and forward drag
+
 const float DEFAULT_ANGULAR_DAMPING = 3.0f;
 
 const float FIXED_LINEAR_DAMPING = 5.0f;
 
-Body3D::Body3D(float linearDamping, Vector3 angularDamping)
+Body3D::Body3D(float sideDrag, Vector3 angularDamping)
 {
     force.x = 0.0f, force.y = 0.0f, force.z = 0.0f;
 
     torque.x = 0.0f, torque.y = 0.0f, torque.z = 0.0f;
 
-    this->linearDamping = linearDamping;
+    forwardDragFactor = 100.0f;
+    this->sideDragFactor = sideDrag;
 
     this->angularDamping.x = angularDamping.x;
     this->angularDamping.y = angularDamping.y;
@@ -84,10 +87,42 @@ void Body3D::ApplyWorldTorque(Vector3 axis, float dt)
 }
 
 void Body3D::UpdateBody(float dt, int iterations)
-{
-    if(isStatic) return;
-
+{   
     dt /= iterations;
+
+    Vector3 forward = GetLocalForwardVector(transform);
+    forward = Vector3Normalize(forward);
+    float forwardSpeed = Vector3DotProduct(linearVelocity, forward);
+
+    Vector3 forwardVel = Vector3Scale(forward, forwardSpeed);
+    Vector3 lateralVel = Vector3Subtract(linearVelocity, forwardVel);
+
+    //forward drag
+
+    Vector3 fowardVelVector = Vector3Subtract(linearVelocity, lateralVel);
+    float forwardDrag = forwardDragFactor * multiplier;
+    float maxForwardDragFactor = GetMass() / dt;
+
+    if(forwardDrag > maxForwardDragFactor)
+    {
+        forwardDrag = maxForwardDragFactor;
+    }
+
+    Vector3 dragForce = Vector3Scale(fowardVelVector, -forwardDrag);
+    force = Vector3Add(force, dragForce);
+
+    //lateral drag
+
+    float lateralDragFactor = sideDragFactor;
+    float maxLateralDragFactor = GetMass() / dt;
+
+    if(lateralDragFactor > maxLateralDragFactor) 
+    {
+        lateralDragFactor = maxLateralDragFactor;
+    }
+
+    Vector3 lateralForce = Vector3Scale(lateralVel, -lateralDragFactor);
+    force = Vector3Add(force, lateralForce);
 
     //linearl update (world space)
 
@@ -109,11 +144,6 @@ void Body3D::UpdateBody(float dt, int iterations)
     transform.translation.x += linearVelocity.x * dt;
     transform.translation.y += linearVelocity.y * dt;
     transform.translation.z += linearVelocity.z * dt;
-
-
-    linearVelocity.x *= Clamp(1.0f - linearDamping * dt, 0, 1);
-    linearVelocity.y *= Clamp(1.0f - linearDamping * dt, 0, 1);
-    linearVelocity.z *= Clamp(1.0f - linearDamping * dt, 0, 1);
     
     force.x = 0.0f;
     force.y = 0.0f;
@@ -163,3 +193,4 @@ void Body3D::UpdateBody(float dt, int iterations)
     torque.y = 0.0f;
     torque.z = 0.0f;
 }
+

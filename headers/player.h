@@ -132,7 +132,7 @@ public:
 
         float correctionFactor = 0.97f;
 
-        return (maxVelocity / body.linearDamping) * correctionFactor;
+        return (maxVelocity / body.GetForwardDragFactor()) * correctionFactor;
     }
 
     inline float GetIdleSpeed()
@@ -141,7 +141,7 @@ public:
 
         float correctionFactor = 0.97f;
 
-        return(maxVelocityIdle / body.linearDamping) * correctionFactor;
+        return(maxVelocityIdle / body.GetForwardDragFactor()) * correctionFactor;
     }
 
     inline float GetSpeed()

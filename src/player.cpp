@@ -2,6 +2,16 @@
 #include <cmath>
 #include <iostream>
 
+Vector3 forwardDir = {0.0f,0.0f,1.0f};
+
+Vector3 upDir = {0.0f,1.0f,0.0f};
+
+Vector3 backDir = {0.0f,0.0f,-1.0f};
+
+Vector3 rightDir = {1.0f,0.0f,0.0f};
+
+Vector3 downDir = {0.0f,-1.0f,0.0f};
+
 Player::Player(float scale)
 {
     params.position.x = 0.0f;
@@ -14,19 +24,19 @@ Player::Player(float scale)
     params.angularDamping.y = angdamping;
     params.angularDamping.z = angdamping;
 
-    //linear damping is fixed so all these
-    //values are already multiplied x5
     params.maxThrust = DEFAULT_MAX_THRUST;
     params.idleThrust = DEFAULT_IDLE_THRUST;
 
-    params.returnSpeedHigh = DEFAULT_RETURN_SPEED_HIGH * 1.15f;
+    params.returnSpeedHigh = DEFAULT_RETURN_SPEED_HIGH;
     params.returnSpeedLow = DEFAULT_RETURN_SPEED_LOW;
 
-    params.acceleration = 52500.0f;
-    params.brake = 47500.0f;
+    params.acceleration = 52500.0f * 0.2f;
+    params.brake = 47500.0f * 0.2f;
 
-    fakeGravity = 37500;
-    stallDownwardForce = 20000;
+    fakeGravity = 37500 * 0.3f;
+    stallDownwardForce = 20000 * 0.3f;
+
+    params.lateralDragFactor = 450.0f;
 
     //angular damping can change per axis per plane
     //these torque values are multiplied by the angular damping
@@ -65,7 +75,8 @@ Player::Player(float scale)
     body.transform.scale.y = scale;
     body.transform.scale.z = scale;
 
-    thrust = params.idleThrust * 1.25f;
+    thrust = params.idleThrust;
+    body.linearVelocity.z = 360;
 
     //camera
     camera.fovy = 60.0f;
@@ -198,6 +209,15 @@ void Player::UpdatePlayer(float dt, int iterations)
     body.ApplyYaw(params.yawPower * yawInput * body.angularDamping.y);
 
     //plane
+
+    Vector3 forward = GetLocalForwardVector(body.transform);
+    forward = Vector3Normalize(forward);
+
+    float dotFU = Vector3DotProduct(forward, upDir);
+
+    float forwardSpeed = Vector3DotProduct(body.linearVelocity, forward);
+
+
     if (body.angularVelocity.x >= params.maxPitchSpeed) body.angularVelocity.x = params.maxPitchSpeed;
     else if (body.angularVelocity.x <= -params.maxPitchSpeed) body.angularVelocity.x = -params.maxPitchSpeed;
  
@@ -219,6 +239,15 @@ void Player::UpdatePlayer(float dt, int iterations)
             thrust -= params.returnSpeedHigh * fdt;
             if (thrust <= params.idleThrust) thrust = params.idleThrust;
         }
+
+        float targetspeed = GetIdleSpeed();
+
+        float speedDiff = targetspeed - forwardSpeed;
+        float correction = 50.0f;
+        
+        Vector3 correctionForce = Vector3Scale(forward, speedDiff * correction);
+
+        body.force = Vector3Add(body.force, correctionForce);
     }
     else
     {
@@ -227,31 +256,11 @@ void Player::UpdatePlayer(float dt, int iterations)
     }
 
     //move this outside the function
-    Vector3 forwardDir;
-    forwardDir.x = 0.0f, forwardDir.y = 0.0f, forwardDir.z = 1.0f;
-
-    Vector3 upDir;
-    upDir.x = 0.0f, upDir.y = 1.0f, upDir.z = 0.0f;
-
-    Vector3 backDir;
-    backDir.x = 0.0f, backDir.y = 0.0f, backDir.z = -1.0f;
-
-    Vector3 rightDir;
-    rightDir.x = 1.0f, rightDir.y = 0.0f, rightDir.z = 0.0f;
-
-    Vector3 downDir;
-    downDir.x = 0.0f, downDir.y = -1.0f, downDir.z = 0.0f;
+   
 
     body.ApplyLocalForce(forwardDir, thrust);
 
-    //drag / fake gravity
-
-    Vector3 forward = GetLocalForwardVector(body.transform);
-    forward = Vector3Normalize(forward);
-
-    float dotFU = Vector3DotProduct(forward, upDir);
-
-    float forwardSpeed = Vector3DotProduct(body.linearVelocity, forward);
+    //drag / fake gravity 
 
     if (dotFU > 0.1)
     {
@@ -336,6 +345,25 @@ void Player::UpdatePlayer(float dt, int iterations)
     }
 
     body.ApplyWorldTorque(axisOfRotation, fdt);
+
+
+    //directional drag
+   
+    Vector3 fwdVel = Vector3Scale(forward, forwardSpeed);
+    Vector3 lateralVel = Vector3Subtract(body.linearVelocity, fwdVel);
+    float lateralDragFactor = params.lateralDragFactor;
+    float maxLateralDragFactor = body.GetMass() / fdt;
+
+    if(lateralDragFactor > maxLateralDragFactor) 
+        lateralDragFactor = maxLateralDragFactor;
+
+    if(!stalling)
+    {
+        
+        Vector3 lateralForce = Vector3Scale(lateralVel, -lateralDragFactor);
+        body.force = Vector3Add(body.force, lateralForce);
+    }
+
 
     body.UpdateBody(dt, iterations);
     

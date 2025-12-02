@@ -38,6 +38,8 @@ struct PlaneParams
     Vector3 angularDamping;
     Vector3 position;
 
+    float lateralDragFactor = 450; //more factor less drifting
+
     float maxThrust = 350000.0f;
     float idleThrust = DEFAULT_IDLE_THRUST;
 

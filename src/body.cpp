@@ -1,4 +1,5 @@
 #include "body.h"
+#include <iostream>
 
 const float DEFAULT_ANGULAR_DAMPING = 3.0f;
 
@@ -38,7 +39,8 @@ Body3D::Body3D(float linearDamping, Vector3 angularDamping)
     angularVelocity.x = 0.0f, angularVelocity.y = 0.0f, 
     angularVelocity.z = 0.0f;
 
-    worldAngVel = 0.0f;
+    stallAngularTorque = 0.0f;
+    stallAngularSpeed = 0.0f;
 
     linearAcceleration.x = 0.0f, linearAcceleration.y = 0.0f,
     linearAcceleration.z = 0.0f;

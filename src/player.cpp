@@ -38,6 +38,8 @@ Player::Player(float scale)
 
     params.lateralDragFactor = 450.0f;
 
+    params.stallTorqueSpeed = 45.0f;
+
     //angular damping can change per axis per plane
     //these torque values are multiplied by the angular damping
     //in update player
@@ -212,9 +214,6 @@ void Player::UpdatePlayer(float dt, int iterations)
 
     Vector3 forward = GetLocalForwardVector(body.transform);
     forward = Vector3Normalize(forward);
-
-    float dotFU = Vector3DotProduct(forward, upDir);
-
     float forwardSpeed = Vector3DotProduct(body.linearVelocity, forward);
 
 
@@ -261,6 +260,8 @@ void Player::UpdatePlayer(float dt, int iterations)
     body.ApplyLocalForce(forwardDir, thrust);
 
     //drag / fake gravity 
+
+    float dotFU = Vector3DotProduct(forward, upDir);
 
     if (dotFU > 0.1)
     {
@@ -346,20 +347,23 @@ void Player::UpdatePlayer(float dt, int iterations)
 
     body.ApplyWorldTorque(axisOfRotation, fdt);
 
-
     //directional drag
-   
-    Vector3 fwdVel = Vector3Scale(forward, forwardSpeed);
+    Vector3 fwd = GetLocalForwardVector(body.transform);
+    fwd = Vector3Normalize(fwd);
+    float fwdSpeed = Vector3DotProduct(body.linearVelocity, fwd);
+
+    Vector3 fwdVel = Vector3Scale(fwd, fwdSpeed);
     Vector3 lateralVel = Vector3Subtract(body.linearVelocity, fwdVel);
     float lateralDragFactor = params.lateralDragFactor;
     float maxLateralDragFactor = body.GetMass() / fdt;
 
     if(lateralDragFactor > maxLateralDragFactor) 
+    {
         lateralDragFactor = maxLateralDragFactor;
+    }
 
     if(!stalling)
     {
-        
         Vector3 lateralForce = Vector3Scale(lateralVel, -lateralDragFactor);
         body.force = Vector3Add(body.force, lateralForce);
     }

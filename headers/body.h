@@ -15,8 +15,6 @@ private:
     float mass = INFINITY;
     Vector3 inertia;
 
-    float worldAngVel = 0;
-
     Vector3 linearAcceleration;
     Vector3 angularAcceleration;
 

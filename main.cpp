@@ -15,7 +15,6 @@ int SCREEN_HEIGHT = 720;
 
 int main()
 {
-
     SetConfigFlags(FLAG_WINDOW_HIGHDPI);
     //SetConfigFlags(FLAG_FULLSCREEN_MODE);
 

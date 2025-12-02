@@ -8,42 +8,43 @@ Player::Player(float scale)
     params.position.y = 400.0f;
     params.position.z = -700.0f;
 
-    params.linearDamping = 5.0f;
+    float angdamping = 3.0f;
 
-    params.angularDamping.x = 3.0f;
-    params.angularDamping.y = 3.0f;
-    params.angularDamping.z = 3.0f;
+    params.angularDamping.x = angdamping;
+    params.angularDamping.y = angdamping;
+    params.angularDamping.z = angdamping;
 
-    params.maxThrust = GetNormalizedForce(DEFAULT_MAX_THRUST);
-    params.idleThrust = GetNormalizedForce(DEFAULT_IDLE_THRUST);
+    //linear damping is fixed so all these
+    //values are already multiplied x5
+    params.maxThrust = DEFAULT_MAX_THRUST;
+    params.idleThrust = DEFAULT_IDLE_THRUST;
 
-    params.returnSpeedHigh = GetNormalizedForce(DEFAULT_RETURN_SPEED_HIGH * 1.15f);
-    params.returnSpeedLow = GetNormalizedForce(DEFAULT_RETURN_SPEED_LOW);
+    params.returnSpeedHigh = DEFAULT_RETURN_SPEED_HIGH * 1.15f;
+    params.returnSpeedLow = DEFAULT_RETURN_SPEED_LOW;
 
-    params.acceleration = GetNormalizedForce(10500.0f);
-    params.brake = GetNormalizedForce(9500.0f); //18000
+    params.acceleration = 52500.0f;
+    params.brake = 47500.0f;
 
-    //forces and torques that rely on non constant multipliers
-    //must be scaled inline at the point of use
-    params.pitchPower = 35.0f;
-    params.rollPower = 90.0f;
-    params.yawPower = 12.5f;
+    fakeGravity = 37500;
+    stallDownwardForce = 20000;
 
-    fakeGravity = 7500;
-    stallDownwardForce = GetNormalizedForce(4000);
+    //angular damping can change per axis per plane
+    //these torque values are multiplied by the angular damping
+    //in update player
+    params.pitchPower = 20.0f;
+    params.rollPower = 60.0f;
+    params.yawPower = 10.0f;
 
-    maxBankTorquePitch = 2.5f;
-    maxBankTorqueYaw = 2.5f;
+    maxBankTorquePitch = 1.5f;
+    maxBankTorqueYaw = 1.5f;
     
-    params.maxPitchSpeed = 1.0f;
-    params.maxRollSpeed = 1.8f;
-    params.maxYawSpeed = 0.23f;
+    params.maxPitchSpeed = 0.8f;
+    params.maxRollSpeed = 1.6f;
+    params.maxYawSpeed = 0.2f;
 
     params.hitboxWidth =  20;
     params.hitboxLength = 23;
     params.hitboxHeight = 2;
-
-    thrust = 0.0f;
 
     originalMaxPitchSpeed = params.maxPitchSpeed;
     originalMaxRollSpeed = params.maxRollSpeed;
@@ -252,15 +253,13 @@ void Player::UpdatePlayer(float dt, int iterations)
 
     float forwardSpeed = Vector3DotProduct(body.linearVelocity, forward);
 
-    float gravForce = fakeGravity * dotFU * params.linearDamping;
-
     if (dotFU > 0.1)
     {
-        if(forwardSpeed > 0.0f) body.ApplyLocalForce(backDir, gravForce); 
+        if(forwardSpeed > 0.0f) body.ApplyLocalForce(backDir, fakeGravity * dotFU); 
     }
     else if (dotFU < -0.1)
     {
-        body.ApplyLocalForce(backDir, gravForce);
+        body.ApplyLocalForce(backDir, fakeGravity * dotFU);
     }
 
     //fake banking
@@ -339,6 +338,8 @@ void Player::UpdatePlayer(float dt, int iterations)
     body.ApplyWorldTorque(axisOfRotation, fdt);
 
     body.UpdateBody(dt, iterations);
+    
+    //gun
     FireB(fdt);
     bulletPool.UpdateBullets(fdt);
 

@@ -148,24 +148,4 @@ public:
     {
         return Vector3Length(body.linearVelocity);
     }
-
-    inline float GetNormalizedForce(float force)
-    {
-        return force * params.linearDamping;
-    }
-
-    inline float GetNormalizedPitch(float pitch)
-    {
-        return pitch * params.angularDamping.x;
-    }
-
-    inline float GetNormalizedRoll(float roll)
-    {
-        return roll * params.angularDamping.z;
-    }
-
-    inline float GetNormalizedYaw(float yaw)
-    {
-        return yaw * params.angularDamping.y;
-    }
 };

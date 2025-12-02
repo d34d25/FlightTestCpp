@@ -2,6 +2,8 @@
 
 const float DEFAULT_ANGULAR_DAMPING = 3.0f;
 
+const float FIXED_LINEAR_DAMPING = 5.0f;
+
 Body3D::Body3D(float linearDamping, Vector3 angularDamping)
 {
     force.x = 0.0f, force.y = 0.0f, force.z = 0.0f;
@@ -107,9 +109,9 @@ void Body3D::UpdateBody(float dt, int iterations)
     transform.translation.z += linearVelocity.z * dt;
 
 
-    linearVelocity.x *= 1.0f - linearDamping * dt;
-    linearVelocity.y *= 1.0f - linearDamping * dt;
-    linearVelocity.z *= 1.0f - linearDamping * dt;
+    linearVelocity.x *= Clamp(1.0f - linearDamping * dt, 0, 1);
+    linearVelocity.y *= Clamp(1.0f - linearDamping * dt, 0, 1);
+    linearVelocity.z *= Clamp(1.0f - linearDamping * dt, 0, 1);
     
     force.x = 0.0f;
     force.y = 0.0f;
@@ -151,9 +153,9 @@ void Body3D::UpdateBody(float dt, int iterations)
         transform.rotation = QuaternionNormalize(transform.rotation);
     }
 
-    angularVelocity.x *= 1.0f - angularDamping.x * dt;
-    angularVelocity.y *= 1.0f - angularDamping.y * dt;
-    angularVelocity.z *= 1.0f - angularDamping.z * dt;
+    angularVelocity.x *= Clamp(1.0f - angularDamping.x * dt, 0, 1);
+    angularVelocity.y *= Clamp(1.0f - angularDamping.y * dt, 0, 1);
+    angularVelocity.z *= Clamp(1.0f - angularDamping.z * dt, 0, 1);
 
     torque.x = 0.0f;
     torque.y = 0.0f;

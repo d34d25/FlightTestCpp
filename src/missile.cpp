@@ -29,7 +29,7 @@ std::vector<Missile> InitMissiles(int quantity, float lifetime, float lockDistan
         tempMissile.lifetime = lifetime;
         tempMissile.currentTime = 0.0f;
 
-        tempMissile.body = Body3D(DEFAULT_LINEAR_DAMPING, 
+        tempMissile.body = Body3D(3.0f, 
         {DEFAULT_ANGULAR_DAMPING,DEFAULT_ANGULAR_DAMPING,DEFAULT_ANGULAR_DAMPING});
 
         std::cout << "Init missile " << i << " isAlive=" << tempMissile.isAlive << " \n";

@@ -35,9 +35,13 @@ private:
     float fireTimerBullet = 0.0f;
     float firerateBullet = 0.1f;
     
-    Transform missileTransform;
-    float fireTimerMissile = 0.0f;
-    float firerateMissile = 1.5f;
+    Transform missileTransformA;
+    float fireTimerMissile;
+    float firerateMissile;
+
+    Transform missileTransformB;
+
+    bool currentMissilePool;
 
     bool returnToIdle = true;
     bool hasInput = false;
@@ -54,7 +58,9 @@ public:
 
     BulletPool bulletPool;
 
-    MissilePool missilePool;
+    MissilePool missilePoolA;
+
+    MissilePool missilePoolB;
 
     float thrust = 0.0f;
 
@@ -66,7 +72,7 @@ public:
 
     void FireB(float dt);
 
-    void FireM(float dt, int iterations);
+    void FireM(float dt);
     //getters
 
     inline float GetEngineGlow()

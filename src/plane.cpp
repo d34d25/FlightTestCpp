@@ -13,14 +13,18 @@ PlaneParams GetPlaneParams(Planes plane)
 {
     PlaneParams params;
 
+    float angDamp = 3.0f;
+
     switch (plane)
     {
     case Planes::SF15:
 
         params.scale = 2.0f;
 
-        params.lateralDragMultiplier = 8.0f;
-        params.angularDamping = {3,3,3};
+        params.lateralDragMultiplier = 200.0f; //200.0f
+        
+        angDamp = 3.0f;
+        params.angularDamping = {angDamp,angDamp,angDamp}; //3.0f
 
         params.maxThrust = 175000;
         params.idleThrust = 37500;

@@ -116,9 +116,25 @@ int main()
                     std::cout<<"PLAYER HIT at: "<<player.GetSpeed()<<"\n";
                 }
                 
-                for (int m = 0; m < player.missilePool.activeMissiles.size(); m++)
+                for (int m = 0; m < player.missilePoolA.activeMissiles.size(); m++)
                 {
-                    Missile* currentMissile = player.missilePool.activeMissiles[m];
+                    Missile* currentMissile = player.missilePoolA.activeMissiles[m];
+
+                    CollisionResult rm;
+
+                    rm = PrismVsSphere(obstacleColliderPos,obstacleCollider.GetTransformedVertices(obstacleColliderTransform),
+                    currentMissile->body.transform.translation, currentMissile->radius);
+
+                    if(rm.collision)
+                    {
+                        std::cout<<"MISSILE HIT at: "<<Vector3Length(currentMissile->body.linearVelocity)<<"\n";
+                        currentMissile->didHit = true;
+                    }
+                }
+
+                for (int m = 0; m < player.missilePoolB.activeMissiles.size(); m++)
+                {
+                    Missile* currentMissile = player.missilePoolB.activeMissiles[m];
 
                     CollisionResult rm;
 
@@ -134,6 +150,9 @@ int main()
 
                 obstacleColliderColor = ogObstacleColliderColor;
             }
+
+            player.FireB(FIXED_DELTA_TIME);
+            player.FireM(FIXED_DELTA_TIME);
 
             player.UpdateCamera(FIXED_DELTA_TIME);
             
@@ -169,9 +188,19 @@ int main()
             
         }
 
-        for(int i = 0; i < player.missilePool.activeMissiles.size(); i++)
+        for(int i = 0; i < player.missilePoolA.activeMissiles.size(); i++)
         {
-            Missile* currentMissile = player.missilePool.activeMissiles[i];
+            Missile* currentMissile = player.missilePoolA.activeMissiles[i];
+
+            if(currentMissile->isAlive)
+            {
+                DrawMissile(currentMissile->body.transform, currentMissile->radius);
+            }
+        }
+
+        for(int i = 0; i < player.missilePoolB.activeMissiles.size(); i++)
+        {
+            Missile* currentMissile = player.missilePoolB.activeMissiles[i];
 
             if(currentMissile->isAlive)
             {

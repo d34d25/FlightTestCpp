@@ -1,7 +1,7 @@
 #include "body.h"
 #include <iostream>
 
-const float FORWARD_DRAG_MULTIPLIER = 3.0f;
+const float FORWARD_DRAG_MULTIPLIER = 4.0f; //3.0f
 
 const float ALT_ANGULAR_DAMPING = 3.0f;
 
@@ -63,6 +63,8 @@ Body3D::Body3D(float sideDrag, Vector3 angularDamping)
     inertia.y = static_cast<float>((1.0f/12.0f) * mass * (length * length + width * width));
     inertia.z = static_cast<float>((1.0f/12.0f) * mass * (width * width + height * height));
 }
+
+//fix framerate / iterations dependency for damping
 
 void Body3D::ApplyAlternateForce(float dt)
 {

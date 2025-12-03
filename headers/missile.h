@@ -16,6 +16,7 @@ public:
     bool isAlive;
 
     float thrust;
+    float maxThrust;
 
     float lifetime;
     float currentTime;
@@ -31,7 +32,7 @@ public:
 };
 
 
-std::vector<Missile> InitMissiles(int quantity, float lifetime, float lockDistance, float thrust);
+std::vector<Missile> InitMissiles(int quantity, float lifetime, float lockDistance, float maxTrhust);
 
 class MissilePool
 {
@@ -43,10 +44,10 @@ public:
     
     MissilePool() = default;
 
-    MissilePool(int quantity, float lifetime, float lockDistance, float thrust);
+    MissilePool(int quantity, float lifetime, float lockDistance, float maxTrhust);
 
     void UpdateMissiles(float dt, int iterations);
 
-    void FireMissile(const Transform& transform, Vector3 initialSpeed);
+    void FireMissile(const Transform& transform, Vector3 initialSpeed, float initialThrust);
 };
 

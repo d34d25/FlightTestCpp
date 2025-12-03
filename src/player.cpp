@@ -80,9 +80,20 @@ Player::Player()
     bulletTransform = {};
     bulletTransform.scale = {1.0f, 1.0f, 1.0f};
 
-    missilePool = MissilePool(2, 7, 1200, MAX_THRUST * 1.25f);
-    missileTransform = {};
-    missileTransform.scale = {1.0f, 1.0f, 1.0f};
+    fireTimerMissile = 0.0f;
+    firerateMissile = 1.0f;
+
+    missilePoolA = MissilePool(4, 7, 1200, MAX_THRUST * 1.25f);
+    missileTransformA = {};
+    missileTransformA.scale = {1.0f, 1.0f, 1.0f};
+    missileTransformA.rotation = QuaternionIdentity();
+
+    missilePoolB = MissilePool(4, 7, 1200, MAX_THRUST * 1.25f);
+    missileTransformB = {};
+    missileTransformB.scale = {1.0f, 1.0f, 1.0f};
+    missileTransformB.rotation = QuaternionIdentity();
+
+    currentMissilePool = false;
 }
 
 void Player::UpdatePlayer(float dt, int iterations)
@@ -306,13 +317,10 @@ void Player::UpdatePlayer(float dt, int iterations)
 
     body.UpdateBody(dt, iterations);
 
-    // gun
-    FireB(fdt);
     bulletPool.UpdateBullets(fdt);
 
-    // pass just dt to missiles;
-    FireM(dt, iterations);
-    missilePool.UpdateMissiles(dt, iterations);
+    missilePoolA.UpdateMissiles(dt, iterations);
+    missilePoolB.UpdateMissiles(dt,iterations);
 }
 
 void Player::UpdateCamera(float dt)
@@ -398,6 +406,7 @@ void Player::UpdateCamera(float dt)
     }
 }
 
+//call once per frame
 void Player::FireB(float dt)
 {
     int bulletspeed = 800; // 800
@@ -412,7 +421,7 @@ void Player::FireB(float dt)
     {
         while (fireTimerBullet <= 0.0f)
         {
-            FollowTransform(&bulletTransform, GetTransform(), {-2.75f, 0.9f, 4.0f});
+            FollowTransform(&bulletTransform, GetTransform(), {-2.75f, 0.9f, 10.0f});
 
             Vector3 forward = GetLocalForwardVector(body.transform);
             Vector3 bulletVelocity = Vector3Add(body.linearVelocity, Vector3Scale(forward, bulletspeed));
@@ -424,26 +433,31 @@ void Player::FireB(float dt)
     }
 }
 
-void Player::FireM(float dt, int iterations)
+//call once per frame
+void Player::FireM(float dt)
 {
-    float fdt = dt;
-    if (iterations > 0) fdt /= iterations;
-
-    if (fireTimerMissile > 0.0f) fireTimerMissile -= fdt;
+    if (fireTimerMissile > 0.0f) fireTimerMissile -= dt;
 
     bool fireKey = (!globalCamera && IsKeyPressed(KEY_SPACE)) || (globalCamera && IsKeyPressed(KEY_LEFT_ALT));
 
-    if (fireKey && fireTimerMissile <= 0.0f)
+    if(fireKey && fireTimerMissile <= 0.0f)
     {
-        while (fireTimerMissile <= 0.0f)
+        Vector3 forward = GetLocalForwardVector(body.transform);
+        Vector3 missileInitialSpeed = Vector3Scale(forward, GetSpeed());
+
+        if (!currentMissilePool)
         {
-            FollowTransform(&missileTransform, GetTransform(), {0, -1, 0});
-
-            Vector3 forward = GetLocalForwardVector(body.transform);
-            Vector3 missileInitialSpeed = Vector3Scale(forward, GetSpeed());
-
-            missilePool.FireMissile(missileTransform, missileInitialSpeed);
-            fireTimerMissile += firerateMissile;
+            FollowTransform(&missileTransformA, GetTransform(), {-4, -1, 0});
+            missilePoolA.FireMissile(missileTransformA, missileInitialSpeed, thrust);            
+            currentMissilePool = true;
         }
-    }
+        else
+        {
+            FollowTransform(&missileTransformB, GetTransform(), {4, -1, 0});
+            missilePoolB.FireMissile(missileTransformB, missileInitialSpeed, thrust);
+            fireTimerMissile = firerateMissile;
+
+            currentMissilePool = false;
+        }
+    }    
 }

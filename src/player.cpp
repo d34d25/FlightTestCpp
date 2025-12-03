@@ -132,26 +132,17 @@ void Player::UpdatePlayer(float dt, int iterations)
 
         engineGlow = Clamp(engineGlow, 0, maxEngineGlow);
 
-        if (IsKeyDown(KEY_D))
-            yawInput = -1;
-        else if (IsKeyDown(KEY_A))
-            yawInput = 1;
-        else
-            yawInput = 0;
+        if (IsKeyDown(KEY_D)) yawInput = -1;
+        else if (IsKeyDown(KEY_A)) yawInput = 1;
+        else yawInput = 0;
 
-        if (IsKeyDown(KEY_RIGHT))
-            rollInput = 1;
-        else if (IsKeyDown(KEY_LEFT))
-            rollInput = -1;
-        else
-            rollInput = 0;
+        if (IsKeyDown(KEY_RIGHT)) rollInput = 1;
+        else if (IsKeyDown(KEY_LEFT)) rollInput = -1;
+        else rollInput = 0;
 
-        if (IsKeyDown(KEY_UP))
-            pitchInput = 1;
-        else if (IsKeyDown(KEY_DOWN))
-            pitchInput = -1;
-        else
-            pitchInput = 0;
+        if (IsKeyDown(KEY_UP)) pitchInput = 1;
+        else if (IsKeyDown(KEY_DOWN)) pitchInput = -1;
+        else pitchInput = 0;
     }
     else
     {
@@ -166,26 +157,17 @@ void Player::UpdatePlayer(float dt, int iterations)
             thrust -= params.brake * fdt;
         }
 
-        if (IsKeyDown(KEY_E))
-            yawInput = -1;
-        else if (IsKeyDown(KEY_Q))
-            yawInput = 1;
-        else
-            yawInput = 0;
+        if (IsKeyDown(KEY_E)) yawInput = -1;
+        else if (IsKeyDown(KEY_Q)) yawInput = 1;
+        else yawInput = 0;
 
-        if (IsKeyDown(KEY_D))
-            rollInput = 1;
-        else if (IsKeyDown(KEY_A))
-            rollInput = -1;
-        else
-            rollInput = 0;
+        if (IsKeyDown(KEY_D)) rollInput = 1;
+        else if (IsKeyDown(KEY_A)) rollInput = -1;
+        else rollInput = 0;
 
-        if (IsKeyDown(KEY_W))
-            pitchInput = 1;
-        else if (IsKeyDown(KEY_S))
-            pitchInput = -1;
-        else
-            pitchInput = 0;
+        if (IsKeyDown(KEY_W)) pitchInput = 1;
+        else if (IsKeyDown(KEY_S)) pitchInput = -1;
+        else pitchInput = 0;
     }
 
     body.ApplyPitch(params.pitchPower * pitchInput * body.angularDamping.x);
@@ -194,42 +176,32 @@ void Player::UpdatePlayer(float dt, int iterations)
 
     // plane
 
-    if (body.angularVelocity.x >= params.maxPitchSpeed)
-        body.angularVelocity.x = params.maxPitchSpeed;
-    else if (body.angularVelocity.x <= -params.maxPitchSpeed)
-        body.angularVelocity.x = -params.maxPitchSpeed;
+    if (body.angularVelocity.x >= params.maxPitchSpeed) body.angularVelocity.x = params.maxPitchSpeed;
+    else if (body.angularVelocity.x <= -params.maxPitchSpeed) body.angularVelocity.x = -params.maxPitchSpeed;
 
-    if (body.angularVelocity.y >= params.maxYawSpeed)
-        body.angularVelocity.y = params.maxYawSpeed;
-    else if (body.angularVelocity.y <= -params.maxYawSpeed)
-        body.angularVelocity.y = -params.maxYawSpeed;
+    if (body.angularVelocity.y >= params.maxYawSpeed) body.angularVelocity.y = params.maxYawSpeed;
+    else if (body.angularVelocity.y <= -params.maxYawSpeed) body.angularVelocity.y = -params.maxYawSpeed;
 
-    if (body.angularVelocity.z >= params.maxRollSpeed)
-        body.angularVelocity.z = params.maxRollSpeed;
-    else if (body.angularVelocity.z <= -params.maxRollSpeed)
-        body.angularVelocity.z = -params.maxRollSpeed;
+    if (body.angularVelocity.z >= params.maxRollSpeed) body.angularVelocity.z = params.maxRollSpeed;
+    else if (body.angularVelocity.z <= -params.maxRollSpeed) body.angularVelocity.z = -params.maxRollSpeed;
 
     if (!hasInput && returnToIdle)
     {
         if (thrust <= params.idleThrust)
         {
             thrust += params.returnSpeedLow * fdt;
-            if (thrust >= params.idleThrust)
-                thrust = params.idleThrust;
+            if (thrust >= params.idleThrust) thrust = params.idleThrust;
         }
         else
         {
             thrust -= params.returnSpeedHigh * fdt;
-            if (thrust <= params.idleThrust)
-                thrust = params.idleThrust;
+            if (thrust <= params.idleThrust) thrust = params.idleThrust;
         }
     }
     else
     {
-        if (thrust >= params.maxThrust)
-            thrust = params.maxThrust;
-        else if (thrust <= 0.0f)
-            thrust = 0.0f;
+        if (thrust >= params.maxThrust) thrust = params.maxThrust;
+        else if (thrust <= 0.0f) thrust = 0.0f;
     }
 
     body.ApplyLocalForce(forwardDir, thrust);
@@ -240,8 +212,7 @@ void Player::UpdatePlayer(float dt, int iterations)
 
     if (dotFU > 0.1)
     {
-        if (forwardSpeed > 0.0f)
-            body.ApplyLocalForce(backDir, FAKE_GRAVITY_FORCE * dotFU);
+        if (forwardSpeed > 0.0f) body.ApplyLocalForce(backDir, FAKE_GRAVITY_FORCE * dotFU);
     }
     else if (dotFU < -0.1)
     {
@@ -433,8 +404,7 @@ void Player::FireB(float dt)
 
     // make this an attribute of the plane
     // call it gun position
-    if (fireTimerBullet > 0.0f)
-        fireTimerBullet -= dt;
+    if (fireTimerBullet > 0.0f) fireTimerBullet -= dt;
 
     bool fireKey = (!globalCamera && IsKeyDown(KEY_LEFT_SHIFT)) || (globalCamera && IsKeyDown(KEY_SPACE));
 
@@ -457,11 +427,9 @@ void Player::FireB(float dt)
 void Player::FireM(float dt, int iterations)
 {
     float fdt = dt;
-    if (iterations > 0)
-        fdt /= iterations;
+    if (iterations > 0) fdt /= iterations;
 
-    if (fireTimerMissile > 0.0f)
-        fireTimerMissile -= fdt;
+    if (fireTimerMissile > 0.0f) fireTimerMissile -= fdt;
 
     bool fireKey = (!globalCamera && IsKeyPressed(KEY_SPACE)) || (globalCamera && IsKeyPressed(KEY_LEFT_ALT));
 

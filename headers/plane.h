@@ -30,8 +30,8 @@ struct PlaneParams
     float returnSpeedHigh;
     float returnSpeedLow;
 
-    float stallSpeed = DEFAULT_STALL_SPEED;
-    float recoverySpeed = DEFAULT_RECOVERY_SPEED;
+    float stallSpeed;
+    float recoverySpeed;
 
     float mobilityLooseStartSpeed;
 

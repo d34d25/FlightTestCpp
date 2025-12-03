@@ -19,7 +19,7 @@ PlaneParams GetPlaneParams(Planes plane)
 
         params.scale = 2.0f;
 
-        params.lateralDragMultiplier = 4.5f;
+        params.lateralDragMultiplier = 8.0f;
         params.angularDamping = {3,3,3};
 
         params.maxThrust = 175000;

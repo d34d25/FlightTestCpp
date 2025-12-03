@@ -22,7 +22,7 @@ int main()
     background.r = 64.0f, background.g = 152.0f, background.b = 230.0f;
     background.a = 255.0f;
 
-    Player player = Player(2.0f);
+    Player player = Player();
     Collider testCollider = Collider();
 
     //the parameters passed are the half size, so the height is actually 4

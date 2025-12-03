@@ -3,67 +3,59 @@
 #include "body.h"
 #include "../headers/simpleTransform.h"
 
-extern const float DEFAULT_ANGULAR_DAMPING;
-
-extern const float DEFAULT_IDLE_THRUST;
-
 extern const float DEFAULT_STALL_SPEED;
 extern const float DEFAULT_RECOVERY_SPEED;
 extern const float DEFAULT_MOBILITY_LOOSE_START_SPEED;
 
-extern const float DEFAULT_STALL_TORQUE_SPEED;
-extern const float DEFAULT_STALL_TORQUE_STOP_SPEED;
-
-extern const float DEFAULT_MAX_STALL_TORQUE;
-
-extern const float DEFAULT_PROPORTION_LOW;
-extern const float DEFAULT_PROPORTION_HIGH;
-
-extern const float DEFAULT_RETURN_SPEED_HIGH;
-extern const float DEFAULT_RETURN_SPEED_LOW;
-
-extern const float DEFAULT_MAX_THRUST;
+extern const float MAX_THRUST;
 
 using namespace std;
 
 struct PlaneParams
 {
-    float hitboxWidth = 11;
-    float hitboxHeight = 1;
-    float hitboxLength = 20;
+    float scale;
+
+    float hitboxWidth;
+    float hitboxHeight;
+    float hitboxLength;
 
     Vector3 angularDamping;
     Vector3 position;
 
-    float lateralDragFactor = 450; //more factor less drifting
+    float lateralDragMultiplier; //more factor less drifting
 
-    float maxThrust = 350000.0f;
-    float idleThrust = DEFAULT_IDLE_THRUST;
+    float maxThrust;
+    float idleThrust;
 
-    float returnSpeedHigh = DEFAULT_RETURN_SPEED_HIGH;
-    float returnSpeedLow = DEFAULT_RETURN_SPEED_LOW;
+    float returnSpeedHigh;
+    float returnSpeedLow;
 
     float stallSpeed = DEFAULT_STALL_SPEED;
     float recoverySpeed = DEFAULT_RECOVERY_SPEED;
 
-    float mobilityLooseStartSpeed = DEFAULT_MOBILITY_LOOSE_START_SPEED;
-
-    float stallTorqueSpeed = DEFAULT_STALL_TORQUE_SPEED;
+    float mobilityLooseStartSpeed;
 
     //how much mobility it looses at low and high speeds
-    float proportionLow = DEFAULT_PROPORTION_LOW;
-    float proportionHigh = DEFAULT_PROPORTION_HIGH;
+    float proportionLow;
+    float proportionHigh;
 
-    float acceleration = 21000.0f;
-    float brake = 18000.0f;
+    float acceleration;
+    float brake;
 
-    float pitchPower = 70.0f;
-    float rollPower = 190.0f;
-    float yawPower = 25.0f;
+    float pitchPower;
+    float rollPower;
+    float yawPower;
 
-    float maxPitchSpeed = 1.0f;
-    float maxRollSpeed = 1.8f;
-    float maxYawSpeed = 0.23f;
+    float maxPitchSpeed;
+    float maxRollSpeed;
+    float maxYawSpeed;
 
-    const char* modelPath = "";
+    const char* modelPath;
 };
+
+enum class Planes
+{
+    SF15
+};
+
+PlaneParams GetPlaneParams(Planes plane);

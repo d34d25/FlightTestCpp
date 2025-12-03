@@ -41,13 +41,7 @@ private:
 
     bool returnToIdle = true;
     bool hasInput = false;
-
-    float fakeGravity;
-    float stallDownwardForce;
-
-    float maxBankTorquePitch;
-    float maxBankTorqueYaw;
-
+    
 public:
 
     PlaneParams params;
@@ -64,7 +58,7 @@ public:
 
     float thrust = 0.0f;
 
-    Player(float scale);
+    Player();
 
     void UpdatePlayer(float dt, int iterations);
     
@@ -132,7 +126,7 @@ public:
 
         float correctionFactor = 0.97f;
 
-        return (maxVelocity / body.GetForwardDragFactor()) * correctionFactor;
+        return (maxVelocity / body.GetForwardDragFactor() * 100) * correctionFactor;
     }
 
     inline float GetIdleSpeed()
@@ -141,11 +135,16 @@ public:
 
         float correctionFactor = 0.97f;
 
-        return(maxVelocityIdle / body.GetForwardDragFactor()) * correctionFactor;
+        return(maxVelocityIdle / body.GetForwardDragFactor() * 100) * correctionFactor;
     }
 
     inline float GetSpeed()
     {
         return Vector3Length(body.linearVelocity);
+    }
+
+    inline float GetScale()
+    {
+        return params.scale;
     }
 };

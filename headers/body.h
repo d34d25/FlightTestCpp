@@ -2,7 +2,9 @@
 
 #include "simpleTransform.h"
 
-extern float multiplier;
+extern const float FORWARD_DRAG_MULTIPLIER;
+
+extern const float ALT_ANGULAR_DAMPING;
 
 class Body3D
 {
@@ -20,7 +22,7 @@ private:
     Vector3 linearAcceleration;
     Vector3 angularAcceleration;
 
-    float forwardDragFactor = 100.0f; //same as mass
+    float drag = 100.0f; //same as mass
 
 public:
 
@@ -29,13 +31,19 @@ public:
     Vector3 linearVelocity;
     Vector3 angularVelocity;
 
-    float stallAngularTorque;
-    float stallAngularSpeed;
+    float worldAngularTorque;
+    float worldAngularSpeed;
+
+    Vector3 alternateForce;
+    Vector3 alternateForceSpeed;
+
+    Vector3 alternateTorque;
+    Vector3 alternateAngularSpeed;
 
     Vector3 force;
     Vector3 torque;
 
-    float sideDragFactor;
+    float lateralDragMultiplier;
 
     Vector3 angularDamping;
 
@@ -76,7 +84,30 @@ public:
         torque.y += amount;
     }
 
-    void ApplyWorldTorque(Vector3 axis, float dt);
+    inline void ApplyAlternateLocalForce(Vector3 direction, float amount)
+    {
+        Vector3 worldDirection = Vector3RotateByQuaternion(direction, transform.rotation);
+
+        alternateForce.x += worldDirection.x * amount;
+        alternateForce.y += worldDirection.y * amount;
+        alternateForce.z += worldDirection.z * amount;
+    }
+
+    inline void ApplyAlternateYaw(float amount)
+    {
+        alternateTorque.y += amount;
+    }
+
+    inline void ApplyAlternatePitch(float amount)
+    {
+        alternateTorque.x += amount;
+    }
+
+    void ApplyAlternateForce(float dt);
+
+    void ApplyAlernateTorque(float dt);
+
+    void ApplyAlternateWorldTorque(Vector3 axis, float dt);
 
     void UpdateBody(float dt, int iterations);
 
@@ -117,6 +148,6 @@ public:
 
     inline float GetForwardDragFactor()
     {
-        return forwardDragFactor * multiplier;
+        return drag * FORWARD_DRAG_MULTIPLIER;
     }
 };

@@ -188,25 +188,7 @@ int main()
             
         }
 
-        for(int i = 0; i < player.missilePoolA.activeMissiles.size(); i++)
-        {
-            Missile* currentMissile = player.missilePoolA.activeMissiles[i];
-
-            if(currentMissile->isAlive)
-            {
-                DrawMissile(currentMissile->body.transform, currentMissile->radius);
-            }
-        }
-
-        for(int i = 0; i < player.missilePoolB.activeMissiles.size(); i++)
-        {
-            Missile* currentMissile = player.missilePoolB.activeMissiles[i];
-
-            if(currentMissile->isAlive)
-            {
-                DrawMissile(currentMissile->body.transform, currentMissile->radius);
-            }
-        }
+        
 
         rlPushMatrix();
         rlRotatef(90,1,0,0);
@@ -219,6 +201,42 @@ int main()
         
         DrawCollider(obstacleCollider.GetTransformedVertices(obstacleColliderTransform), {255,255,0,100});
         DrawColliderWire(obstacleCollider.GetTransformedVertices(obstacleColliderTransform), obstacleColliderColor);
+        
+        for(int i = 0; i < player.missilePoolA.activeMissiles.size(); i++)
+        {
+            Missile* currentMissile = player.missilePoolA.activeMissiles[i];
+
+            if(currentMissile->isAlive)
+            {
+                DrawMissile(currentMissile->body.transform, currentMissile->radius);
+
+                for(int j = 0; j < currentMissile->particlePool.activeParticles.size(); j++)
+                {
+                    Particle* currentParticle = currentMissile->particlePool.activeParticles[j];
+
+                    RotateTowardsCamera(&currentParticle->transform, player.camera);
+                    DrawCircleRotated3D(currentParticle->transform, currentParticle->radius, {255,255,255,static_cast<unsigned char>(currentParticle->alpha)});
+                }
+            }
+        }
+
+        for(int i = 0; i < player.missilePoolB.activeMissiles.size(); i++)
+        {
+            Missile* currentMissile = player.missilePoolB.activeMissiles[i];
+
+            if(currentMissile->isAlive)
+            {
+                DrawMissile(currentMissile->body.transform, currentMissile->radius);
+
+                for(int j = 0; j < currentMissile->particlePool.activeParticles.size(); j++)
+                {
+                    Particle* currentParticle = currentMissile->particlePool.activeParticles[j];
+
+                    RotateTowardsCamera(&currentParticle->transform, player.camera);
+                    DrawCircleRotated3D(currentParticle->transform, currentParticle->radius, {255,255,255,static_cast<unsigned char>(currentParticle->alpha)});
+                }
+            }
+        }
         
         EndMode3D();
         EndTextureMode();

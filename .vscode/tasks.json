@@ -16,6 +16,7 @@
                 "${workspaceFolder}/src/collisions.cpp",
                 "${workspaceFolder}/src/bullet.cpp",
                 "${workspaceFolder}/src/missile.cpp",
+                "${workspaceFolder}/src/particles.cpp",
                 "-o",
                 "${fileDirname}/${fileBasenameNoExtension}",
                 "-I", "${workspaceFolder}/headers",

@@ -80,15 +80,17 @@ Player::Player()
     bulletTransform = {};
     bulletTransform.scale = {1.0f, 1.0f, 1.0f};
 
-    fireTimerMissile = 0.0f;
+    fireTimerMissileA = 0.0f;
     firerateMissile = 1.0f;
 
-    missilePoolA = MissilePool(4, 7, 1200, MAX_THRUST * 1.25f);
+    fireTimerMissileB = 0.0f;
+
+    missilePoolA = MissilePool(6, 7, 1200, MAX_THRUST * 1.25f);
     missileTransformA = {};
     missileTransformA.scale = {1.0f, 1.0f, 1.0f};
     missileTransformA.rotation = QuaternionIdentity();
 
-    missilePoolB = MissilePool(4, 7, 1200, MAX_THRUST * 1.25f);
+    missilePoolB = MissilePool(6, 7, 1200, MAX_THRUST * 1.25f);
     missileTransformB = {};
     missileTransformB.scale = {1.0f, 1.0f, 1.0f};
     missileTransformB.rotation = QuaternionIdentity();
@@ -428,7 +430,7 @@ void Player::FireB(float dt)
 
             bulletPool.FireBullet(bulletTransform, bulletVelocity);
 
-            fireTimerBullet += firerateBullet;
+            fireTimerBullet = firerateBullet;
         }
     }
 }
@@ -436,26 +438,31 @@ void Player::FireB(float dt)
 //call once per frame
 void Player::FireM(float dt)
 {
-    if (fireTimerMissile > 0.0f) fireTimerMissile -= dt;
+    if (fireTimerMissileA > 0.0f) fireTimerMissileA -= dt;
+    if (fireTimerMissileB > 0.0f) fireTimerMissileB -= dt;
 
     bool fireKey = (!globalCamera && IsKeyPressed(KEY_SPACE)) || (globalCamera && IsKeyPressed(KEY_LEFT_ALT));
 
-    if(fireKey && fireTimerMissile <= 0.0f)
+    if(fireKey)
     {
         Vector3 forward = GetLocalForwardVector(body.transform);
         Vector3 missileInitialSpeed = Vector3Scale(forward, GetSpeed());
 
-        if (!currentMissilePool)
+        if (!currentMissilePool && fireTimerMissileA <= 0.0f)
         {
             FollowTransform(&missileTransformA, GetTransform(), {-4, -1, 0});
-            missilePoolA.FireMissile(missileTransformA, missileInitialSpeed, thrust);            
+            missilePoolA.FireMissile(missileTransformA, missileInitialSpeed, thrust);    
+            
+            fireTimerMissileA = firerateMissile;
+
             currentMissilePool = true;
         }
-        else
+        else if (currentMissilePool && fireTimerMissileB <= 0.0f)
         {
             FollowTransform(&missileTransformB, GetTransform(), {4, -1, 0});
             missilePoolB.FireMissile(missileTransformB, missileInitialSpeed, thrust);
-            fireTimerMissile = firerateMissile;
+
+            fireTimerMissileB = firerateMissile;
 
             currentMissilePool = false;
         }

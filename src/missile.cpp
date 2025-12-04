@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <iostream>
 
+
 void Missile::UpdateMissile(float dt, float iterations)
 {
     if(thrust < maxThrust) thrust += 500000 * (dt / iterations);
@@ -11,50 +12,79 @@ void Missile::UpdateMissile(float dt, float iterations)
     Vector3 forward = GetLocalForwardVector(body.transform);
     body.ApplyForce(forward, thrust);
     body.UpdateBody(dt, iterations);
-}
 
-
-std::vector<Missile> InitMissiles(int quantity, float lifetime, float lockDistance, float maxThrust)
-{
-    std::vector<Missile> missileArray;
-
-    for (int i = 0; i < quantity; i++)
+    if(isAlive)
     {
-        Missile tempMissile = Missile();
-        
-        tempMissile.lockDistance = lockDistance;
-        
-        tempMissile.locked = false;
-        tempMissile.didHit = false;
-        tempMissile.isAlive = false;
+        if(fireTimerParticle > 0.0f) fireTimerParticle -= (dt / iterations);
 
-        tempMissile.thrust = 0.0f;
-        tempMissile.lifetime = lifetime;
-        tempMissile.currentTime = 0.0f;
-        tempMissile.maxThrust = maxThrust;
+        if(fireTimerParticle <= 0.0f)
+        {
+            Vector3 forward = GetLocalForwardVector(body.transform);
+            Vector3 particleVel = Vector3Add(body.linearVelocity, Vector3Scale(forward, 50));
 
-        tempMissile.body = Body3D(4.5f, {3.0f,3.0f,3.0f});
+            Vector3 right = GetLocalRightVector(body.transform);
+            Vector3 up = GetLocalUpVector(body.transform);
 
-        std::cout << "Init missile " << i << " isAlive=" << tempMissile.isAlive << " \n";
-        missileArray.push_back(tempMissile);
+            float rightDeviation = (2.0f * ((float)rand() / RAND_MAX) - 1.0f) * 4.0f;
+            float upDeviation = (2.0f * ((float)rand() / RAND_MAX) - 1.0f) * 4.0f;
+
+            Vector3 deviation = Vector3Add(
+                Vector3Scale(right, rightDeviation),
+                Vector3Scale(up, upDeviation));
+
+            particleVel = Vector3Add(particleVel, deviation);    
+
+            particlePool.FireParticle(body.transform, particleVel);
+
+            fireTimerParticle = firerateParticle;
+        }        
     }
-
-    return missileArray;
+   
+    particlePool.UpdateParticles(dt / iterations);
 }
+
 
 MissilePool::MissilePool(int quantity, float lifetime, float lockDistance, float maxThrust)
 {
-    this->missiles = InitMissiles(quantity, lifetime, lockDistance, maxThrust);
-
-    for (Missile &missile : this->missiles)
+    for (int i = 0; i < quantity; i++)
     {
-        if(missile.isAlive)
+        // 1. Allocate a Missile object on the heap
+        std::unique_ptr<Missile> tempMissile = std::make_unique<Missile>();
+        
+        // 2. Perform all initializations on the heap object using ->
+        tempMissile->lockDistance = lockDistance;
+        tempMissile->locked = false;
+        tempMissile->didHit = false;
+        tempMissile->isAlive = false;
+
+        tempMissile->thrust = 0.0f;
+        tempMissile->lifetime = lifetime;
+        tempMissile->currentTime = 0.0f;
+        tempMissile->maxThrust = maxThrust;
+
+        tempMissile->body = Body3D(4.5f, {3.0f,3.0f,3.0f});
+        
+        // Ensure Missile::Missile() doesn't initialize the pool if you initialize it here
+        // If Missile::Missile() is empty, this line is fine:
+        tempMissile->particlePool = ParticlePool(30,1); 
+        tempMissile->fireTimerParticle = 0.0f;
+        tempMissile->firerateParticle = 0.05f;
+
+        // 3. Move the object into the main vector (no copy occurs)
+        this->missiles.push_back(std::move(tempMissile));
+    }
+
+    // 4. Populate active/inactive lists using raw pointers from the smart pointers
+    for (const auto& missilePtr : this->missiles)
+    {
+        Missile* rawMissilePtr = missilePtr.get();
+        if(rawMissilePtr->isAlive)
         {
-            activeMissiles.push_back(&missile);
+            activeMissiles.push_back(rawMissilePtr);
         }
         else
         {
-            inactiveMissiles.push_back(&missile);
+            inactiveMissiles.push_back(rawMissilePtr);
         }
     }
 }
@@ -64,38 +94,26 @@ void MissilePool::UpdateMissiles(float dt, int iterations)
     float fdt = dt;
     fdt /= iterations;
 
-    for (Missile* m : activeMissiles)
+    for (int i = 0; i < activeMissiles.size();)
     {
-        if(m->isAlive)
+        Missile* m = activeMissiles[i];
+        m->UpdateMissile(dt, iterations);
+
+        m->currentTime += fdt;
+
+        if(m->currentTime >= m->lifetime || m->didHit)
         {
-            m->currentTime += fdt;
+            m->isAlive = false;
+            inactiveMissiles.push_back(m);
 
-            if(m->currentTime >= m->lifetime)
-            {
-                m->isAlive = false;
-            }
-
-            if(m->didHit)
-            {
-                m->isAlive = false;
-            }
-
-            m->UpdateMissile(dt, iterations);
+            activeMissiles[i] = activeMissiles.back();
+            activeMissiles.pop_back();
         }
-    }
-
-    auto it = std::remove_if(activeMissiles.begin(), activeMissiles.end(),
-        [&](Missile* m)
+        else
         {
-            if(!m->isAlive)
-            {
-                inactiveMissiles.push_back(m);
-                return true;
-            }
-            return false;
-        });
-    activeMissiles.erase(it, activeMissiles.end());
-    
+            i++;
+        }
+    }    
 }
 
 void MissilePool::FireMissile(const Transform &transform, Vector3 initialSpeed, float initialThrust)
@@ -105,7 +123,7 @@ void MissilePool::FireMissile(const Transform &transform, Vector3 initialSpeed, 
         Missile* m = inactiveMissiles.back();
         inactiveMissiles.pop_back();
 
-        std::cout<<"inactive missiles "<< this <<" " <<inactiveMissiles.size()<<"\n";
+        m->particlePool.ResetParticlePool();
 
         m->body.transform = transform;
         m->isAlive = true;
@@ -121,7 +139,6 @@ void MissilePool::FireMissile(const Transform &transform, Vector3 initialSpeed, 
         Vector3 worldUp = GetLocalUpVector(m->body.transform);
         m->body.linearVelocity = Vector3Add(m->body.linearVelocity, Vector3Scale(worldUp, -7.0f));
         
-
         activeMissiles.push_back(m);
     }
 }

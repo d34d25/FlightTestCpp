@@ -60,3 +60,15 @@ inline void DrawMissile(const Transform& transform, float radius)
     DrawCube({0,0,0},1.0f,1.0f,radius * 2.0f,{200,200,200,255});
     rlPopMatrix();
 }
+
+inline void DrawCircleRotated3D(const Transform& transform, float radius, Color color)
+{
+    rlPushMatrix();
+    const float* matrix = GetLocalMatrixTransform(transform).data();
+    rlMultMatrixf(matrix);
+    rlScalef(transform.scale.x, transform.scale.y, transform.scale.z);
+    DrawCircleSector({0,0}, radius, 0, 360, 10, color);
+    rlPopMatrix();
+}
+
+//DrawCircleSector({0,0}, radius, 0, PI, 10, ORANGE); this looks like an arrow, cool for using it in the HUD

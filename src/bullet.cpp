@@ -16,83 +16,59 @@ void Bullet::UpdateBullet(float dt)
     velocityVec.z *= 1 - damping * dt;
 }
 
-std::vector<Bullet> InitBullets(int quantity, float lifetime ,float damping)
-{
-    std::vector<Bullet> bulletArray;
-
-    for (int i = 0; i < quantity; i++)
-    {
-        Bullet tempBullet = Bullet();
-
-        tempBullet.isAlive = false;
-        tempBullet.transform = {};
-        tempBullet.damping = damping;
-        tempBullet.lifetime = lifetime;
-        tempBullet.currentTime = 0.0f;
-        tempBullet.force = {0,0,0};
-
-        bulletArray.push_back(tempBullet);
-    }
-
-    return bulletArray;
-}
-
 BulletPool::BulletPool(int quantity, float lifetime, float damping)
 {
-    this->bullets = InitBullets(quantity, lifetime, damping);
-
-    for (Bullet &bullet : this->bullets)
+    for (int i = 0; i < quantity; i++)
     {
-        if(bullet.isAlive)
+        std::unique_ptr<Bullet> tempBullet = std::make_unique<Bullet>();
+
+        tempBullet->isAlive = false;
+        tempBullet->transform = {};
+        tempBullet->damping = damping;
+        tempBullet->lifetime = lifetime;
+        tempBullet->currentTime = 0.0f;
+        tempBullet->force = {0,0,0};
+
+        bullets.push_back(std::move(tempBullet));
+    }
+
+    for (const auto& bulletPtr : this->bullets)
+    {
+        Bullet* rawBulletPtr = bulletPtr.get();
+        if(rawBulletPtr->isAlive)
         {
-            activeBullets.push_back(&bullet);
+            activeBullets.push_back(rawBulletPtr);
         }
         else
         {
-            inactiveBullets.push_back(&bullet);
+            inactiveBullets.push_back(rawBulletPtr);
         }
     }
 }
 
 void BulletPool::UpdateBullets(float dt)
 {
-    for (Bullet* b : activeBullets)
+    for (int i = 0; i < activeBullets.size();)
     {
-        if (b->isAlive)
+        Bullet* b = activeBullets[i];
+        b->UpdateBullet(dt);
+        b->currentTime += dt;
+
+        if(b->currentTime >= b->lifetime || 
+            abs(Vector3Length(b->velocityVec)) <= 0.00001f||
+            b->didHit)
         {
-            b->currentTime += dt;
-            if (b->currentTime >= b->lifetime)
-            {
-                b->isAlive = false;
-            }
+            b->isAlive = false;
+            inactiveBullets.push_back(b);
 
-            if(abs(Vector3Length(b->velocityVec)) <= 0.0f)
-            {
-                b->isAlive = false;
-            }
-
-            if(b->didHit)
-            {
-                b->isAlive = false;
-            }
-
-            b->UpdateBullet(dt);
+            activeBullets[i] = activeBullets.back();
+            activeBullets.pop_back();
+        }
+        else
+        {
+            i++;
         }
     }
-
-    // Move dead bullets back to inactive
-    auto it = std::remove_if(activeBullets.begin(), activeBullets.end(),
-        [&](Bullet* b)
-        {
-            if (!b->isAlive)
-            {
-                inactiveBullets.push_back(b);
-                return true; // remove from active
-            }
-            return false;
-        });
-
-    activeBullets.erase(it, activeBullets.end());
 }
 
 void BulletPool::FireBullet(const Transform &transform, const Vector3& force)

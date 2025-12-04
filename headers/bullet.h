@@ -2,6 +2,7 @@
 #include "raylib.h"
 #include "raymath.h"
 #include <vector>
+#include <memory>
 
 class Bullet
 {
@@ -26,15 +27,13 @@ public:
     void UpdateBullet(float dt);
 };
 
-std::vector<Bullet> InitBullets(int quantity, float lifetime ,float damping);
-
 class BulletPool
 {
 public:
 
     std::vector<Bullet*> activeBullets;
     std::vector<Bullet*> inactiveBullets;
-    std::vector<Bullet> bullets;
+    std::vector<std::unique_ptr<Bullet>> bullets;
 
     BulletPool() = default;
 

@@ -83,3 +83,12 @@ inline void FollowTransform(Transform* transform_1, const Transform& transform_2
 
     transform_1->rotation = transform_2.rotation;
 }
+
+inline void RotateTowardsCamera(Transform* transform_1, const Camera& camera)
+{
+    Matrix m = MatrixLookAt(transform_1->translation, camera.position, {0,1,0});
+    
+    Matrix mWorld = MatrixInvert(m);
+
+    transform_1->rotation = QuaternionFromMatrix(mWorld);
+}

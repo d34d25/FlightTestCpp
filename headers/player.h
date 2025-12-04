@@ -36,8 +36,10 @@ private:
     float firerateBullet = 0.1f;
     
     Transform missileTransformA;
-    float fireTimerMissile;
+    float fireTimerMissileA;
     float firerateMissile;
+
+    float fireTimerMissileB;
 
     Transform missileTransformB;
 

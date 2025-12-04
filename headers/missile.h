@@ -4,6 +4,8 @@
 #include "raymath.h"
 #include <vector>
 #include "body.h"
+#include "particles.h"
+#include <memory>
 
 class Missile
 {
@@ -24,6 +26,10 @@ public:
     float radius = 3.0f;
 
     Body3D body;
+    
+    ParticlePool particlePool;
+    float fireTimerParticle;
+    float firerateParticle;
 
     Missile() = default;
 
@@ -31,16 +37,13 @@ public:
 
 };
 
-
-std::vector<Missile> InitMissiles(int quantity, float lifetime, float lockDistance, float maxTrhust);
-
 class MissilePool
 {
 public:
 
     std::vector<Missile*> activeMissiles;
     std::vector<Missile*> inactiveMissiles;
-    std::vector<Missile> missiles;
+    std::vector<std::unique_ptr<Missile>> missiles;
     
     MissilePool() = default;
 

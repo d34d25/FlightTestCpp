@@ -31,6 +31,9 @@ public:
     float fireTimerParticle;
     float firerateParticle;
 
+    Vector3 target;
+    bool lockedOnTarget;
+
     Missile() = default;
 
     void UpdateMissile(float dt, float iterations);
@@ -51,6 +54,6 @@ public:
 
     void UpdateMissiles(float dt, int iterations);
 
-    void FireMissile(const Transform& transform, Vector3 initialSpeed, float initialThrust);
+    void FireMissile(const Transform& transform, Vector3 initialSpeed, float initialThrust, Vector3 target);
 };
 

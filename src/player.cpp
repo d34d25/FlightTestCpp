@@ -15,8 +15,8 @@ const Vector3 downDir = {0.0f, -1.0f, 0.0f};
 const float FAKE_GRAVITY_FORCE = 7500 * FORWARD_DRAG_MULTIPLIER;
 const float STALL_DOWNWARD_FORCE = 4000 * FORWARD_DRAG_MULTIPLIER;
 
-const float MAX_BANK_TORQUE_YAW = 1.75f * ALT_ANGULAR_DAMPING;
-const float MAX_BANK_TORQUE_PITCH = 1.75f * ALT_ANGULAR_DAMPING;
+const float MAX_BANK_TORQUE_YAW = 1.5f * ALT_ANGULAR_DAMPING;
+const float MAX_BANK_TORQUE_PITCH = 1.5f * ALT_ANGULAR_DAMPING;
 
 const float STALL_TORQUE_SPEED = 15.0f * ALT_ANGULAR_DAMPING;
 
@@ -76,7 +76,7 @@ Player::Player()
 
     engineGlowChange = 0.2f;
 
-    bulletPool = BulletPool(60, 4, 0.05f);
+    bulletPool = BulletPool(60, 1, 0.05f);
     bulletTransform = {};
     bulletTransform.scale = {1.0f, 1.0f, 1.0f};
 
@@ -85,12 +85,12 @@ Player::Player()
 
     fireTimerMissileB = 0.0f;
 
-    missilePoolA = MissilePool(6, 7, 1200, MAX_THRUST * 1.25f);
+    missilePoolA = MissilePool(6, 4, 1200, MAX_THRUST * 1.25f);
     missileTransformA = {};
     missileTransformA.scale = {1.0f, 1.0f, 1.0f};
     missileTransformA.rotation = QuaternionIdentity();
 
-    missilePoolB = MissilePool(6, 7, 1200, MAX_THRUST * 1.25f);
+    missilePoolB = MissilePool(6, 4, 1200, MAX_THRUST * 1.25f);
     missileTransformB = {};
     missileTransformB.scale = {1.0f, 1.0f, 1.0f};
     missileTransformB.rotation = QuaternionIdentity();
@@ -451,7 +451,7 @@ void Player::FireM(float dt)
         if (!currentMissilePool && fireTimerMissileA <= 0.0f)
         {
             FollowTransform(&missileTransformA, GetTransform(), {-4, -1, 0});
-            missilePoolA.FireMissile(missileTransformA, missileInitialSpeed, thrust);    
+            missilePoolA.FireMissile(missileTransformA, missileInitialSpeed, thrust, {0,0,0});    
             
             fireTimerMissileA = firerateMissile;
 
@@ -460,7 +460,7 @@ void Player::FireM(float dt)
         else if (currentMissilePool && fireTimerMissileB <= 0.0f)
         {
             FollowTransform(&missileTransformB, GetTransform(), {4, -1, 0});
-            missilePoolB.FireMissile(missileTransformB, missileInitialSpeed, thrust);
+            missilePoolB.FireMissile(missileTransformB, missileInitialSpeed, thrust, {0,0,0});
 
             fireTimerMissileB = firerateMissile;
 

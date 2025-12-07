@@ -6,13 +6,34 @@
 
 void Missile::UpdateMissile(float dt, float iterations)
 {
+    Vector3 forward = GetLocalForwardVector(body.transform);
+
+    //missile guiding system
+
+    Vector3 distToTarget = Vector3Subtract(target, body.transform.translation);
+
+    Vector3 dirToTarget = Vector3Normalize(distToTarget);
+
+    float angleToTarget = Vector3DotProduct(forward,dirToTarget);
+
+    if(angleToTarget >= 0.75f)
+    {
+        Vector3 axisOfRotation = Vector3CrossProduct(forward, dirToTarget);
+        axisOfRotation = Vector3Normalize(axisOfRotation);
+
+        body.worldAngularTorque = 10 * ALT_ANGULAR_DAMPING;
+
+        body.ApplyAlternateWorldTorque(axisOfRotation, dt / iterations);
+    }
+
+    //missile update
     if(thrust < maxThrust) thrust += 500000 * (dt / iterations);
     else thrust = maxThrust;
 
-    Vector3 forward = GetLocalForwardVector(body.transform);
     body.ApplyForce(forward, thrust);
     body.UpdateBody(dt, iterations);
 
+    //missile particles
     if(isAlive)
     {
         if(fireTimerParticle > 0.0f) fireTimerParticle -= (dt / iterations);
@@ -51,7 +72,7 @@ MissilePool::MissilePool(int quantity, float lifetime, float lockDistance, float
         // 1. Allocate a Missile object on the heap
         std::unique_ptr<Missile> tempMissile = std::make_unique<Missile>();
         
-        // 2. Perform all initializations on the heap object using ->
+        // 2. Perform all initializations on the heap object
         tempMissile->lockDistance = lockDistance;
         tempMissile->locked = false;
         tempMissile->didHit = false;
@@ -64,11 +85,12 @@ MissilePool::MissilePool(int quantity, float lifetime, float lockDistance, float
 
         tempMissile->body = Body3D(4.5f, {3.0f,3.0f,3.0f});
         
-        // Ensure Missile::Missile() doesn't initialize the pool if you initialize it here
-        // If Missile::Missile() is empty, this line is fine:
         tempMissile->particlePool = ParticlePool(30,1); 
         tempMissile->fireTimerParticle = 0.0f;
         tempMissile->firerateParticle = 0.05f;
+
+        tempMissile->target = {0,0,0};
+        tempMissile->lockedOnTarget = false;
 
         // 3. Move the object into the main vector (no copy occurs)
         this->missiles.push_back(std::move(tempMissile));
@@ -104,6 +126,7 @@ void MissilePool::UpdateMissiles(float dt, int iterations)
         if(m->currentTime >= m->lifetime || m->didHit)
         {
             m->isAlive = false;
+            m->lockedOnTarget = false;
             inactiveMissiles.push_back(m);
 
             activeMissiles[i] = activeMissiles.back();
@@ -116,7 +139,7 @@ void MissilePool::UpdateMissiles(float dt, int iterations)
     }    
 }
 
-void MissilePool::FireMissile(const Transform &transform, Vector3 initialSpeed, float initialThrust)
+void MissilePool::FireMissile(const Transform &transform, Vector3 initialSpeed, float initialThrust, Vector3 target)
 {
     if(!inactiveMissiles.empty())
     {
@@ -125,6 +148,8 @@ void MissilePool::FireMissile(const Transform &transform, Vector3 initialSpeed, 
 
         m->particlePool.ResetParticlePool();
 
+        m->lockedOnTarget = false;
+        m->target = target;
         m->body.transform = transform;
         m->isAlive = true;
         m->didHit = false;

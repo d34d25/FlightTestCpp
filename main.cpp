@@ -186,9 +186,7 @@ int main()
                 //DrawSphere(currentBullet->transform.translation, currentBullet->radius, {255,255,100,255});
             }
             
-        }
-
-        
+        }        
 
         rlPushMatrix();
         rlRotatef(90,1,0,0);
@@ -237,6 +235,8 @@ int main()
                 }
             }
         }
+
+        DrawSphere({0,0,0}, 20, RED);
         
         EndMode3D();
         EndTextureMode();

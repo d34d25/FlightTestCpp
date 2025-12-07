@@ -10,20 +10,23 @@ void Missile::UpdateMissile(float dt, float iterations)
 
     //missile guiding system
 
-    Vector3 distToTarget = Vector3Subtract(target, body.transform.translation);
+    if(lockedOnTarget)
+    {   
+        Vector3 distToTarget = Vector3Subtract(target, body.transform.translation);
 
-    Vector3 dirToTarget = Vector3Normalize(distToTarget);
+        Vector3 dirToTarget = Vector3Normalize(distToTarget);
 
-    float angleToTarget = Vector3DotProduct(forward,dirToTarget);
+        float angleToTarget = Vector3DotProduct(forward,dirToTarget);
 
-    if(angleToTarget >= 0.75f)
-    {
-        Vector3 axisOfRotation = Vector3CrossProduct(forward, dirToTarget);
-        axisOfRotation = Vector3Normalize(axisOfRotation);
+        if(angleToTarget >= 0.75f)
+        {
+            Vector3 axisOfRotation = Vector3CrossProduct(forward, dirToTarget);
+            axisOfRotation = Vector3Normalize(axisOfRotation);
 
-        body.worldAngularTorque = 10 * ALT_ANGULAR_DAMPING;
+            body.worldAngularTorque = 10 * ALT_ANGULAR_DAMPING;
 
-        body.ApplyAlternateWorldTorque(axisOfRotation, dt / iterations);
+            body.ApplyAlternateWorldTorque(axisOfRotation, dt / iterations);
+        }
     }
 
     //missile update
@@ -65,7 +68,7 @@ void Missile::UpdateMissile(float dt, float iterations)
 }
 
 
-MissilePool::MissilePool(int quantity, float lifetime, float lockDistance, float maxThrust)
+MissilePool::MissilePool(int quantity, float lifetime, float maxThrust)
 {
     for (int i = 0; i < quantity; i++)
     {
@@ -73,7 +76,6 @@ MissilePool::MissilePool(int quantity, float lifetime, float lockDistance, float
         std::unique_ptr<Missile> tempMissile = std::make_unique<Missile>();
         
         // 2. Perform all initializations on the heap object
-        tempMissile->lockDistance = lockDistance;
         tempMissile->locked = false;
         tempMissile->didHit = false;
         tempMissile->isAlive = false;
@@ -139,7 +141,7 @@ void MissilePool::UpdateMissiles(float dt, int iterations)
     }    
 }
 
-void MissilePool::FireMissile(const Transform &transform, Vector3 initialSpeed, float initialThrust, Vector3 target)
+void MissilePool::FireMissile(const Transform &transform, Vector3 initialSpeed, float initialThrust, Vector3 target, bool locked)
 {
     if(!inactiveMissiles.empty())
     {
@@ -148,8 +150,10 @@ void MissilePool::FireMissile(const Transform &transform, Vector3 initialSpeed, 
 
         m->particlePool.ResetParticlePool();
 
-        m->lockedOnTarget = false;
-        m->target = target;
+        m->lockedOnTarget = locked;
+
+        m->target = target;  
+
         m->body.transform = transform;
         m->isAlive = true;
         m->didHit = false;

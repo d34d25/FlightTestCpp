@@ -11,8 +11,6 @@ class Missile
 {
 public:
 
-    float lockDistance;
-
     bool locked;
     bool didHit;
     bool isAlive;
@@ -50,10 +48,10 @@ public:
     
     MissilePool() = default;
 
-    MissilePool(int quantity, float lifetime, float lockDistance, float maxTrhust);
+    MissilePool(int quantity, float lifetime, float maxTrhust);
 
     void UpdateMissiles(float dt, int iterations);
 
-    void FireMissile(const Transform& transform, Vector3 initialSpeed, float initialThrust, Vector3 target);
+    void FireMissile(const Transform& transform, Vector3 initialSpeed, float initialThrust, Vector3 target, bool locked);
 };
 

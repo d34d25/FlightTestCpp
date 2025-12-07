@@ -3,6 +3,7 @@
 #include "rlgl.h"
 #include <vector>
 #include "simpleTransform.h"
+#include "target.h"
 
 struct FlatShaderData
 {
@@ -66,8 +67,16 @@ inline void DrawCircleRotated3D(const Transform& transform, float radius, Color 
     rlPushMatrix();
     const float* matrix = GetLocalMatrixTransform(transform).data();
     rlMultMatrixf(matrix);
-    rlScalef(transform.scale.x, transform.scale.y, transform.scale.z);
     DrawCircleSector({0,0}, radius, 0, 360, 10, color);
+    rlPopMatrix();
+}
+
+inline void DrawTgt(const Target& tgt)
+{
+    rlPushMatrix();
+    const float* matrix = GetLocalMatrixTransform(tgt.transform).data();
+    rlMultMatrixf(matrix);
+    DrawCubeWires({0,0,0},tgt.width, tgt.height, tgt.lenght, GREEN);
     rlPopMatrix();
 }
 

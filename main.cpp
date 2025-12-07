@@ -6,6 +6,7 @@
 #include "collider.h"
 #include <iostream>
 #include "collisions.h"
+#include "target.h"
 
 int INTERNAL_WIDTH = 426;
 int INTERNAL_HEIGHT = 240;
@@ -33,6 +34,7 @@ int main()
         player.params.hitboxHeight,
         player.params.hitboxLength);
 
+    //test obstacle
     Collider obstacleCollider = Collider();
 
     obstacleCollider.CreatePrismatoidUp(10500,4,10500,4,10300);
@@ -46,9 +48,30 @@ int main()
 
     Color obstacleColliderColor = ogObstacleColliderColor;
 
+    // test targets
+    Target tgt1 = CreateTarget({0,100,400}, 10,10,10, 100);
+    
+    Target tgt2 = CreateTarget({500,0,400}, 10,10,10, 100);
+
+    Target tgt3 = CreateTarget({0,600,400}, 10,10,10, 100);
+
+    Target tgt4 = CreateTarget({0,0,900}, 10,10,10, 100);
+
+    std::vector<Target> tgtList = {};
+
+    tgtList.push_back(tgt1);
+    tgtList.push_back(tgt2);
+    tgtList.push_back(tgt3);
+    tgtList.push_back(tgt4);
+
+    for(int i = 0; i < tgtList.size(); i++)
+    {
+        player.targets.push_back(std::make_shared<Target>(tgtList[i]));
+    }
+
     InitWindow(SCREEN_WIDTH,SCREEN_HEIGHT,"");
 
-    Model planeModel = LoadModel("assets/sf15b.obj");
+    Model planeModel = LoadModel(player.params.modelPath);
 
     RenderTexture2D renderTarget = LoadRenderTexture(INTERNAL_WIDTH, INTERNAL_HEIGHT);
 
@@ -151,6 +174,7 @@ int main()
                 obstacleColliderColor = ogObstacleColliderColor;
             }
 
+            player.ChooseTarget();
             player.FireB(FIXED_DELTA_TIME);
             player.FireM(FIXED_DELTA_TIME);
 
@@ -236,7 +260,16 @@ int main()
             }
         }
 
-        DrawSphere({0,0,0}, 20, RED);
+        for (int i = 0; i < tgtList.size(); i++)
+        {
+            DrawTgt(tgtList[i]);
+        }
+
+
+        if(player.currentTarget)
+        {
+            DrawLine3D(player.GetPosition(), player.currentTarget->transform.translation, RED);
+        }
         
         EndMode3D();
         EndTextureMode();

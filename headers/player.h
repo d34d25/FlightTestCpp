@@ -3,6 +3,8 @@
 #include "plane.h"
 #include "bullet.h"
 #include "missile.h"
+#include "target.h"
+#include <memory>
 
 class Player
 {
@@ -47,6 +49,9 @@ private:
 
     bool returnToIdle = true;
     bool hasInput = false;
+
+    int tgtIndex;
+    bool tgtLocked;
     
 public:
 
@@ -66,6 +71,9 @@ public:
 
     float thrust = 0.0f;
 
+    std::vector<std::shared_ptr<Target>> targets; 
+    std::shared_ptr<Target> currentTarget;
+
     Player();
 
     void UpdatePlayer(float dt, int iterations);
@@ -75,6 +83,8 @@ public:
     void FireB(float dt);
 
     void FireM(float dt);
+
+    void ChooseTarget();
     //getters
 
     inline float GetEngineGlow()

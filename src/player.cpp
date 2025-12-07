@@ -85,17 +85,26 @@ Player::Player()
 
     fireTimerMissileB = 0.0f;
 
-    missilePoolA = MissilePool(6, 4, 1200, MAX_THRUST * 1.25f);
+    missilePoolA = MissilePool(6, 4, MAX_THRUST * 1.25f);
     missileTransformA = {};
     missileTransformA.scale = {1.0f, 1.0f, 1.0f};
     missileTransformA.rotation = QuaternionIdentity();
 
-    missilePoolB = MissilePool(6, 4, 1200, MAX_THRUST * 1.25f);
+    missilePoolB = MissilePool(6, 4, MAX_THRUST * 1.25f);
     missileTransformB = {};
     missileTransformB.scale = {1.0f, 1.0f, 1.0f};
     missileTransformB.rotation = QuaternionIdentity();
 
     currentMissilePool = false;
+
+
+    //targets
+
+    targets = {};
+    currentTarget = nullptr;
+
+    tgtIndex = 0;
+    tgtLocked = false;
 }
 
 void Player::UpdatePlayer(float dt, int iterations)
@@ -438,6 +447,15 @@ void Player::FireB(float dt)
 //call once per frame
 void Player::FireM(float dt)
 {
+    bool locked = false;
+    Vector3 tgtPos = {0,0,0};
+
+    if(currentTarget && tgtLocked)
+    {
+        locked = true;
+        tgtPos = currentTarget->transform.translation;
+    }
+
     if (fireTimerMissileA > 0.0f) fireTimerMissileA -= dt;
     if (fireTimerMissileB > 0.0f) fireTimerMissileB -= dt;
 
@@ -451,7 +469,7 @@ void Player::FireM(float dt)
         if (!currentMissilePool && fireTimerMissileA <= 0.0f)
         {
             FollowTransform(&missileTransformA, GetTransform(), {-4, -1, 0});
-            missilePoolA.FireMissile(missileTransformA, missileInitialSpeed, thrust, {0,0,0});    
+            missilePoolA.FireMissile(missileTransformA, missileInitialSpeed, thrust, tgtPos, locked);    
             
             fireTimerMissileA = firerateMissile;
 
@@ -460,11 +478,56 @@ void Player::FireM(float dt)
         else if (currentMissilePool && fireTimerMissileB <= 0.0f)
         {
             FollowTransform(&missileTransformB, GetTransform(), {4, -1, 0});
-            missilePoolB.FireMissile(missileTransformB, missileInitialSpeed, thrust, {0,0,0});
+            missilePoolB.FireMissile(missileTransformB, missileInitialSpeed, thrust, tgtPos, locked);
 
             fireTimerMissileB = firerateMissile;
 
             currentMissilePool = false;
         }
+    }    
+}
+
+void Player::ChooseTarget()
+{
+    float distToTgtMag = INFINITY;
+
+    for (int i = 0; i < targets.size(); i++)
+    {
+        Vector3 distToTgt = Vector3Subtract(
+            targets[i]->transform.translation, GetPosition()
+        );
+
+        distToTgtMag = Vector3Length(distToTgt);
+
+        if(!tgtLocked) 
+        {
+            tgtIndex = i;
+        }
+    }
+
+    if(distToTgtMag <= 4000)
+    {
+        tgtLocked = true; 
+
+        if(!globalCamera && IsKeyPressed(KEY_E) || globalCamera && IsKeyPressed(KEY_TAB))
+        {
+            if(tgtIndex < targets.size())
+            {
+                tgtIndex++;
+
+                if(tgtIndex >= targets.size())
+                {
+                    tgtIndex = 0;
+                }
+
+                currentTarget = targets[tgtIndex];
+            }
+        }
+    }
+    else
+    {
+        currentTarget = nullptr;
+        tgtLocked = false;
+        return;
     }    
 }

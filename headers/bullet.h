@@ -9,7 +9,7 @@ class Bullet
 public:
 
     Transform transform;
-    Vector3 velocityVec;
+    Vector3 linearVelocity;
     float damping;
     bool isAlive;
 
@@ -20,6 +20,7 @@ public:
     float lifetime;
     float currentTime;
 
+    Vector3 initialVel;
     Vector3 force;
 
     Bullet() = default;
@@ -41,5 +42,5 @@ public:
 
     void UpdateBullets(float dt);
     
-    void FireBullet(const Transform& transform, const Vector3& force);
+    void FireBullet(const Transform& transform, const Vector3& initialVel);
 };

@@ -106,7 +106,7 @@ int main()
                     
                     if(rb.collision)
                     {
-                        std::cout<<"BULLET HIT at: "<<Vector3Length(currentBullet->velocityVec)<<"\n";
+                        std::cout<<"BULLET HIT at: "<<Vector3Length(currentBullet->linearVelocity)<<"\n";
                         currentBullet->didHit = true;
                     }
                 }

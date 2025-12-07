@@ -5,15 +5,31 @@
 
 void Bullet::UpdateBullet(float dt)
 {
-    transform.translation.x += velocityVec.x * dt;
-    transform.translation.y += velocityVec.y * dt;
-    transform.translation.z += velocityVec.z * dt;
-    
-    velocityVec.y += -30.0 * dt;
+    Vector3 forward = GetLocalForwardVector(transform);
+    float forwardSpeed = Vector3DotProduct(linearVelocity, forward);
 
-    velocityVec.x *= 1 - damping * dt;
-    velocityVec.y *= 1 - damping * dt;
-    velocityVec.z *= 1 - damping * dt;
+    float drag = 1.0f * damping;
+    float maxDragFactor = 1.0f / dt;
+
+    if (drag > maxDragFactor) drag = maxDragFactor;
+
+    Vector3 dragForce = Vector3Scale(linearVelocity, -drag);
+
+    force = Vector3Add(force, dragForce);
+
+    linearVelocity.x += force.x * dt;
+    linearVelocity.y += force.y * dt;
+    linearVelocity.z += force.z * dt;
+
+    transform.translation.x += linearVelocity.x * dt;
+    transform.translation.y += linearVelocity.y * dt;
+    transform.translation.z += linearVelocity.z * dt;
+    
+    linearVelocity.y += -30.0 * dt;
+
+    force.x = 0;
+    force.y = 0;
+    force.z = 0;
 }
 
 BulletPool::BulletPool(int quantity, float lifetime, float damping)
@@ -27,6 +43,7 @@ BulletPool::BulletPool(int quantity, float lifetime, float damping)
         tempBullet->damping = damping;
         tempBullet->lifetime = lifetime;
         tempBullet->currentTime = 0.0f;
+        tempBullet->initialVel = {0,0,0};
         tempBullet->force = {0,0,0};
 
         bullets.push_back(std::move(tempBullet));
@@ -55,7 +72,7 @@ void BulletPool::UpdateBullets(float dt)
         b->currentTime += dt;
 
         if(b->currentTime >= b->lifetime || 
-            abs(Vector3Length(b->velocityVec)) <= 0.00001f||
+            abs(Vector3Length(b->linearVelocity)) <= 0.00001f||
             b->didHit)
         {
             b->isAlive = false;
@@ -71,7 +88,7 @@ void BulletPool::UpdateBullets(float dt)
     }
 }
 
-void BulletPool::FireBullet(const Transform &transform, const Vector3& force)
+void BulletPool::FireBullet(const Transform &transform, const Vector3& initialVel)
 {
     if (!inactiveBullets.empty())
     {
@@ -82,9 +99,10 @@ void BulletPool::FireBullet(const Transform &transform, const Vector3& force)
         b->isAlive = true;
         b->didHit = false;
         b->currentTime = 0.0f;
-        b->force = force;
+        b->initialVel = initialVel;
 
-        b->velocityVec = {force.x,force.y,force.z};
+        b->force = {0,0,0};
+        b->linearVelocity = {initialVel.x,initialVel.y,initialVel.z};
 
         activeBullets.push_back(b);
     }

@@ -9,7 +9,7 @@ void Particle::UpdateParticle(float dt)
 
     radius += 5 * dt;
 
-    alpha -= 10 * dt;
+    alpha -= 100 * dt;
     if(alpha <= 0.0f) alpha = 0.0f;
 }
 

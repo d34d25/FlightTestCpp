@@ -18,8 +18,6 @@ Body3D::Body3D(float sideDrag, Vector3 angularDamping)
     alternateTorque = {0,0,0};
     alternateAngularSpeed = {0,0,0};
 
-    drag = 100.0f; //constant, same as mass
-
     this->lateralDragMultiplier = sideDrag;
 
     this->angularDamping.x = angularDamping.x;
@@ -68,6 +66,18 @@ Body3D::Body3D(float sideDrag, Vector3 angularDamping)
 
 void Body3D::ApplyAlternateForce(float dt)
 {
+    Vector3 forward = GetLocalForwardVector(transform);
+    float forwardSpeed = Vector3DotProduct(alternateForceSpeed, forward);
+
+    float altDrag = linearDrag * FORWARD_DRAG_MULTIPLIER;
+
+    float maxAltDrag = GetMass() / dt;
+
+    if (altDrag > maxAltDrag) altDrag = maxAltDrag;
+
+    Vector3 altDragForce = Vector3Scale(alternateForceSpeed, -altDrag);
+    alternateForce = Vector3Add(alternateForce, altDragForce);
+
     Vector3 sAcc = {0,0,0};
 
     if(mass != 0.0f)
@@ -85,10 +95,6 @@ void Body3D::ApplyAlternateForce(float dt)
     transform.translation.y += alternateForceSpeed.y * dt;
     transform.translation.z += alternateForceSpeed.z * dt;
 
-    alternateForceSpeed.x *= Clamp(1 - FORWARD_DRAG_MULTIPLIER * dt, 0, 1);
-    alternateForceSpeed.y *= Clamp(1 - FORWARD_DRAG_MULTIPLIER * dt, 0, 1);
-    alternateForceSpeed.z *= Clamp(1 - FORWARD_DRAG_MULTIPLIER * dt, 0, 1);
-
     alternateForce.x = 0.0f;
     alternateForce.y = 0.0f;
     alternateForce.z = 0.0f;
@@ -96,6 +102,26 @@ void Body3D::ApplyAlternateForce(float dt)
 
 void Body3D::ApplyAlernateTorque(float dt)
 {
+    float pitchDrag = angularDrag * ALT_ANGULAR_DAMPING;
+    float rollDrag = angularDrag * ALT_ANGULAR_DAMPING;
+    float yawDrag = angularDrag * ALT_ANGULAR_DAMPING;
+
+    float maxPitchDragFactor = GetInertia().x / dt;
+    float maxRollDragFactor = GetInertia().z / dt;
+    float maxYawDragFactor = GetInertia().y / dt;
+
+    if(pitchDrag > maxPitchDragFactor) pitchDrag = maxPitchDragFactor;
+    if(rollDrag > maxRollDragFactor) rollDrag = maxRollDragFactor;
+    if(yawDrag > maxYawDragFactor) yawDrag = maxYawDragFactor;
+
+    float pitchT = alternateAngularSpeed.x * -pitchDrag;
+    float rollT = alternateAngularSpeed.z * -rollDrag;
+    float yawT = alternateAngularSpeed.y * -yawDrag;
+
+    Vector3 dragTorque = {pitchT, yawT, rollT};
+
+    alternateTorque = Vector3Add(alternateTorque, dragTorque);
+
     Vector3 altAcc = {0,0,0};
 
     altAcc.x = 0.0f;
@@ -132,17 +158,23 @@ void Body3D::ApplyAlernateTorque(float dt)
         transform.rotation = QuaternionNormalize(transform.rotation);
     }
 
-    alternateAngularSpeed.x *= Clamp(1.0f - ALT_ANGULAR_DAMPING * dt, 0, 1);
-    alternateAngularSpeed.y *= Clamp(1.0f - ALT_ANGULAR_DAMPING * dt, 0, 1);
-    alternateAngularSpeed.z *= Clamp(1.0f - ALT_ANGULAR_DAMPING * dt, 0, 1);
-
     alternateTorque.x = 0.0f;
     alternateTorque.y = 0.0f;
     alternateTorque.z = 0.0f;
 }
 
 void Body3D::ApplyAlternateWorldTorque(Vector3 axis, float dt)
-{
+{   
+    float worldRotationDrag = angularDrag * ALT_ANGULAR_DAMPING;
+
+    float maxWorldRotDragFractor = GetInertia().x / dt;
+
+    if (worldRotationDrag > maxWorldRotDragFractor) worldRotationDrag = maxWorldRotDragFractor;
+
+    float worldT = worldAngularSpeed * -worldRotationDrag;
+
+    worldAngularTorque += worldT;
+
     float aAcc = 0.0f;
 
     if (inertia.x != 0.0f)
@@ -163,8 +195,6 @@ void Body3D::ApplyAlternateWorldTorque(Vector3 axis, float dt)
         transform.rotation = QuaternionNormalize(transform.rotation);
     }
 
-    worldAngularSpeed *= Clamp(1 - ALT_ANGULAR_DAMPING * dt, 0, 1);
-
     worldAngularTorque = 0.0f;
 }
 
@@ -183,7 +213,7 @@ void Body3D::UpdateBody(float dt, int iterations)
 
     Vector3 fowardVelVector = Vector3Subtract(linearVelocity, lateralVel);
 
-    float forwardDrag = drag * FORWARD_DRAG_MULTIPLIER;
+    float forwardDrag = linearDrag * FORWARD_DRAG_MULTIPLIER;
 
     float maxForwardDragFactor = GetMass() / dt;
 
@@ -197,7 +227,7 @@ void Body3D::UpdateBody(float dt, int iterations)
 
     //lateral drag
 
-    float lateralDrag = drag * lateralDragMultiplier;
+    float lateralDrag = linearDrag * lateralDragMultiplier;
 
     float maxLateralDragFactor = GetMass() / dt;
 
@@ -209,7 +239,7 @@ void Body3D::UpdateBody(float dt, int iterations)
     Vector3 lateralForce = Vector3Scale(lateralVel, -lateralDrag);
     force = Vector3Add(force, lateralForce);
 
-    //linearl update (world space)
+    //linear update (world space)
 
     linearAcceleration.x = 0.0f;
     linearAcceleration.y = 0.0f;
@@ -236,6 +266,29 @@ void Body3D::UpdateBody(float dt, int iterations)
 
     //angular update (local space)
 
+    //angular drag
+
+    float pitchDrag = angularDrag * angularDamping.x;
+    float rollDrag = angularDrag * angularDamping.z;
+    float yawDrag = angularDrag * angularDamping.y;
+
+    float maxPitchDragFactor = GetInertia().x / dt;
+    float maxRollDragFactor = GetInertia().z / dt;
+    float maxYawDragFactor = GetInertia().y / dt;
+
+    if(pitchDrag > maxPitchDragFactor) pitchDrag = maxPitchDragFactor;
+    if(rollDrag > maxRollDragFactor) rollDrag = maxRollDragFactor;
+    if(yawDrag > maxYawDragFactor) yawDrag = maxYawDragFactor;
+
+    float pitchT = angularVelocity.x * -pitchDrag;
+    float rollT = angularVelocity.z * -rollDrag;
+    float yawT = angularVelocity.y * -yawDrag;
+
+    Vector3 dragTorque = {pitchT, yawT, rollT};
+
+    torque = Vector3Add(torque, dragTorque);
+
+    //angular update (local space)
     angularAcceleration.x = 0.0f;
     angularAcceleration.y = 0.0f;
     angularAcceleration.z = 0.0f;
@@ -269,10 +322,6 @@ void Body3D::UpdateBody(float dt, int iterations)
 
         transform.rotation = QuaternionNormalize(transform.rotation);
     }
-
-    angularVelocity.x *= Clamp(1.0f - angularDamping.x * dt, 0, 1);
-    angularVelocity.y *= Clamp(1.0f - angularDamping.y * dt, 0, 1);
-    angularVelocity.z *= Clamp(1.0f - angularDamping.z * dt, 0, 1);
 
     torque.x = 0.0f;
     torque.y = 0.0f;

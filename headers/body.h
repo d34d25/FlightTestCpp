@@ -22,7 +22,8 @@ private:
     Vector3 linearAcceleration;
     Vector3 angularAcceleration;
 
-    float drag = 100.0f; //same as mass
+    float linearDrag = 100.0f; //same as mass
+    float angularDrag = 16.6667f; //same as inertia
 
 public:
 
@@ -148,6 +149,6 @@ public:
 
     inline float GetForwardDragFactor()
     {
-        return drag * FORWARD_DRAG_MULTIPLIER;
+        return linearDrag * FORWARD_DRAG_MULTIPLIER;
     }
 };

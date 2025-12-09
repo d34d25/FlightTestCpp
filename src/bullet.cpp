@@ -4,10 +4,11 @@
 #include <iostream>
 
 const float BULLET_DAMPING = 0.05f;
+const float BULLET_GRAVITY = 30.0f;
 
 void Bullet::UpdateBullet(float dt)
 {
-    Vector3 forward = GetLocalForwardVector(transform);
+    Vector3 forward = GetWorldForwardVector(transform);
     float forwardSpeed = Vector3DotProduct(linearVelocity, forward);
 
     float drag = 1.0f * damping;
@@ -27,14 +28,14 @@ void Bullet::UpdateBullet(float dt)
     transform.translation.y += linearVelocity.y * dt;
     transform.translation.z += linearVelocity.z * dt;
     
-    linearVelocity.y += -30.0 * dt;
+    linearVelocity.y += -gravitiy * dt;
 
     force.x = 0;
     force.y = 0;
     force.z = 0;
 }
 
-BulletPool::BulletPool(int quantity, float lifetime, float damping)
+BulletPool::BulletPool(int quantity, float lifetime, float damping, float gravity)
 {
     for (int i = 0; i < quantity; i++)
     {
@@ -47,6 +48,7 @@ BulletPool::BulletPool(int quantity, float lifetime, float damping)
         tempBullet->currentTime = 0.0f;
         tempBullet->initialVel = {0,0,0};
         tempBullet->force = {0,0,0};
+        tempBullet->gravitiy = gravity;
 
         bullets.push_back(std::move(tempBullet));
     }

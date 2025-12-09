@@ -5,6 +5,8 @@
 #include "simpleTransform.h"
 #include "target.h"
 
+#define BULLET_YELLOW Color{255,255,100,255}
+
 struct FlatShaderData
 {
     float minIntensity = 0.4f;
@@ -33,7 +35,7 @@ void DrawShadedMesh(FlatShaderData* shaderData, Model model);
 inline void DrawFlatShadedModel(const Transform& transform, const Model& model, FlatShaderData* shaderData)
 {
     rlPushMatrix();
-    const float* matrix = GetLocalMatrixTransform(transform).data();
+    const float* matrix = GetWorldMatrixTransform(transform).data();
     rlMultMatrixf(matrix);
     rlScalef(transform.scale.x, transform.scale.y, transform.scale.z);
     DrawShadedMesh(shaderData, model);
@@ -44,19 +46,19 @@ void DrawColliderWire(const std::vector<Vector3>& transformedVertices, Color col
 
 void DrawCollider(const std::vector<Vector3>& v, Color color);
 
-inline void DrawBullet(const Transform& transform, float radius)
+inline void DrawBullet(const Transform& transform, float radius, Color color)
 {
     rlPushMatrix();
-    const float* matrix = GetLocalMatrixTransform(transform).data();
+    const float* matrix = GetWorldMatrixTransform(transform).data();
     rlMultMatrixf(matrix);
-    DrawCube({0,0,0},0.5f,0.5f,radius * 2.0f,{255,255,100,255});
+    DrawCube({0,0,0},0.5f,0.5f,radius * 2.0f,color);
     rlPopMatrix();
 }
 
 inline void DrawMissile(const Transform& transform, float radius)
 {
     rlPushMatrix();
-    const float* matrix = GetLocalMatrixTransform(transform).data();
+    const float* matrix = GetWorldMatrixTransform(transform).data();
     rlMultMatrixf(matrix);
     DrawCube({0,0,0},1.0f,1.0f,radius * 2.0f,{200,200,200,255});
     rlPopMatrix();
@@ -65,7 +67,7 @@ inline void DrawMissile(const Transform& transform, float radius)
 inline void DrawCircleRotated3D(const Transform& transform, float radius, Color color)
 {
     rlPushMatrix();
-    const float* matrix = GetLocalMatrixTransform(transform).data();
+    const float* matrix = GetWorldMatrixTransform(transform).data();
     rlMultMatrixf(matrix);
     DrawCircleSector({0,0}, radius, 0, 360, 10, color);
     rlPopMatrix();
@@ -74,7 +76,7 @@ inline void DrawCircleRotated3D(const Transform& transform, float radius, Color 
 inline void DrawTgt(const Target& tgt)
 {
     rlPushMatrix();
-    const float* matrix = GetLocalMatrixTransform(tgt.body.transform).data();
+    const float* matrix = GetWorldMatrixTransform(tgt.body.transform).data();
     rlMultMatrixf(matrix);
     DrawCubeWires({0,0,0},tgt.width, tgt.height, tgt.length, GREEN);
     rlPopMatrix();

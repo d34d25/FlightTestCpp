@@ -66,7 +66,7 @@ Body3D::Body3D(float sideDrag, Vector3 angularDamping)
 
 void Body3D::ApplyAlternateForce(float dt)
 {
-    Vector3 forward = GetLocalForwardVector(transform);
+    Vector3 forward = GetWorldForwardVector(transform);
     float forwardSpeed = Vector3DotProduct(alternateForceSpeed, forward);
 
     float altDrag = linearDrag * FORWARD_DRAG_MULTIPLIER;
@@ -202,7 +202,7 @@ void Body3D::UpdateBody(float dt, int iterations)
 {   
     dt /= iterations;
 
-    Vector3 forward = GetLocalForwardVector(transform);
+    Vector3 forward = GetWorldForwardVector(transform);
     forward = Vector3Normalize(forward);
     float forwardSpeed = Vector3DotProduct(linearVelocity, forward);
 

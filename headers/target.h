@@ -40,11 +40,22 @@ public:
     Target target;
 
     BulletPool bulletPool;
+    float fireTimerBullet;
+    float firerateBullet;
+
     MissilePool missilePool;
+    float fireTimerMissile;
+    float firerateMissile;
+
+    bool playerInRange;
 
     Enemy(Target target, EnemyType type);
 
     void UpdateEnemy(float dt, int iterations, const Vector3& playerPos, const std::vector<Missile*>& activeMissilesA, const std::vector<Missile*>& activeMissilesB);
+
+    void FireB(float dt, const Vector3& playerPos, const Vector3& playerVel);
+
+    void FireM(float dt, const Vector3& playerPos);
 
 private:
 

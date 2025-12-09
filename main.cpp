@@ -176,6 +176,47 @@ int main()
                     }
                 }
 
+                for (int m = 0; m < player.missilePoolA.activeMissiles.size(); m++)
+                {
+                    Missile* currentMissile = player.missilePoolA.activeMissiles[m];
+
+                    CollisionResult rm;
+
+                    for(int e = 0; e < enemyList.size(); e++)
+                    {
+                        float a = 100;
+
+                        rm = PrismVsSphere(enemyList[e]->target.body.transform.translation,
+                            enemyList[e]->target.hitbox.GetTransformedVertices(enemyList[e]->target.body.transform),
+                            currentMissile->body.transform.translation, currentMissile->radius);
+
+                        if(rm.collision)
+                        {
+                            currentMissile->didHit = true;
+                        }
+                    }
+                }
+
+                for (int m = 0; m < player.missilePoolB.activeMissiles.size(); m++)
+                {
+                    Missile* currentMissile = player.missilePoolB.activeMissiles[m];
+
+                    CollisionResult rm;
+
+                    for(int e = 0; e < enemyList.size(); e++)
+                    {
+                        float a = 100;
+
+                        rm = PrismVsSphere(enemyList[e]->target.body.transform.translation,
+                            enemyList[e]->target.hitbox.GetTransformedVertices(enemyList[e]->target.body.transform),
+                            currentMissile->body.transform.translation, currentMissile->radius);
+
+                        if(rm.collision)
+                        {
+                            currentMissile->didHit = true;
+                        }
+                    }
+                }
 
                 for (int a = 0; a < enemyList.size(); a++)
                 {
@@ -185,6 +226,11 @@ int main()
                 }
 
                 obstacleColliderColor = ogObstacleColliderColor;
+            }
+
+            for (int a = 0; a < enemyList.size(); a++)
+            {
+                enemyList[a]->FireB(FIXED_DELTA_TIME, player.GetPosition(), player.body.linearVelocity);
             }
 
             player.ChooseTarget();
@@ -217,7 +263,7 @@ int main()
         {
             Bullet* currentBullet = player.bulletPool.activeBullets[i];
 
-            DrawBullet(currentBullet->transform, currentBullet->radius);
+            DrawBullet(currentBullet->transform, currentBullet->radius, BULLET_YELLOW);
         }        
 
         rlPushMatrix();
@@ -265,14 +311,20 @@ int main()
         for (int i = 0; i < enemyList.size(); i++)
         {
             DrawTgt(enemyList[i]->target);
-        }
 
+            for(int j = 0; j < enemyList[i]->bulletPool.activeBullets.size(); j++)
+            {
+                Bullet* currentBullet = enemyList[i]->bulletPool.activeBullets[j];
+
+                DrawBullet(currentBullet->transform, currentBullet->radius, {150,150,255,255});
+            }
+        }
 
         if(player.currentTarget)
         {
             DrawLine3D(player.GetPosition(), player.currentTarget->body.transform.translation, RED);
         }
-        
+
         EndMode3D();
         EndTextureMode();
         

@@ -5,6 +5,7 @@
 #include <memory>
 
 extern const float BULLET_DAMPING;
+extern const float BULLET_GRAVITY;
 
 class Bullet
 {
@@ -25,6 +26,8 @@ public:
     Vector3 initialVel;
     Vector3 force;
 
+    float gravitiy;
+
     Bullet() = default;
 
     void UpdateBullet(float dt);
@@ -40,7 +43,7 @@ public:
 
     BulletPool() = default;
 
-    BulletPool(int quantity, float lifetime, float damping);
+    BulletPool(int quantity, float lifetime, float damping, float gravity);
 
     void UpdateBullets(float dt);
     

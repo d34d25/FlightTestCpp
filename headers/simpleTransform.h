@@ -3,7 +3,7 @@
 #include "raymath.h"
 #include <array>
 
-inline Matrix GetLocalTransform(const Transform& transform)
+inline Matrix GetWorldTransform(const Transform& transform)
 {
     Matrix rotationMatrix = QuaternionToMatrix(transform.rotation);
     Matrix translationMatrix = MatrixTranslate(
@@ -14,9 +14,9 @@ inline Matrix GetLocalTransform(const Transform& transform)
     return MatrixMultiply(rotationMatrix, translationMatrix);
 }
 
-inline std::array<float, 16> GetLocalMatrixTransform(const Transform& transform)
+inline std::array<float, 16> GetWorldMatrixTransform(const Transform& transform)
 {
-    Matrix matrix = GetLocalTransform(transform);
+    Matrix matrix = GetWorldTransform(transform);
 
     std::array<float, 16> matrixArray = {
         matrix.m0, matrix.m1, matrix.m2, matrix.m3,
@@ -28,7 +28,7 @@ inline std::array<float, 16> GetLocalMatrixTransform(const Transform& transform)
     return matrixArray;
 }
 
-inline Vector3 GetLocalForwardVector(const Transform& transform)
+inline Vector3 GetWorldForwardVector(const Transform& transform)
 {
     Vector3 localForward;
     localForward.x = 0.0f, localForward.y = 0.0f, localForward.z = 1.0f;
@@ -40,7 +40,7 @@ inline Vector3 GetLocalForwardVector(const Transform& transform)
     return forward;
 }
 
-inline Vector3 GetLocalUpVector(const Transform& transform)
+inline Vector3 GetWorldUpVector(const Transform& transform)
 {
     Vector3 localUp;
     localUp.x = 0.0f, localUp.y = 1.0f, localUp.z = 0.0f;
@@ -52,7 +52,7 @@ inline Vector3 GetLocalUpVector(const Transform& transform)
     return up;
 }
 
-inline Vector3 GetLocalRightVector(const Transform& transform)
+inline Vector3 GetWorldRightVector(const Transform& transform)
 {
     Vector3 localRight;
     localRight.x = 1.0f, localRight.y = 0.0f, localRight.z = 0.0f;

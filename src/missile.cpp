@@ -6,7 +6,7 @@
 
 void Missile::UpdateMissile(float dt, float iterations)
 {
-    Vector3 forward = GetLocalForwardVector(body.transform);
+    Vector3 forward = GetWorldForwardVector(body.transform);
 
     //missile guiding system
 
@@ -43,11 +43,11 @@ void Missile::UpdateMissile(float dt, float iterations)
 
         if(fireTimerParticle <= 0.0f)
         {
-            Vector3 forward = GetLocalForwardVector(body.transform);
+            Vector3 forward = GetWorldForwardVector(body.transform);
             Vector3 particleVel = Vector3Add(body.linearVelocity, Vector3Scale(forward, 50));
 
-            Vector3 right = GetLocalRightVector(body.transform);
-            Vector3 up = GetLocalUpVector(body.transform);
+            Vector3 right = GetWorldRightVector(body.transform);
+            Vector3 up = GetWorldUpVector(body.transform);
 
             float rightDeviation = (2.0f * ((float)rand() / RAND_MAX) - 1.0f) * 4.0f;
             float upDeviation = (2.0f * ((float)rand() / RAND_MAX) - 1.0f) * 4.0f;
@@ -165,7 +165,7 @@ void MissilePool::FireMissile(const Transform &transform, Vector3 initialSpeed, 
         m->thrust = initialThrust;
         m->body.linearVelocity = {initialSpeed.x, initialSpeed.y, initialSpeed.z};
 
-        Vector3 worldUp = GetLocalUpVector(m->body.transform);
+        Vector3 worldUp = GetWorldUpVector(m->body.transform);
         m->body.linearVelocity = Vector3Add(m->body.linearVelocity, Vector3Scale(worldUp, -7.0f));
         
         activeMissiles.push_back(m);

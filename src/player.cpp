@@ -76,9 +76,12 @@ Player::Player()
 
     engineGlowChange = 0.2f;
 
-    bulletPool = BulletPool(60, 1, BULLET_DAMPING);
+    bulletPool = BulletPool(60, 1, BULLET_DAMPING, BULLET_GRAVITY);
     bulletTransform = {};
     bulletTransform.scale = {1.0f, 1.0f, 1.0f};
+
+    fireTimerBullet = 0.0f;
+    firerateBullet = 0.1f;
 
     fireTimerMissileA = 0.0f;
     firerateMissile = 1.0f;
@@ -112,7 +115,7 @@ void Player::UpdatePlayer(float dt, int iterations)
     float fdt = dt;
     fdt /= iterations;
 
-    Vector3 forward = GetLocalForwardVector(body.transform);
+    Vector3 forward = GetWorldForwardVector(body.transform);
     forward = Vector3Normalize(forward);
     float forwardSpeed = Vector3DotProduct(body.linearVelocity, forward);
 
@@ -243,7 +246,7 @@ void Player::UpdatePlayer(float dt, int iterations)
 
     // fake banking
 
-    Vector3 right = GetLocalRightVector(body.transform);
+    Vector3 right = GetWorldRightVector(body.transform);
     right = Vector3Normalize(right);
 
     float rDot = Vector3DotProduct(upDir, right);
@@ -252,7 +255,7 @@ void Player::UpdatePlayer(float dt, int iterations)
 
     // upside down case
 
-    Vector3 up = GetLocalUpVector(body.transform);
+    Vector3 up = GetWorldUpVector(body.transform);
     up = Vector3Normalize(up);
 
     float uDot = Vector3DotProduct(upDir, up);
@@ -434,7 +437,7 @@ void Player::FireB(float dt)
         {
             FollowTransform(&bulletTransform, GetTransform(), {-2.75f, 0.9f, 10.0f});
 
-            Vector3 forward = GetLocalForwardVector(body.transform);
+            Vector3 forward = GetWorldForwardVector(body.transform);
             Vector3 bulletVelocity = Vector3Add(body.linearVelocity, Vector3Scale(forward, bulletspeed));
 
             bulletPool.FireBullet(bulletTransform, bulletVelocity);
@@ -463,7 +466,7 @@ void Player::FireM(float dt)
 
     if(fireKey)
     {
-        Vector3 forward = GetLocalForwardVector(body.transform);
+        Vector3 forward = GetWorldForwardVector(body.transform);
         Vector3 missileInitialSpeed = Vector3Scale(forward, GetSpeed());
 
         if (!currentMissilePool && fireTimerMissileA <= 0.0f)
@@ -495,7 +498,7 @@ void Player::ChooseTarget()
     float frontAngle = 0.75f;
     float maxDist = 4000.0f;
 
-    Vector3 forward = GetLocalForwardVector(body.transform);
+    Vector3 forward = GetWorldForwardVector(body.transform);
 
     for (int i = 0; i < targets.size(); i++)
     {

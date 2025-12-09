@@ -16,26 +16,26 @@ private:
     float originalMaxRollSpeed;
     float originalMaxYawSpeed;
 
-    int pitchInput = 0;
-    int rollInput = 0;
-    int yawInput = 0;
+    int pitchInput;
+    int rollInput;
+    int yawInput;
 
     bool globalCamera = false;
-    float orbitYaw = 0.0f;
-    float orbitPitch = 0.0f;
-    float orbitDistance = -100.0f;
+    float orbitYaw;
+    float orbitPitch;
+    float orbitDistance;
 
     Vector3 smoothedOffset;
 
-    float engineGlow = 0.5f;
-    float idleEngineGlow = 0.5f;
+    float engineGlow;
+    float idleEngineGlow;
 
-    int maxEngineGlow = 1;
+    int maxEngineGlow;
     float engineGlowChange;
 
     Transform bulletTransform;
-    float fireTimerBullet = 0.0f;
-    float firerateBullet = 0.1f;
+    float fireTimerBullet;
+    float firerateBullet;
     
     Transform missileTransformA;
     float fireTimerMissileA;

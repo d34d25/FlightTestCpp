@@ -76,7 +76,7 @@ Player::Player()
 
     engineGlowChange = 0.2f;
 
-    bulletPool = BulletPool(60, 1, 0.05f);
+    bulletPool = BulletPool(60, 1, BULLET_DAMPING);
     bulletTransform = {};
     bulletTransform.scale = {1.0f, 1.0f, 1.0f};
 
@@ -453,7 +453,7 @@ void Player::FireM(float dt)
     if(currentTarget && tgtLocked)
     {
         locked = true;
-        tgtPos = currentTarget->transform.translation;
+        tgtPos = currentTarget->body.transform.translation;
     }
 
     if (fireTimerMissileA > 0.0f) fireTimerMissileA -= dt;
@@ -489,45 +489,70 @@ void Player::FireM(float dt)
 
 void Player::ChooseTarget()
 {
-    float distToTgtMag = INFINITY;
+    float closestDist = INFINITY;
+    int bestTarget = -1;
+
+    float frontAngle = 0.75f;
+    float maxDist = 4000.0f;
+
+    Vector3 forward = GetLocalForwardVector(body.transform);
 
     for (int i = 0; i < targets.size(); i++)
     {
-        Vector3 distToTgt = Vector3Subtract(
-            targets[i]->transform.translation, GetPosition()
-        );
+        Vector3 diff = Vector3Subtract(targets[i]->body.transform.translation, GetPosition());
+        float dist = Vector3Length(diff);
 
-        distToTgtMag = Vector3Length(distToTgt);
+        if (dist > maxDist) continue;
 
-        if(!tgtLocked) 
+        Vector3 dir = Vector3Normalize(diff);
+        float angle = Vector3DotProduct(forward, dir);
+
+        if (angle < frontAngle) continue;
+
+        if (dist < closestDist)
         {
-            tgtIndex = i;
+            closestDist = dist;
+            bestTarget = i;
         }
     }
 
-    if(distToTgtMag <= 4000)
-    {
-        tgtLocked = true; 
-
-        if(!globalCamera && IsKeyPressed(KEY_E) || globalCamera && IsKeyPressed(KEY_TAB))
-        {
-            if(tgtIndex < targets.size())
-            {
-                tgtIndex++;
-
-                if(tgtIndex >= targets.size())
-                {
-                    tgtIndex = 0;
-                }
-
-                currentTarget = targets[tgtIndex];
-            }
-        }
-    }
-    else
+    if (bestTarget < 0)
     {
         currentTarget = nullptr;
         tgtLocked = false;
         return;
-    }    
+    }
+
+    if (!tgtLocked)
+    {
+        tgtLocked = true;
+        tgtIndex = bestTarget;
+        currentTarget = targets[tgtIndex];
+    }
+
+    bool switchPressed = (!globalCamera && IsKeyPressed(KEY_E)) || ( globalCamera && IsKeyPressed(KEY_TAB));
+
+    if (switchPressed)
+    {
+        int startIndex = tgtIndex;
+
+        do
+        {
+            tgtIndex = (tgtIndex + 1) % targets.size();
+
+            Vector3 diff = Vector3Subtract(targets[tgtIndex]->body.transform.translation, GetPosition());
+            float dist = Vector3Length(diff);
+            Vector3 dir = Vector3Normalize(diff);
+
+            float angle = Vector3DotProduct(forward, dir);
+
+            if (dist < maxDist && angle > frontAngle)
+            {
+                currentTarget = targets[tgtIndex];
+                break;
+            }
+
+        } while (tgtIndex != startIndex);
+    }
 }
+

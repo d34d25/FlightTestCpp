@@ -74,9 +74,9 @@ inline void DrawCircleRotated3D(const Transform& transform, float radius, Color 
 inline void DrawTgt(const Target& tgt)
 {
     rlPushMatrix();
-    const float* matrix = GetLocalMatrixTransform(tgt.transform).data();
+    const float* matrix = GetLocalMatrixTransform(tgt.body.transform).data();
     rlMultMatrixf(matrix);
-    DrawCubeWires({0,0,0},tgt.width, tgt.height, tgt.lenght, GREEN);
+    DrawCubeWires({0,0,0},tgt.width, tgt.height, tgt.length, GREEN);
     rlPopMatrix();
 }
 

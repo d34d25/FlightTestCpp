@@ -49,24 +49,29 @@ int main()
     Color obstacleColliderColor = ogObstacleColliderColor;
 
     // test targets
-    Target tgt1 = CreateTarget({0,100,400}, 10,10,10, 100);
+    Target tgt1 = CreateTarget({0,100,400}, 10,10,10, 100, EnemyColliderType::BOX);
     
-    Target tgt2 = CreateTarget({500,0,400}, 10,10,10, 100);
+    Target tgt2 = CreateTarget({500,0,400}, 10,10,10, 100, EnemyColliderType::BOX);
 
-    Target tgt3 = CreateTarget({0,600,400}, 10,10,10, 100);
+    Target tgt3 = CreateTarget({0,600,400}, 10,10,10, 100, EnemyColliderType::PRISMATOID_FORWARD);
 
-    Target tgt4 = CreateTarget({0,0,900}, 10,10,10, 100);
+    Target tgt4 = CreateTarget({0,0,900}, 10,10,10, 100, EnemyColliderType::PRISMATOID_UP);
 
-    std::vector<Target> tgtList = {};
+    Enemy aatank1 = Enemy(tgt1, EnemyType::AA_TANK);
+    Enemy aatank2 = Enemy(tgt2, EnemyType::AA_TANK);
+    Enemy aatank3 = Enemy(tgt3, EnemyType::AA_TANK);
+    Enemy aatank4 = Enemy(tgt4, EnemyType::AA_TANK);
 
-    tgtList.push_back(tgt1);
-    tgtList.push_back(tgt2);
-    tgtList.push_back(tgt3);
-    tgtList.push_back(tgt4);
+    std::vector<std::unique_ptr<Enemy>> enemyList;
 
-    for(int i = 0; i < tgtList.size(); i++)
+    enemyList.push_back(std::make_unique<Enemy>(tgt1, EnemyType::AA_TANK));
+    enemyList.push_back(std::make_unique<Enemy>(tgt2, EnemyType::AA_TANK));
+    enemyList.push_back(std::make_unique<Enemy>(tgt3, EnemyType::AA_TANK));
+    enemyList.push_back(std::make_unique<Enemy>(tgt4, EnemyType::AA_TANK));
+
+    for(int i = 0; i < enemyList.size(); i++)
     {
-        player.targets.push_back(std::make_shared<Target>(tgtList[i]));
+        player.targets.push_back(std::make_shared<Target>(enemyList[i]->target));
     }
 
     InitWindow(SCREEN_WIDTH,SCREEN_HEIGHT,"");
@@ -171,6 +176,14 @@ int main()
                     }
                 }
 
+
+                for (int a = 0; a < enemyList.size(); a++)
+                {
+                    enemyList[a]->UpdateEnemy(FIXED_DELTA_TIME, iterations, 
+                        player.GetPosition(), 
+                        player.missilePoolA.activeMissiles, player.missilePoolB.activeMissiles);
+                }
+
                 obstacleColliderColor = ogObstacleColliderColor;
             }
 
@@ -204,12 +217,7 @@ int main()
         {
             Bullet* currentBullet = player.bulletPool.activeBullets[i];
 
-            if(currentBullet->isAlive)
-            {
-                DrawBullet(currentBullet->transform, currentBullet->radius);
-                //DrawSphere(currentBullet->transform.translation, currentBullet->radius, {255,255,100,255});
-            }
-            
+            DrawBullet(currentBullet->transform, currentBullet->radius);
         }        
 
         rlPushMatrix();
@@ -228,17 +236,14 @@ int main()
         {
             Missile* currentMissile = player.missilePoolA.activeMissiles[i];
 
-            if(currentMissile->isAlive)
+            DrawMissile(currentMissile->body.transform, currentMissile->radius);
+
+            for(int j = 0; j < currentMissile->particlePool.activeParticles.size(); j++)
             {
-                DrawMissile(currentMissile->body.transform, currentMissile->radius);
+                Particle* currentParticle = currentMissile->particlePool.activeParticles[j];
 
-                for(int j = 0; j < currentMissile->particlePool.activeParticles.size(); j++)
-                {
-                    Particle* currentParticle = currentMissile->particlePool.activeParticles[j];
-
-                    RotateTowardsCamera(&currentParticle->transform, player.camera);
-                    DrawCircleRotated3D(currentParticle->transform, currentParticle->radius, {255,255,255,static_cast<unsigned char>(currentParticle->alpha)});
-                }
+                RotateTowardsCamera(&currentParticle->transform, player.camera);
+                DrawCircleRotated3D(currentParticle->transform, currentParticle->radius, {255,255,255,static_cast<unsigned char>(currentParticle->alpha)});
             }
         }
 
@@ -246,29 +251,26 @@ int main()
         {
             Missile* currentMissile = player.missilePoolB.activeMissiles[i];
 
-            if(currentMissile->isAlive)
+            DrawMissile(currentMissile->body.transform, currentMissile->radius);
+
+            for(int j = 0; j < currentMissile->particlePool.activeParticles.size(); j++)
             {
-                DrawMissile(currentMissile->body.transform, currentMissile->radius);
+                Particle* currentParticle = currentMissile->particlePool.activeParticles[j];
 
-                for(int j = 0; j < currentMissile->particlePool.activeParticles.size(); j++)
-                {
-                    Particle* currentParticle = currentMissile->particlePool.activeParticles[j];
-
-                    RotateTowardsCamera(&currentParticle->transform, player.camera);
-                    DrawCircleRotated3D(currentParticle->transform, currentParticle->radius, {255,255,255,static_cast<unsigned char>(currentParticle->alpha)});
-                }
+                RotateTowardsCamera(&currentParticle->transform, player.camera);
+                DrawCircleRotated3D(currentParticle->transform, currentParticle->radius, {255,255,255,static_cast<unsigned char>(currentParticle->alpha)});
             }
         }
 
-        for (int i = 0; i < tgtList.size(); i++)
+        for (int i = 0; i < enemyList.size(); i++)
         {
-            DrawTgt(tgtList[i]);
+            DrawTgt(enemyList[i]->target);
         }
 
 
         if(player.currentTarget)
         {
-            DrawLine3D(player.GetPosition(), player.currentTarget->transform.translation, RED);
+            DrawLine3D(player.GetPosition(), player.currentTarget->body.transform.translation, RED);
         }
         
         EndMode3D();
@@ -311,3 +313,11 @@ int main()
 
     return 0;
 }
+
+
+/*
+
+when creating the scene system, before drawing create a temp list of the objects to be drawn
+out of the active ones
+
+*/

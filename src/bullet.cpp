@@ -3,6 +3,8 @@
 #include <algorithm>
 #include <iostream>
 
+const float BULLET_DAMPING = 0.05f;
+
 void Bullet::UpdateBullet(float dt)
 {
     Vector3 forward = GetLocalForwardVector(transform);

@@ -4,6 +4,8 @@
 #include <vector>
 #include <memory>
 
+extern const float BULLET_DAMPING;
+
 class Bullet
 {
 public:

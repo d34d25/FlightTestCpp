@@ -160,6 +160,11 @@ public:
     {
         return Vector3Length(body.linearVelocity);
     }
+    
+    inline float GetTrueSpeed()
+    {
+        return Vector3Length(body.GetTrueVelocity());    
+    }
 
     inline float GetScale()
     {

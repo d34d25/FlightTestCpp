@@ -36,7 +36,7 @@ public:
     float worldAngularSpeed;
 
     Vector3 alternateForce;
-    Vector3 alternateForceSpeed;
+    Vector3 alternateLinearVelocity;
 
     Vector3 alternateTorque;
     Vector3 alternateAngularSpeed;
@@ -104,9 +104,7 @@ public:
         alternateTorque.x += amount;
     }
 
-    void ApplyAlternateForce(float dt);
-
-    void ApplyAlernateTorque(float dt);
+    void AlternateUpdateBody(float dt, int iterations);
 
     void ApplyAlternateWorldTorque(Vector3 axis, float dt);
 
@@ -150,5 +148,10 @@ public:
     inline float GetForwardDragFactor()
     {
         return linearDrag * FORWARD_DRAG_MULTIPLIER;
+    }
+
+    inline Vector3 GetTrueVelocity()
+    {
+        return Vector3Add(linearVelocity, alternateLinearVelocity);
     }
 };

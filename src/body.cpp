@@ -11,7 +11,7 @@ Body3D::Body3D(float sideDrag, Vector3 angularDamping)
     
     alternateForce = {0.0f,0.0f,0.0f};
 
-    alternateForceSpeed = {0.0f,0.0f,0.0f};
+    alternateLinearVelocity = {0.0f,0.0f,0.0f};
 
     torque.x = 0.0f, torque.y = 0.0f, torque.z = 0.0f;
 
@@ -62,12 +62,14 @@ Body3D::Body3D(float sideDrag, Vector3 angularDamping)
     inertia.z = static_cast<float>((1.0f/12.0f) * mass * (width * width + height * height));
 }
 
-//fix framerate / iterations dependency for damping
 
-void Body3D::ApplyAlternateForce(float dt)
+void Body3D::AlternateUpdateBody(float dt, int iterations)
 {
+    dt /= iterations;
+
     Vector3 forward = GetWorldForwardVector(transform);
-    float forwardSpeed = Vector3DotProduct(alternateForceSpeed, forward);
+
+    float forwardSpeed = Vector3DotProduct(alternateLinearVelocity, forward);
 
     float altDrag = linearDrag * FORWARD_DRAG_MULTIPLIER;
 
@@ -75,7 +77,7 @@ void Body3D::ApplyAlternateForce(float dt)
 
     if (altDrag > maxAltDrag) altDrag = maxAltDrag;
 
-    Vector3 altDragForce = Vector3Scale(alternateForceSpeed, -altDrag);
+    Vector3 altDragForce = Vector3Scale(alternateLinearVelocity, -altDrag);
     alternateForce = Vector3Add(alternateForce, altDragForce);
 
     Vector3 sAcc = {0,0,0};
@@ -87,21 +89,20 @@ void Body3D::ApplyAlternateForce(float dt)
         sAcc.z = alternateForce.z / mass;
     }
 
-    alternateForceSpeed.x += sAcc.x * dt;
-    alternateForceSpeed.y += sAcc.y * dt;
-    alternateForceSpeed.z += sAcc.z * dt;
+    alternateLinearVelocity.x += sAcc.x * dt;
+    alternateLinearVelocity.y += sAcc.y * dt;
+    alternateLinearVelocity.z += sAcc.z * dt;
 
-    transform.translation.x += alternateForceSpeed.x * dt;
-    transform.translation.y += alternateForceSpeed.y * dt;
-    transform.translation.z += alternateForceSpeed.z * dt;
+    transform.translation.x += alternateLinearVelocity.x * dt;
+    transform.translation.y += alternateLinearVelocity.y * dt;
+    transform.translation.z += alternateLinearVelocity.z * dt;
 
     alternateForce.x = 0.0f;
     alternateForce.y = 0.0f;
     alternateForce.z = 0.0f;
-}
 
-void Body3D::ApplyAlernateTorque(float dt)
-{
+    //alt torque
+
     float pitchDrag = angularDrag * ALT_ANGULAR_DAMPING;
     float rollDrag = angularDrag * ALT_ANGULAR_DAMPING;
     float yawDrag = angularDrag * ALT_ANGULAR_DAMPING;
@@ -161,6 +162,7 @@ void Body3D::ApplyAlernateTorque(float dt)
     alternateTorque.x = 0.0f;
     alternateTorque.y = 0.0f;
     alternateTorque.z = 0.0f;
+
 }
 
 void Body3D::ApplyAlternateWorldTorque(Vector3 axis, float dt)
@@ -203,7 +205,7 @@ void Body3D::UpdateBody(float dt, int iterations)
     dt /= iterations;
 
     Vector3 forward = GetWorldForwardVector(transform);
-    forward = Vector3Normalize(forward);
+
     float forwardSpeed = Vector3DotProduct(linearVelocity, forward);
 
     Vector3 forwardVel = Vector3Scale(forward, forwardSpeed);

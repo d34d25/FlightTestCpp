@@ -76,7 +76,7 @@ Player::Player()
 
     engineGlowChange = 0.2f;
 
-    bulletPool = BulletPool(60, 1, BULLET_DAMPING, BULLET_GRAVITY);
+    bulletPool = BulletPool(60, 1);
     bulletTransform = {};
     bulletTransform.scale = {1.0f, 1.0f, 1.0f};
 
@@ -117,7 +117,6 @@ void Player::UpdatePlayer(float dt, int iterations)
 
     Vector3 forward = GetWorldForwardVector(body.transform);
     forward = Vector3Normalize(forward);
-    float forwardSpeed = Vector3DotProduct(body.linearVelocity, forward);
 
     if (!globalCamera)
     {
@@ -235,13 +234,15 @@ void Player::UpdatePlayer(float dt, int iterations)
 
     float dotFU = Vector3DotProduct(forward, upDir);
 
+    float forwardSpeed = Vector3DotProduct(body.GetTrueVelocity(), forward);
+
     if (dotFU > 0.1)
     {
-        if (forwardSpeed > 0.0f) body.ApplyLocalForce(backDir, FAKE_GRAVITY_FORCE * dotFU);
+        if (forwardSpeed > 0.0f) body.ApplyAlternateLocalForce(backDir, FAKE_GRAVITY_FORCE * dotFU);
     }
     else if (dotFU < -0.1)
     {
-        body.ApplyLocalForce(backDir, FAKE_GRAVITY_FORCE * dotFU);
+        body.ApplyAlternateLocalForce(backDir, FAKE_GRAVITY_FORCE * dotFU);
     }
 
     // fake banking
@@ -267,7 +268,7 @@ void Player::UpdatePlayer(float dt, int iterations)
 
     // fake stall
 
-    float speed = GetSpeed();
+    float speed = GetTrueSpeed();
 
     float fDot = Vector3DotProduct(downDir, forward);
 
@@ -311,10 +312,6 @@ void Player::UpdatePlayer(float dt, int iterations)
 
         body.alternateForce.y = -STALL_DOWNWARD_FORCE;
     }
-    else
-    {
-        body.alternateForce.y = 0.0f;
-    }
 
     Vector3 axisOfRotation = Vector3CrossProduct(forward, downDir);
 
@@ -325,11 +322,11 @@ void Player::UpdatePlayer(float dt, int iterations)
         body.worldAngularTorque = STALL_TORQUE_SPEED;
     }
 
-    body.ApplyAlternateForce(fdt);
-    body.ApplyAlernateTorque(fdt);
-    body.ApplyAlternateWorldTorque(axisOfRotation, fdt);
+    body.AlternateUpdateBody(dt, iterations); //external forces
 
-    body.UpdateBody(dt, iterations);
+    body.ApplyAlternateWorldTorque(axisOfRotation, fdt); //stall
+
+    body.UpdateBody(dt, iterations); //player input
 
     bulletPool.UpdateBullets(fdt);
 

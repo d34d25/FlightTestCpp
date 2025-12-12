@@ -44,7 +44,7 @@ Target CreateTarget(Vector3 position, float width, float height, float length, f
 
 Enemy::Enemy(Target target, EnemyType type)
 {
-    bulletPool = BulletPool(30, 3, 0,0);
+    bulletPool = BulletPool(30, 3);
     missilePool = MissilePool(4, 2, MAX_THRUST * 0.75f);
 
     fireTimerBullet = 0.0f;

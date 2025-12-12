@@ -4,16 +4,12 @@
 #include <vector>
 #include <memory>
 
-extern const float BULLET_DAMPING;
-extern const float BULLET_GRAVITY;
-
 class Bullet
 {
 public:
 
     Transform transform;
     Vector3 linearVelocity;
-    float damping;
     bool isAlive;
 
     float radius = 2.0f;
@@ -25,8 +21,6 @@ public:
 
     Vector3 initialVel;
     Vector3 force;
-
-    float gravitiy;
 
     Bullet() = default;
 
@@ -43,7 +37,7 @@ public:
 
     BulletPool() = default;
 
-    BulletPool(int quantity, float lifetime, float damping, float gravity);
+    BulletPool(int quantity, float lifetime);
 
     void UpdateBullets(float dt);
     

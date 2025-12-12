@@ -58,14 +58,19 @@ Enemy::Enemy(Target target, EnemyType type)
     target.isLocked = false;
 
     playerInRange = false;
+
+    predictedPos = {0,0,0};
+    predictedDir = {0,0,0};
+
+    bulletspeed = 1900;
 }
 
-void Enemy::UpdateEnemy(float dt, int iterations, const Vector3 &playerPos, const std::vector<Missile *>& activeMissilesA, const std::vector<Missile *>& activeMissilesB)
+void Enemy::UpdateEnemy(float dt, int iterations, const Vector3 &playerPos, const Vector3& playerVel, const std::vector<Missile *>& activeMissilesA, const std::vector<Missile *>& activeMissilesB)
 {
     switch (type)
     {
     case EnemyType::AA_TANK:
-        UpdateAATank(dt,iterations,playerPos, activeMissilesA, activeMissilesB);
+        UpdateAATank(dt,iterations,playerPos, playerVel, activeMissilesA, activeMissilesB);
         break;
     
     default:
@@ -73,16 +78,10 @@ void Enemy::UpdateEnemy(float dt, int iterations, const Vector3 &playerPos, cons
     }
 }
 
-void Enemy::FireB(float dt, const Vector3& playerPos, const Vector3& playerVel)
+void Enemy::FireB(float dt)
 {
     if(playerInRange)
     {    
-        int bulletspeed = 1900;
-
-        Vector3 predictedPos = SolveIntercept(playerPos, playerVel, bulletspeed);
-        Vector3 predictedDir = Vector3Subtract(predictedPos, GetPosition());
-        predictedDir = Vector3Normalize(predictedDir);
-
         Transform bulletTransform = {};
 
         bulletTransform.translation = GetPosition();
@@ -100,7 +99,7 @@ void Enemy::FireB(float dt, const Vector3& playerPos, const Vector3& playerVel)
         Vector3 right = GetWorldRightVector(bulletTransform);
         Vector3 up = GetWorldUpVector(bulletTransform);
 
-        float maxDeviation = 300.0f;
+        float maxDeviation = 0.0f;//300.0f;
 
         float rightDeviation = (2.0f * ((float)rand() / RAND_MAX) - 1.0f) * maxDeviation;
         float upDeviation = (2.0f * ((float)rand() / RAND_MAX) - 1.0f) * maxDeviation;
@@ -113,7 +112,7 @@ void Enemy::FireB(float dt, const Vector3& playerPos, const Vector3& playerVel)
         
         while(fireTimerBullet <= 0.0f)
         {
-            Vector3 bulletVelocity = Vector3Scale(predictedDir, bulletspeed);
+            Vector3 bulletVelocity = Vector3Add(GetVelocity(),Vector3Scale(predictedDir, bulletspeed));
 
             bulletVelocity = Vector3Add(bulletVelocity, deviation);
 
@@ -130,7 +129,7 @@ void Enemy::FireM(float dt, const Vector3& playerPos)
 }
 
 
-void Enemy::UpdateAATank(float dt, int iterations, const Vector3 &playerPos, const std::vector<Missile *> &activeMissilesA, const std::vector<Missile *> &activeMissilesB)
+void Enemy::UpdateAATank(float dt, int iterations, const Vector3 &playerPos, const Vector3& playerVel, const std::vector<Missile *> &activeMissilesA, const std::vector<Missile *> &activeMissilesB)
 {
     Vector3 dirToPlayer = Vector3Subtract(playerPos, target.body.transform.translation);
 
@@ -144,6 +143,10 @@ void Enemy::UpdateAATank(float dt, int iterations, const Vector3 &playerPos, con
     if (distToPlayer <= 4000)
     {
         playerInRange = true;
+
+        predictedPos = SolveIntercept(playerPos, playerVel, bulletspeed);
+        predictedDir = Vector3Subtract(predictedPos, GetPosition());
+        predictedDir = Vector3Normalize(predictedDir);
     }
 
     target.body.UpdateBody(dt, iterations);
@@ -167,16 +170,20 @@ bool Enemy::IsLockedByMissile(const std::vector<Missile *> &activeMissiles)
 
 Vector3 Enemy::SolveIntercept(const Vector3 &playerPos, const Vector3 &playerVel, int bulletspeed)
 {
+    Vector3 relPos = Vector3Subtract(playerPos, GetPosition());
+
     float a = bulletspeed * bulletspeed - Vector3DotProduct(playerVel, playerVel);
-    float b = 2 * Vector3DotProduct(playerVel, Vector3Subtract(playerPos, GetPosition()));
-    float c = Vector3DotProduct(Vector3Subtract(playerPos, GetPosition()), Vector3Subtract(playerPos, GetPosition()));
+    float b = 2 * Vector3DotProduct(playerVel, relPos);
+    float c = Vector3DotProduct(relPos,relPos);
 
     float time = 0.0f;
 
     if(bulletspeed > Vector3Length(playerVel))
     {
-        time = (b + sqrtf(b*b+4*a*c)) / (2*a);
+        float discriminant = b * b + 4 * a * c;
+        time = (b + sqrtf(discriminant)) / (2.0f*a);
     }
 
     return Vector3Add(playerPos, Vector3Scale(playerVel, time));
 }
+

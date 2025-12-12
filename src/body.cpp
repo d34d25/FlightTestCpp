@@ -16,7 +16,7 @@ Body3D::Body3D(float sideDrag, Vector3 angularDamping)
     torque.x = 0.0f, torque.y = 0.0f, torque.z = 0.0f;
 
     alternateTorque = {0,0,0};
-    alternateAngularSpeed = {0,0,0};
+    alternateAngularVelocity = {0,0,0};
 
     this->lateralDragMultiplier = sideDrag;
 
@@ -47,13 +47,7 @@ Body3D::Body3D(float sideDrag, Vector3 angularDamping)
     angularVelocity.z = 0.0f;
 
     worldAngularTorque = 0.0f;
-    worldAngularSpeed = 0.0f;
-
-    linearAcceleration.x = 0.0f, linearAcceleration.y = 0.0f,
-    linearAcceleration.z = 0.0f;
-
-    angularAcceleration.x = 0.0f, angularAcceleration.y = 0.0f,
-    angularAcceleration.z = 0.0f;
+    worldAngularVelocity = 0.0f;
 
     mass = density * width * height * length;
 
@@ -113,9 +107,9 @@ void Body3D::AlternateUpdateBody(float dt, int iterations)
     if(rollDrag > maxRollDragFactor) rollDrag = maxRollDragFactor;
     if(yawDrag > maxYawDragFactor) yawDrag = maxYawDragFactor;
 
-    float pitchT = alternateAngularSpeed.x * -pitchDrag;
-    float rollT = alternateAngularSpeed.z * -rollDrag;
-    float yawT = alternateAngularSpeed.y * -yawDrag;
+    float pitchT = alternateAngularVelocity.x * -pitchDrag;
+    float rollT = alternateAngularVelocity.z * -rollDrag;
+    float yawT = alternateAngularVelocity.y * -yawDrag;
 
     Vector3 dragTorque = {pitchT, yawT, rollT};
 
@@ -134,19 +128,19 @@ void Body3D::AlternateUpdateBody(float dt, int iterations)
         altAcc.z = alternateTorque.z / inertia.z;
     }
 
-    alternateAngularSpeed.x += altAcc.x * dt;
-    alternateAngularSpeed.y += altAcc.y * dt;
-    alternateAngularSpeed.z += altAcc.z * dt;
+    alternateAngularVelocity.x += altAcc.x * dt;
+    alternateAngularVelocity.y += altAcc.y * dt;
+    alternateAngularVelocity.z += altAcc.z * dt;
 
-    float angSpeed = Vector3Length(alternateAngularSpeed);
+    float angSpeed = Vector3Length(alternateAngularVelocity);
 
     if(angSpeed > 0.0f)
     {
         Vector3 axis;
 
-        axis.x = alternateAngularSpeed.x / angSpeed;
-        axis.y = alternateAngularSpeed.y / angSpeed;
-        axis.z = alternateAngularSpeed.z / angSpeed;
+        axis.x = alternateAngularVelocity.x / angSpeed;
+        axis.y = alternateAngularVelocity.y / angSpeed;
+        axis.z = alternateAngularVelocity.z / angSpeed;
 
         float angle = angSpeed * dt;
 
@@ -170,7 +164,7 @@ void Body3D::ApplyAlternateWorldTorque(Vector3 axis, float dt)
 
     if (worldRotationDrag > maxWorldRotDragFractor) worldRotationDrag = maxWorldRotDragFractor;
 
-    float worldT = worldAngularSpeed * -worldRotationDrag;
+    float worldT = worldAngularVelocity * -worldRotationDrag;
 
     worldAngularTorque += worldT;
 
@@ -181,11 +175,11 @@ void Body3D::ApplyAlternateWorldTorque(Vector3 axis, float dt)
         aAcc = worldAngularTorque / inertia.x;
     }
 
-    worldAngularSpeed += aAcc * dt;
+    worldAngularVelocity += aAcc * dt;
 
-    if (worldAngularSpeed > 0.0001f)
+    if (worldAngularVelocity > 0.0001f)
     {
-        float angle = worldAngularSpeed * dt;
+        float angle = worldAngularVelocity * dt;
 
         Quaternion deltaQ = QuaternionFromAxisAngle(axis, angle);
 
@@ -240,9 +234,7 @@ void Body3D::UpdateBody(float dt, int iterations)
 
     //linear update (world space)
 
-    linearAcceleration.x = 0.0f;
-    linearAcceleration.y = 0.0f;
-    linearAcceleration.z = 0.0f;
+    Vector3 linearAcceleration = {0.0f,0.0f,0.0f};
 
     if(!HasZeroMass())
     {
@@ -288,9 +280,7 @@ void Body3D::UpdateBody(float dt, int iterations)
     torque = Vector3Add(torque, dragTorque);
 
     //angular update (local space)
-    angularAcceleration.x = 0.0f;
-    angularAcceleration.y = 0.0f;
-    angularAcceleration.z = 0.0f;
+    Vector3 angularAcceleration = {0.0f,0.0f,0.0f};
 
     if (!HasZeroInertia()) 
     {
@@ -345,18 +335,18 @@ void Body3D::SingleBodyUpdate(float dt, int iterations)
     Vector3 altDragForce = Vector3Scale(alternateLinearVelocity, -altDrag);
     alternateForce = Vector3Add(alternateForce, altDragForce);
 
-    Vector3 sAcc = {0,0,0};
+    Vector3 alternateLinearAcc = {0,0,0};
 
     if(mass != 0.0f)
     {
-        sAcc.x = alternateForce.x / mass;
-        sAcc.y = alternateForce.y / mass;
-        sAcc.z = alternateForce.z / mass;
+        alternateLinearAcc.x = alternateForce.x / mass;
+        alternateLinearAcc.y = alternateForce.y / mass;
+        alternateLinearAcc.z = alternateForce.z / mass;
     }
 
-    alternateLinearVelocity.x += sAcc.x * dt;
-    alternateLinearVelocity.y += sAcc.y * dt;
-    alternateLinearVelocity.z += sAcc.z * dt;
+    alternateLinearVelocity.x += alternateLinearAcc.x * dt;
+    alternateLinearVelocity.y += alternateLinearAcc.y * dt;
+    alternateLinearVelocity.z += alternateLinearAcc.z * dt;
 
 
     //normal
@@ -398,9 +388,7 @@ void Body3D::SingleBodyUpdate(float dt, int iterations)
 
     //linear update (world space)
 
-    linearAcceleration.x = 0.0f;
-    linearAcceleration.y = 0.0f;
-    linearAcceleration.z = 0.0f;
+    Vector3 linearAcceleration = {0.0f,0.0f,0.0f};
 
     if(!HasZeroMass())
     {
@@ -448,19 +436,15 @@ void Body3D::SingleBodyUpdate(float dt, int iterations)
     if(altRollDrag > altMaxRollDragFactor) altRollDrag = altMaxRollDragFactor;
     if(altYawDrag > altMaxYawDragFactor) altYawDrag = altMaxYawDragFactor;
 
-    float altPitchT = alternateAngularSpeed.x * -altPitchDrag;
-    float altRollT = alternateAngularSpeed.z * -altRollDrag;
-    float altYawT = alternateAngularSpeed.y * -altYawDrag;
+    float altPitchT = alternateAngularVelocity.x * -altPitchDrag;
+    float altRollT = alternateAngularVelocity.z * -altRollDrag;
+    float altYawT = alternateAngularVelocity.y * -altYawDrag;
 
     Vector3 altDragTorque = {altPitchT, altYawT, altRollT};
 
     alternateTorque = Vector3Add(alternateTorque, altDragTorque);
 
-    Vector3 altAngularAcc = {0,0,0};
-
-    altAngularAcc.x = 0.0f;
-    altAngularAcc.y = 0.0f;
-    altAngularAcc.z = 0.0f;
+    Vector3 altAngularAcc = {0.0f,0.0f,0.0f};
 
     if (!HasZeroInertia()) 
     {
@@ -469,9 +453,9 @@ void Body3D::SingleBodyUpdate(float dt, int iterations)
         altAngularAcc.z = alternateTorque.z / inertia.z;
     }
 
-    alternateAngularSpeed.x += altAngularAcc.x * dt;
-    alternateAngularSpeed.y += altAngularAcc.y * dt;
-    alternateAngularSpeed.z += altAngularAcc.z * dt;
+    alternateAngularVelocity.x += altAngularAcc.x * dt;
+    alternateAngularVelocity.y += altAngularAcc.y * dt;
+    alternateAngularVelocity.z += altAngularAcc.z * dt;
 
     //normal
 
@@ -495,9 +479,7 @@ void Body3D::SingleBodyUpdate(float dt, int iterations)
 
     torque = Vector3Add(torque, dragTorque);
 
-    angularAcceleration.x = 0.0f;
-    angularAcceleration.y = 0.0f;
-    angularAcceleration.z = 0.0f;
+    Vector3 angularAcceleration = {0.0f,0.0f,0.0f};
 
     if (!HasZeroInertia()) 
     {
@@ -512,7 +494,7 @@ void Body3D::SingleBodyUpdate(float dt, int iterations)
 
     //angular integration
 
-    Vector3 totalAngularVelocity = Vector3Add(alternateAngularSpeed, angularVelocity);
+    Vector3 totalAngularVelocity = Vector3Add(alternateAngularVelocity, angularVelocity);
 
     float angSpeed = Vector3Length(totalAngularVelocity);
 

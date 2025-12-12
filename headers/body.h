@@ -19,9 +19,6 @@ private:
     float mass = INFINITY;
     Vector3 inertia;
 
-    Vector3 linearAcceleration;
-    Vector3 angularAcceleration;
-
     float linearDrag = 100.0f; //same as mass
     float angularDrag = 16.6667f; //same as inertia
 
@@ -33,13 +30,13 @@ public:
     Vector3 angularVelocity;
 
     float worldAngularTorque;
-    float worldAngularSpeed;
+    float worldAngularVelocity;
 
     Vector3 alternateForce;
     Vector3 alternateLinearVelocity;
 
     Vector3 alternateTorque;
-    Vector3 alternateAngularSpeed;
+    Vector3 alternateAngularVelocity;
 
     Vector3 force;
     Vector3 torque;

@@ -33,6 +33,12 @@ Target CreateTarget(Vector3 position, float width, float height, float length, f
 
 class Enemy
 {
+private:
+
+    Vector3 predictedPos;
+    Vector3 predictedDir;
+    int bulletspeed;
+
 public:
 
     EnemyType type;
@@ -51,9 +57,9 @@ public:
 
     Enemy(Target target, EnemyType type);
 
-    void UpdateEnemy(float dt, int iterations, const Vector3& playerPos, const std::vector<Missile*>& activeMissilesA, const std::vector<Missile*>& activeMissilesB);
+    void UpdateEnemy(float dt, int iterations, const Vector3& playerPos, const Vector3& playerVel,const std::vector<Missile*>& activeMissilesA, const std::vector<Missile*>& activeMissilesB);
 
-    void FireB(float dt, const Vector3& playerPos, const Vector3& playerVel);
+    void FireB(float dt);
 
     void FireM(float dt, const Vector3& playerPos);
 
@@ -62,9 +68,14 @@ public:
         return target.body.transform.translation;
     }
 
+    inline Vector3 GetVelocity()
+    {
+        return target.body.linearVelocity;
+    }
+
 private:
 
-    void UpdateAATank(float dt, int iterations, const Vector3& playerPos, const std::vector<Missile*>& activeMissilesA, const std::vector<Missile*>& activeMissilesB);
+    void UpdateAATank(float dt, int iterations, const Vector3& playerPos, const Vector3& playerVel,const std::vector<Missile*>& activeMissilesA, const std::vector<Missile*>& activeMissilesB);
 
     bool IsLockedByMissile(const std::vector<Missile*>& activeMissiles);
 

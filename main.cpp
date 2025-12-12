@@ -221,7 +221,7 @@ int main()
                 for (int a = 0; a < enemyList.size(); a++)
                 {
                     enemyList[a]->UpdateEnemy(FIXED_DELTA_TIME, iterations, 
-                        player.GetPosition(), 
+                        player.GetPosition(), player.body.GetTrueVelocity(),
                         player.missilePoolA.activeMissiles, player.missilePoolB.activeMissiles);
                 }
 
@@ -230,7 +230,7 @@ int main()
 
             for (int a = 0; a < enemyList.size(); a++)
             {
-                enemyList[a]->FireB(FIXED_DELTA_TIME, player.GetPosition(), player.body.GetTrueVelocity());
+                enemyList[a]->FireB(FIXED_DELTA_TIME);
             }
 
             player.ChooseTarget();

@@ -324,9 +324,11 @@ void Player::UpdatePlayer(float dt, int iterations)
 
     body.ApplyAlternateWorldTorque(axisOfRotation, fdt); //stall
 
-    body.AlternateUpdateBody(dt, iterations); //external forces
+    //body.AlternateUpdateBody(dt, iterations); //external forces
 
-    body.UpdateBody(dt, iterations); //player input
+    //body.UpdateBody(dt, iterations); //player input
+
+    body.SingleBodyUpdate(dt,iterations);
 
     bulletPool.UpdateBullets(fdt);
 

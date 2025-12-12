@@ -110,6 +110,8 @@ public:
 
     void UpdateBody(float dt, int iterations);
 
+    void SingleBodyUpdate(float dt, int iterations);
+
     //consults
 
     inline bool HasZeroMass()

@@ -69,8 +69,6 @@ void Body3D::AlternateUpdateBody(float dt, int iterations)
 
     Vector3 forward = GetWorldForwardVector(transform);
 
-    float forwardSpeed = Vector3DotProduct(alternateLinearVelocity, forward);
-
     float altDrag = linearDrag * FORWARD_DRAG_MULTIPLIER;
 
     float maxAltDrag = GetMass() / dt;
@@ -162,7 +160,6 @@ void Body3D::AlternateUpdateBody(float dt, int iterations)
     alternateTorque.x = 0.0f;
     alternateTorque.y = 0.0f;
     alternateTorque.z = 0.0f;
-
 }
 
 void Body3D::ApplyAlternateWorldTorque(Vector3 axis, float dt)
@@ -325,6 +322,222 @@ void Body3D::UpdateBody(float dt, int iterations)
         transform.rotation = QuaternionNormalize(transform.rotation);
     }
 
+    torque.x = 0.0f;
+    torque.y = 0.0f;
+    torque.z = 0.0f;
+}
+
+void Body3D::SingleBodyUpdate(float dt, int iterations)
+{
+    dt /= iterations;
+
+    Vector3 forward = GetWorldForwardVector(transform);
+
+    //linear
+
+    //alt
+    float altDrag = linearDrag * FORWARD_DRAG_MULTIPLIER;
+
+    float maxAltDrag = GetMass() / dt;
+
+    if (altDrag > maxAltDrag) altDrag = maxAltDrag;
+
+    Vector3 altDragForce = Vector3Scale(alternateLinearVelocity, -altDrag);
+    alternateForce = Vector3Add(alternateForce, altDragForce);
+
+    Vector3 sAcc = {0,0,0};
+
+    if(mass != 0.0f)
+    {
+        sAcc.x = alternateForce.x / mass;
+        sAcc.y = alternateForce.y / mass;
+        sAcc.z = alternateForce.z / mass;
+    }
+
+    alternateLinearVelocity.x += sAcc.x * dt;
+    alternateLinearVelocity.y += sAcc.y * dt;
+    alternateLinearVelocity.z += sAcc.z * dt;
+
+
+    //normal
+
+    float forwardSpeed = Vector3DotProduct(linearVelocity, forward);
+
+    Vector3 forwardVel = Vector3Scale(forward, forwardSpeed);
+    Vector3 lateralVel = Vector3Subtract(linearVelocity, forwardVel);
+
+    //forward drag
+
+    Vector3 fowardVelVector = Vector3Subtract(linearVelocity, lateralVel);
+
+    float forwardDrag = linearDrag * FORWARD_DRAG_MULTIPLIER;
+
+    float maxForwardDragFactor = GetMass() / dt;
+
+    if(forwardDrag > maxForwardDragFactor)
+    {
+        forwardDrag = maxForwardDragFactor;
+    }
+
+    Vector3 dragForce = Vector3Scale(fowardVelVector, -forwardDrag);
+    force = Vector3Add(force, dragForce);
+
+    //lateral drag
+
+    float lateralDrag = linearDrag * lateralDragMultiplier;
+
+    float maxLateralDragFactor = GetMass() / dt;
+
+    if(lateralDrag > maxLateralDragFactor) 
+    {
+        lateralDrag = maxLateralDragFactor;
+    }
+
+    Vector3 lateralForce = Vector3Scale(lateralVel, -lateralDrag);
+    force = Vector3Add(force, lateralForce);
+
+    //linear update (world space)
+
+    linearAcceleration.x = 0.0f;
+    linearAcceleration.y = 0.0f;
+    linearAcceleration.z = 0.0f;
+
+    if(!HasZeroMass())
+    {
+        linearAcceleration.x = force.x / mass;
+        linearAcceleration.y = force.y / mass;
+        linearAcceleration.z = force.z / mass;
+    }
+
+    linearVelocity.x += linearAcceleration.x * dt;
+    linearVelocity.y += linearAcceleration.y * dt;
+    linearVelocity.z += linearAcceleration.z * dt;
+
+    //linear integration
+
+    Vector3 totalVelocity = Vector3Add(linearVelocity, alternateLinearVelocity);
+
+    transform.translation.x += totalVelocity.x * dt;
+    transform.translation.y += totalVelocity.y * dt;
+    transform.translation.z += totalVelocity.z * dt;
+
+    //alt
+    alternateForce.x = 0.0f;
+    alternateForce.y = 0.0f;
+    alternateForce.z = 0.0f;
+
+    //normal
+    force.x = 0.0f;
+    force.y = 0.0f;
+    force.z = 0.0f;
+
+
+    //angular
+
+    //alt
+
+    float altPitchDrag = angularDrag * ALT_ANGULAR_DAMPING;
+    float altRollDrag = angularDrag * ALT_ANGULAR_DAMPING;
+    float altYawDrag = angularDrag * ALT_ANGULAR_DAMPING;
+
+    float altMaxPitchDragFactor = GetInertia().x / dt;
+    float altMaxRollDragFactor = GetInertia().z / dt;
+    float altMaxYawDragFactor = GetInertia().y / dt;
+
+    if(altPitchDrag > altMaxPitchDragFactor) altPitchDrag = altMaxPitchDragFactor;
+    if(altRollDrag > altMaxRollDragFactor) altRollDrag = altMaxRollDragFactor;
+    if(altYawDrag > altMaxYawDragFactor) altYawDrag = altMaxYawDragFactor;
+
+    float altPitchT = alternateAngularSpeed.x * -altPitchDrag;
+    float altRollT = alternateAngularSpeed.z * -altRollDrag;
+    float altYawT = alternateAngularSpeed.y * -altYawDrag;
+
+    Vector3 altDragTorque = {altPitchT, altYawT, altRollT};
+
+    alternateTorque = Vector3Add(alternateTorque, altDragTorque);
+
+    Vector3 altAngularAcc = {0,0,0};
+
+    altAngularAcc.x = 0.0f;
+    altAngularAcc.y = 0.0f;
+    altAngularAcc.z = 0.0f;
+
+    if (!HasZeroInertia()) 
+    {
+        altAngularAcc.x = alternateTorque.x / inertia.x;
+        altAngularAcc.y = alternateTorque.y / inertia.y;
+        altAngularAcc.z = alternateTorque.z / inertia.z;
+    }
+
+    alternateAngularSpeed.x += altAngularAcc.x * dt;
+    alternateAngularSpeed.y += altAngularAcc.y * dt;
+    alternateAngularSpeed.z += altAngularAcc.z * dt;
+
+    //normal
+
+    float pitchDrag = angularDrag * angularDamping.x;
+    float rollDrag = angularDrag * angularDamping.z;
+    float yawDrag = angularDrag * angularDamping.y;
+
+    float maxPitchDragFactor = GetInertia().x / dt;
+    float maxRollDragFactor = GetInertia().z / dt;
+    float maxYawDragFactor = GetInertia().y / dt;
+
+    if(pitchDrag > maxPitchDragFactor) pitchDrag = maxPitchDragFactor;
+    if(rollDrag > maxRollDragFactor) rollDrag = maxRollDragFactor;
+    if(yawDrag > maxYawDragFactor) yawDrag = maxYawDragFactor;
+
+    float pitchT = angularVelocity.x * -pitchDrag;
+    float rollT = angularVelocity.z * -rollDrag;
+    float yawT = angularVelocity.y * -yawDrag;
+
+    Vector3 dragTorque = {pitchT, yawT, rollT};
+
+    torque = Vector3Add(torque, dragTorque);
+
+    angularAcceleration.x = 0.0f;
+    angularAcceleration.y = 0.0f;
+    angularAcceleration.z = 0.0f;
+
+    if (!HasZeroInertia()) 
+    {
+        angularAcceleration.x = torque.x / inertia.x;
+        angularAcceleration.y = torque.y / inertia.y;
+        angularAcceleration.z = torque.z / inertia.z;
+    }
+
+    angularVelocity.x += angularAcceleration.x * dt;
+    angularVelocity.y += angularAcceleration.y * dt;
+    angularVelocity.z += angularAcceleration.z * dt;
+
+    //angular integration
+
+    Vector3 totalAngularVelocity = Vector3Add(alternateAngularSpeed, angularVelocity);
+
+    float angSpeed = Vector3Length(totalAngularVelocity);
+
+    if(angSpeed > 0.0f)
+    {
+        Vector3 axis;
+
+        axis.x = totalAngularVelocity.x / angSpeed;
+        axis.y = totalAngularVelocity.y / angSpeed;
+        axis.z = totalAngularVelocity.z / angSpeed;
+
+        float angle = angSpeed * dt;
+
+        Quaternion deltaQ = QuaternionFromAxisAngle(axis,angle);
+
+        transform.rotation = QuaternionMultiply(transform.rotation, deltaQ);
+
+        transform.rotation = QuaternionNormalize(transform.rotation);
+    }
+
+    //alt
+    alternateTorque.x = 0.0f;
+    alternateTorque.y = 0.0f;
+    alternateTorque.z = 0.0f;
+    //normal
     torque.x = 0.0f;
     torque.y = 0.0f;
     torque.z = 0.0f;

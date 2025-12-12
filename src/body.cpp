@@ -330,3 +330,26 @@ void Body3D::UpdateBody(float dt, int iterations)
     torque.z = 0.0f;
 }
 
+/*
+GUIDE FOR DECIDING ROTATION ORDER:
+
+LAST MEANS HIGHEST AUTHORITY
+FIRST MEANS LOWEST AUTHORITY
+
+The general rule of thumb for physical systems is:
+
+World Rotations First: 
+Apply rotations that are fixed relative to the world 
+(e.g., a simple gravity-induced torque, or a powerful, absolute tumble like your stall). 
+This sets the baseline global frame.
+
+Local Rotations Second: 
+Apply rotations that are defined relative to the body's internal frame 
+(e.g., thrust-induced pitch, rudder yaw, local drag). 
+These rotations use the baseline global frame as their reference.
+
+UpdateBody and AlternateUpdateBody are in local space
+
+while ApplyAlternateWorldTorque is in world space
+
+*/

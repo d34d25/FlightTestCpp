@@ -322,9 +322,9 @@ void Player::UpdatePlayer(float dt, int iterations)
         body.worldAngularTorque = STALL_TORQUE_SPEED;
     }
 
-    body.AlternateUpdateBody(dt, iterations); //external forces
-
     body.ApplyAlternateWorldTorque(axisOfRotation, fdt); //stall
+
+    body.AlternateUpdateBody(dt, iterations); //external forces
 
     body.UpdateBody(dt, iterations); //player input
 

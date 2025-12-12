@@ -18,7 +18,7 @@ void Bullet::UpdateBullet(float dt)
     force.z = 0;
 }
 
-BulletPool::BulletPool(int quantity, float lifetime, float damping, float gravity)
+BulletPool::BulletPool(int quantity, float lifetime)
 {
     for (int i = 0; i < quantity; i++)
     {

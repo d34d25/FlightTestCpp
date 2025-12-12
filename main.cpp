@@ -230,7 +230,7 @@ int main()
 
             for (int a = 0; a < enemyList.size(); a++)
             {
-                enemyList[a]->FireB(FIXED_DELTA_TIME, player.GetPosition(), player.body.linearVelocity);
+                enemyList[a]->FireB(FIXED_DELTA_TIME, player.GetPosition(), player.body.GetTrueVelocity());
             }
 
             player.ChooseTarget();
@@ -316,7 +316,7 @@ int main()
             {
                 Bullet* currentBullet = enemyList[i]->bulletPool.activeBullets[j];
 
-                DrawBullet(currentBullet->transform, currentBullet->radius, {150,150,255,255});
+                DrawBullet(currentBullet->transform, currentBullet->radius, BULLET_YELLOW);
             }
         }
 

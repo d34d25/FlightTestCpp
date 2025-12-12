@@ -57,7 +57,16 @@ public:
 
     void FireM(float dt, const Vector3& playerPos);
 
+    inline Vector3 GetPosition()
+    {
+        return target.body.transform.translation;
+    }
+
 private:
 
     void UpdateAATank(float dt, int iterations, const Vector3& playerPos, const std::vector<Missile*>& activeMissilesA, const std::vector<Missile*>& activeMissilesB);
+
+    bool IsLockedByMissile(const std::vector<Missile*>& activeMissiles);
+
+    Vector3 SolveIntercept(const Vector3& playerPos, const Vector3& playerVel, int bulletspeed);
 };

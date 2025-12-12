@@ -92,3 +92,4 @@ inline void RotateTowardsCamera(Transform* transform_1, const Camera& camera)
 
     transform_1->rotation = QuaternionFromMatrix(mWorld);
 }
+

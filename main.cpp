@@ -84,7 +84,7 @@ int main()
 
     //shader
 
-    FlatShaderData shaderData = mLoadFlatShader("shaders/flatShader.vs", "shaders/flatShader.fs", 7);
+    FlatShaderData shaderData = mLoadFlatShader("shaders/flatShader.vs", "shaders/flatShader.fs", player.params.skipMaterialIndex);
 
     mApplyFlatShader(&shaderData, &planeModel);
 

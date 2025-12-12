@@ -27,20 +27,19 @@ struct PlaneParams
     float maxThrust;
     float idleThrust;
 
+    float acceleration;
+    float brake;
+
     float returnSpeedHigh;
     float returnSpeedLow;
-
-    float stallSpeed;
-    float recoverySpeed;
-
-    float mobilityLooseStartSpeed;
 
     //how much mobility it looses at low and high speeds
     float proportionLow;
     float proportionHigh;
 
-    float acceleration;
-    float brake;
+    float stallSpeed;
+    float recoverySpeed;
+    float mobilityLooseStartSpeed;    
 
     float pitchPower;
     float rollPower;
@@ -50,7 +49,9 @@ struct PlaneParams
     float maxRollSpeed;
     float maxYawSpeed;
 
+    //model variables
     const char* modelPath;
+    int skipMaterialIndex;
 };
 
 enum class Planes

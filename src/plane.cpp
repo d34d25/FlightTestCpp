@@ -14,6 +14,7 @@ PlaneParams GetPlaneParams(Planes plane)
     PlaneParams params;
 
     float angDamp = 3.0f;
+    params.skipMaterialIndex = 2;
 
     switch (plane)
     {
@@ -21,11 +22,15 @@ PlaneParams GetPlaneParams(Planes plane)
 
         params.scale = 2.0f;
 
-        params.lateralDragMultiplier = 200.0f; //200.0f
-        
+        params.hitboxWidth = 20;
+        params.hitboxLength = 23;
+        params.hitboxHeight = 2;
+
         angDamp = 3.0f;
         params.angularDamping = {angDamp,angDamp,angDamp}; //3.0f
 
+        params.lateralDragMultiplier = 200.0f; //200.0f
+        
         params.maxThrust = 175000;
         params.idleThrust = 37500;
 
@@ -33,8 +38,15 @@ PlaneParams GetPlaneParams(Planes plane)
         params.brake = 9500;
 
         params.returnSpeedHigh = 4000;
-        params. returnSpeedLow = 2500;
+        params.returnSpeedLow = 2500;
 
+        params.proportionHigh = 0.8f;
+        params.proportionLow = 0.6f;
+
+        params.stallSpeed = DEFAULT_STALL_SPEED;
+        params.recoverySpeed = DEFAULT_RECOVERY_SPEED;
+        params.mobilityLooseStartSpeed = DEFAULT_MOBILITY_LOOSE_START_SPEED;
+       
         params.pitchPower = 20.0f;
         params.rollPower = 60.0f;
         params.yawPower = 10.0f;
@@ -43,18 +55,8 @@ PlaneParams GetPlaneParams(Planes plane)
         params.maxRollSpeed = 1.6f;
         params.maxYawSpeed = 0.2f;
 
-        params.hitboxWidth = 20;
-        params.hitboxLength = 23;
-        params.hitboxHeight = 2;
-
         params.modelPath = "assets/sf15b.obj";
-
-        params.stallSpeed = DEFAULT_STALL_SPEED;
-        params.recoverySpeed = DEFAULT_RECOVERY_SPEED;
-        params.mobilityLooseStartSpeed = DEFAULT_MOBILITY_LOOSE_START_SPEED;
-
-        params.proportionHigh = 0.8f;
-        params.proportionLow = 0.6f;
+        params.skipMaterialIndex = 7;
 
         break;
     

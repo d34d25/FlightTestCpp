@@ -34,8 +34,11 @@ struct PlaneParams
     float returnSpeedLow;
 
     //how much mobility it looses at low and high speeds
-    float proportionLow;
-    float proportionHigh;
+    float mobilityProportionLow;
+    float mobilityProportionHigh;
+
+    float responsivenessProportionLow;
+    float responsivenessProportionHigh;
 
     float stallSpeed;
     float recoverySpeed;

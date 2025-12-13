@@ -16,6 +16,10 @@ private:
     float originalMaxRollSpeed;
     float originalMaxYawSpeed;
 
+    float originalPitchResponsiveness;
+    float originalRollResponsiveness;
+    float originalYawResponsiveness;
+
     float pitchInputUp;
     float rollInputRight;
     float yawInputRight;

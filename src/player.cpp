@@ -28,6 +28,10 @@ Player::Player()
     originalMaxRollSpeed = params.maxRollSpeed;
     originalMaxYawSpeed = params.maxYawSpeed;
 
+    originalPitchResponsiveness = params.pitchResponsiveness;
+    originalRollResponsiveness = params.rollResponsiveness;
+    originalYawResponsiveness = params.yawResponsiveness;
+
     body = Body3D(this->params.lateralDragMultiplier,
                   this->params.angularDamping);
 
@@ -372,22 +376,39 @@ void Player::UpdatePlayer(float dt, int iterations)
         stalling = false;
     }
 
-    float factor = 1.0f;
+    float mobilityFactor = 1.0f;
 
     if (speed <= params.mobilityLooseStartSpeed)
     {
-        factor = 1 - (1 - params.proportionLow) * (speed - params.mobilityLooseStartSpeed) / (params.stallSpeed - params.mobilityLooseStartSpeed);
-        factor = Clamp(factor, params.proportionLow, 1.0f);
+        mobilityFactor = 1 - (1 - params.mobilityProportionLow) * (speed - params.mobilityLooseStartSpeed) / (params.stallSpeed - params.mobilityLooseStartSpeed);
+        mobilityFactor = Clamp(mobilityFactor, params.mobilityProportionLow, 1.0f);
     }
     else
     {
-        factor = 1 - (1 - params.proportionHigh) * (speed - params.mobilityLooseStartSpeed) / (GetMaxSpeed() - params.mobilityLooseStartSpeed);
-        factor = Clamp(factor, params.proportionHigh, 1.0f);
+        mobilityFactor = 1 - (1 - params.mobilityProportionHigh) * (speed - params.mobilityLooseStartSpeed) / (GetMaxSpeed() - params.mobilityLooseStartSpeed);
+        mobilityFactor = Clamp(mobilityFactor, params.mobilityProportionHigh, 1.0f);
     }
 
-    params.maxPitchSpeed = originalMaxPitchSpeed * factor;
-    params.maxRollSpeed = originalMaxRollSpeed * factor;
-    params.maxYawSpeed = originalMaxYawSpeed * factor;
+    params.maxPitchSpeed = originalMaxPitchSpeed * mobilityFactor;
+    params.maxRollSpeed = originalMaxRollSpeed * mobilityFactor;
+    params.maxYawSpeed = originalMaxYawSpeed * mobilityFactor;
+
+    float responsivenessFactor = 1.0f;
+
+    if (speed <= params.mobilityLooseStartSpeed)
+    {
+        responsivenessFactor = 1 - (1 - params.responsivenessProportionLow) * (speed - params.mobilityLooseStartSpeed) / (params.stallSpeed - params.mobilityLooseStartSpeed);
+        responsivenessFactor = Clamp(responsivenessFactor, params.responsivenessProportionLow, 1.0f);
+    }
+    else
+    {
+        responsivenessFactor = 1 - (1 - params.responsivenessProportionHigh) * (speed - params.mobilityLooseStartSpeed) / (GetMaxSpeed() - params.mobilityLooseStartSpeed);
+        responsivenessFactor = Clamp(responsivenessFactor, 1.0f, params.responsivenessProportionHigh);
+    }
+
+    params.pitchResponsiveness = originalPitchResponsiveness * responsivenessFactor;
+    params.rollResponsiveness = originalRollResponsiveness * responsivenessFactor;
+    params.yawResponsiveness = originalYawResponsiveness * responsivenessFactor;
 
     if (stalling)
     {

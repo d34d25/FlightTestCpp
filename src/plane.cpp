@@ -46,8 +46,11 @@ PlaneParams GetPlaneParams(Planes plane)
         params.returnSpeedHigh = 4000;
         params.returnSpeedLow = 2500;
 
-        params.proportionHigh = 0.8f;
-        params.proportionLow = 0.6f;
+        params.mobilityProportionHigh = 0.6f; //0.8f;
+        params.mobilityProportionLow = 0.3f; //0.6f;
+
+        params.responsivenessProportionHigh = 2.25f;
+        params.responsivenessProportionLow = 0.5f;
 
         params.stallSpeed = DEFAULT_STALL_SPEED;
         params.recoverySpeed = DEFAULT_RECOVERY_SPEED;
@@ -57,7 +60,7 @@ PlaneParams GetPlaneParams(Planes plane)
         params.maxRollSpeed = 1.6f;
         params.maxYawSpeed = 0.2f;
 
-        responsive = 150;
+        responsive = 100;
 
         params.pitchResponsiveness = responsive * 0.75f;
         params.rollResponsiveness = responsive * 3.0f;

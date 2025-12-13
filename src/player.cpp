@@ -104,7 +104,7 @@ Player::Player()
     //targets
 
     targets = {};
-    currentTarget = nullptr;
+    currentTarget.reset();
 
     tgtIndex = 0;
     tgtLocked = false;
@@ -450,12 +450,19 @@ void Player::FireB(float dt)
 void Player::FireM(float dt)
 {
     bool locked = false;
-    Vector3 tgtPos = {0,0,0};
+    Vector3* tgtPos = nullptr;
 
-    if(currentTarget && tgtLocked)
+    if(tgtLocked)
     {
-        locked = true;
-        tgtPos = currentTarget->body.transform.translation;
+        if(auto t = currentTarget.lock())
+        {
+            locked = true;
+            tgtPos = &t->body.transform.translation;
+        }
+        else
+        {
+            tgtPos = nullptr;
+        }
     }
 
     if (fireTimerMissileA > 0.0f) fireTimerMissileA -= dt;
@@ -501,26 +508,29 @@ void Player::ChooseTarget()
 
     for (int i = 0; i < targets.size(); i++)
     {
-        Vector3 diff = Vector3Subtract(targets[i]->body.transform.translation, GetPosition());
-        float dist = Vector3Length(diff);
-
-        if (dist > maxDist) continue;
-
-        Vector3 dir = Vector3Normalize(diff);
-        float angle = Vector3DotProduct(forward, dir);
-
-        if (angle < frontAngle) continue;
-
-        if (dist < closestDist)
+        if (auto t = targets[i].lock()) 
         {
-            closestDist = dist;
-            bestTarget = i;
+            Vector3 diff = Vector3Subtract(t->body.transform.translation, GetPosition());
+            float dist = Vector3Length(diff);
+
+            if (dist > maxDist) continue;
+
+            Vector3 dir = Vector3Normalize(diff);
+            float angle = Vector3DotProduct(forward, dir);
+
+            if (angle < frontAngle) continue;
+
+            if (dist < closestDist)
+            {
+                closestDist = dist;
+                bestTarget = i;
+            }
         }
     }
 
     if (bestTarget < 0)
     {
-        currentTarget = nullptr;
+        currentTarget.reset();
         tgtLocked = false;
         return;
     }
@@ -542,16 +552,19 @@ void Player::ChooseTarget()
         {
             tgtIndex = (tgtIndex + 1) % targets.size();
 
-            Vector3 diff = Vector3Subtract(targets[tgtIndex]->body.transform.translation, GetPosition());
-            float dist = Vector3Length(diff);
-            Vector3 dir = Vector3Normalize(diff);
-
-            float angle = Vector3DotProduct(forward, dir);
-
-            if (dist < maxDist && angle > frontAngle)
+            if (auto t = targets[tgtIndex].lock()) 
             {
-                currentTarget = targets[tgtIndex];
-                break;
+                Vector3 diff = Vector3Subtract(t->body.transform.translation, GetPosition());
+                float dist = Vector3Length(diff);
+                Vector3 dir = Vector3Normalize(diff);
+
+                float angle = Vector3DotProduct(forward, dir);
+
+                if (dist < maxDist && angle > frontAngle)
+                {
+                    currentTarget = targets[tgtIndex];
+                    break;
+                }
             }
 
         } while (tgtIndex != startIndex);

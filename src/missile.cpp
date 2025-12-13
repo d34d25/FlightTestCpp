@@ -12,20 +12,23 @@ void Missile::UpdateMissile(float dt, float iterations)
 
     if(lockedOnTarget)
     {   
-        Vector3 distToTarget = Vector3Subtract(target, body.transform.translation);
-
-        Vector3 dirToTarget = Vector3Normalize(distToTarget);
-
-        float angleToTarget = Vector3DotProduct(forward,dirToTarget);
-
-        if(angleToTarget >= 0.75f)
+        if(target)
         {
-            Vector3 axisOfRotation = Vector3CrossProduct(forward, dirToTarget);
-            axisOfRotation = Vector3Normalize(axisOfRotation);
+            Vector3 distToTarget = Vector3Subtract(*target, body.transform.translation);
 
-            body.worldAngularTorque = 10 * ALT_ANGULAR_DAMPING;
+            Vector3 dirToTarget = Vector3Normalize(distToTarget);
 
-            body.ApplyAlternateWorldTorque(axisOfRotation, dt / iterations);
+            float angleToTarget = Vector3DotProduct(forward,dirToTarget);
+
+            if(angleToTarget >= 0.6f)
+            {
+                Vector3 axisOfRotation = Vector3CrossProduct(forward, dirToTarget);
+                axisOfRotation = Vector3Normalize(axisOfRotation);
+
+                body.worldAngularTorque = 10 * ALT_ANGULAR_DAMPING;
+
+                body.ApplyAlternateWorldTorque(axisOfRotation, dt / iterations);
+            }
         }
     }
 
@@ -91,7 +94,7 @@ MissilePool::MissilePool(int quantity, float lifetime, float maxThrust)
         tempMissile->fireTimerParticle = 0.0f;
         tempMissile->firerateParticle = 0.05f;
 
-        tempMissile->target = {0,0,0};
+        tempMissile->target = nullptr;
         tempMissile->lockedOnTarget = false;
 
         // 3. Move the object into the main vector (no copy occurs)
@@ -141,7 +144,7 @@ void MissilePool::UpdateMissiles(float dt, int iterations)
     }    
 }
 
-void MissilePool::FireMissile(const Transform &transform, Vector3 initialSpeed, float initialThrust, Vector3 target, bool locked)
+void MissilePool::FireMissile(const Transform &transform, Vector3 initialSpeed, float initialThrust, Vector3* target, bool locked)
 {
     if(!inactiveMissiles.empty())
     {

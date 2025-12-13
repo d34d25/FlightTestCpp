@@ -43,7 +43,7 @@ public:
 
     EnemyType type;
 
-    Target target;
+    std::shared_ptr<Target> target;
 
     BulletPool bulletPool;
     float fireTimerBullet;
@@ -57,25 +57,25 @@ public:
 
     Enemy(Target target, EnemyType type);
 
-    void UpdateEnemy(float dt, int iterations, const Vector3& playerPos, const Vector3& playerVel,const std::vector<Missile*>& activeMissilesA, const std::vector<Missile*>& activeMissilesB);
+    void UpdateEnemy(float dt, int iterations, const Vector3& playerPos,const std::vector<Missile*>& activeMissilesA, const std::vector<Missile*>& activeMissilesB);
 
-    void FireB(float dt);
+    void FireB(float dt, const Vector3 &playerPos, const Vector3& playerVel);
 
     void FireM(float dt, const Vector3& playerPos);
 
     inline Vector3 GetPosition()
     {
-        return target.body.transform.translation;
+        return target->body.transform.translation;
     }
 
     inline Vector3 GetVelocity()
     {
-        return target.body.linearVelocity;
+        return target->body.linearVelocity;
     }
 
 private:
 
-    void UpdateAATank(float dt, int iterations, const Vector3& playerPos, const Vector3& playerVel,const std::vector<Missile*>& activeMissilesA, const std::vector<Missile*>& activeMissilesB);
+    void UpdateAATank(float dt, int iterations, const Vector3& playerPos,const std::vector<Missile*>& activeMissilesA, const std::vector<Missile*>& activeMissilesB);
 
     bool IsLockedByMissile(const std::vector<Missile*>& activeMissiles);
 

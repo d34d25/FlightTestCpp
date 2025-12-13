@@ -71,7 +71,7 @@ int main()
 
     for(int i = 0; i < enemyList.size(); i++)
     {
-        player.targets.push_back(std::make_shared<Target>(enemyList[i]->target));
+        player.targets.push_back(enemyList[i]->target);
     }
 
     InitWindow(SCREEN_WIDTH,SCREEN_HEIGHT,"");
@@ -186,8 +186,8 @@ int main()
                     {
                         float a = 100;
 
-                        rm = PrismVsSphere(enemyList[e]->target.body.transform.translation,
-                            enemyList[e]->target.hitbox.GetTransformedVertices(enemyList[e]->target.body.transform),
+                        rm = PrismVsSphere(enemyList[e]->target->body.transform.translation,
+                            enemyList[e]->target->hitbox.GetTransformedVertices(enemyList[e]->target->body.transform),
                             currentMissile->body.transform.translation, currentMissile->radius);
 
                         if(rm.collision)
@@ -207,8 +207,8 @@ int main()
                     {
                         float a = 100;
 
-                        rm = PrismVsSphere(enemyList[e]->target.body.transform.translation,
-                            enemyList[e]->target.hitbox.GetTransformedVertices(enemyList[e]->target.body.transform),
+                        rm = PrismVsSphere(enemyList[e]->target->body.transform.translation,
+                            enemyList[e]->target->hitbox.GetTransformedVertices(enemyList[e]->target->body.transform),
                             currentMissile->body.transform.translation, currentMissile->radius);
 
                         if(rm.collision)
@@ -221,7 +221,7 @@ int main()
                 for (int a = 0; a < enemyList.size(); a++)
                 {
                     enemyList[a]->UpdateEnemy(FIXED_DELTA_TIME, iterations, 
-                        player.GetPosition(), player.body.GetTrueVelocity(),
+                        player.GetPosition(),
                         player.missilePoolA.activeMissiles, player.missilePoolB.activeMissiles);
                 }
 
@@ -230,7 +230,7 @@ int main()
 
             for (int a = 0; a < enemyList.size(); a++)
             {
-                enemyList[a]->FireB(FIXED_DELTA_TIME);
+                enemyList[a]->FireB(FIXED_DELTA_TIME, player.GetPosition(), player.body.GetTrueVelocity());
             }
 
             player.ChooseTarget();
@@ -310,19 +310,21 @@ int main()
 
         for (int i = 0; i < enemyList.size(); i++)
         {
-            DrawTgt(enemyList[i]->target);
+            DrawTgt(*enemyList[i]->target);
 
             for(int j = 0; j < enemyList[i]->bulletPool.activeBullets.size(); j++)
             {
                 Bullet* currentBullet = enemyList[i]->bulletPool.activeBullets[j];
 
                 DrawBullet(currentBullet->transform, currentBullet->radius, BULLET_YELLOW);
+
+                //DrawSphere(currentBullet->transform.translation,currentBullet->radius, BULLET_YELLOW);
             }
         }
 
-        if(player.currentTarget)
+        if(auto c = player.currentTarget.lock())
         {
-            DrawLine3D(player.GetPosition(), player.currentTarget->body.transform.translation, RED);
+            DrawLine3D(player.GetPosition(), c->body.transform.translation, RED);
         }
 
         EndMode3D();

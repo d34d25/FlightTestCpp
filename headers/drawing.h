@@ -60,7 +60,7 @@ inline void DrawMissile(const Transform& transform, float radius)
     rlPushMatrix();
     const float* matrix = GetWorldMatrixTransform(transform).data();
     rlMultMatrixf(matrix);
-    DrawCube({0,0,0},1.0f,1.0f,radius * 2.0f,{200,200,200,255});
+    DrawCube({0,0,0},2.0f,2.0f,radius * 2.0f,{200,200,200,255});
     rlPopMatrix();
 }
 

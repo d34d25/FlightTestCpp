@@ -71,8 +71,8 @@ public:
 
     float thrust = 0.0f;
 
-    std::vector<std::shared_ptr<Target>> targets; 
-    std::shared_ptr<Target> currentTarget;
+    std::vector<std::weak_ptr<Target>> targets; 
+    std::weak_ptr<Target> currentTarget;
 
     Player();
 

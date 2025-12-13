@@ -55,9 +55,13 @@ Player::Player()
     cameraOffset.y = 5.0f;
     cameraOffset.z = -39.0f;
 
-    pitchInput = 0;
-    rollInput = 0;
-    yawInput = 0;
+    pitchInputUp = 0;
+    rollInputRight = 0;
+    yawInputRight = 0;
+
+    pitchInputDown = 0;
+    rollInputLeft = 0;
+    yawInputLeft = 0;
 
     globalCamera = false;
     orbitYaw = 0.0f;
@@ -99,7 +103,6 @@ Player::Player()
     missileTransformB.rotation = QuaternionIdentity();
 
     currentMissilePool = false;
-
 
     //targets
 
@@ -156,17 +159,53 @@ void Player::UpdatePlayer(float dt, int iterations)
 
         engineGlow = Clamp(engineGlow, 0, maxEngineGlow);
 
-        if (IsKeyDown(KEY_D)) yawInput = -1;
-        else if (IsKeyDown(KEY_A)) yawInput = 1;
-        else yawInput = 0;
+        if (IsKeyDown(KEY_D)) 
+        {   
+            yawInputLeft = 0;
+            yawInputRight += -params.yawResponsiveness * fdt;
+        }   
+        else if (IsKeyDown(KEY_A))
+        {
+            yawInputRight = 0;
+            yawInputLeft += params.yawResponsiveness * fdt;
+        } 
+        else
+        {
+            yawInputLeft = 0;
+            yawInputRight = 0;
+        } 
 
-        if (IsKeyDown(KEY_RIGHT)) rollInput = 1;
-        else if (IsKeyDown(KEY_LEFT)) rollInput = -1;
-        else rollInput = 0;
+        if (IsKeyDown(KEY_RIGHT))
+        {
+            rollInputLeft = 0;
+            rollInputRight += params.rollResponsiveness * fdt;
+        } 
+        else if (IsKeyDown(KEY_LEFT))
+        {
+            rollInputRight = 0;
+            rollInputLeft += -params.rollResponsiveness * fdt;
+        } 
+        else
+        {
+            rollInputLeft = 0;
+            rollInputRight = 0;
+        }
 
-        if (IsKeyDown(KEY_UP)) pitchInput = 1;
-        else if (IsKeyDown(KEY_DOWN)) pitchInput = -1;
-        else pitchInput = 0;
+        if (IsKeyDown(KEY_DOWN))
+        {
+            pitchInputDown = 0;
+            pitchInputUp += -params.pitchResponsiveness * fdt;
+        } 
+        else if (IsKeyDown(KEY_UP)) 
+        {
+            pitchInputUp = 0;
+            pitchInputDown += params.pitchResponsiveness * fdt;
+        } 
+        else
+        {
+            pitchInputDown = 0;
+            pitchInputUp = 0;
+        } 
     }
     else
     {
@@ -181,22 +220,72 @@ void Player::UpdatePlayer(float dt, int iterations)
             thrust -= params.brake * fdt;
         }
 
-        if (IsKeyDown(KEY_E)) yawInput = -1;
-        else if (IsKeyDown(KEY_Q)) yawInput = 1;
-        else yawInput = 0;
+        if (IsKeyDown(KEY_E))
+        {
+            yawInputLeft = 0;
+            yawInputRight += -params.yawResponsiveness * fdt;
+        } 
+        else if (IsKeyDown(KEY_Q))
+        {
+            yawInputRight = 0;
+            yawInputLeft += params.yawResponsiveness * fdt;
+        }
+        else
+        {
+            yawInputLeft = 0;
+            yawInputRight = 0;
+        } 
 
-        if (IsKeyDown(KEY_D)) rollInput = 1;
-        else if (IsKeyDown(KEY_A)) rollInput = -1;
-        else rollInput = 0;
+        if (IsKeyDown(KEY_D))
+        {
+            rollInputLeft = 0;
+            rollInputRight += params.rollResponsiveness * fdt;
+        }
+        else if (IsKeyDown(KEY_A))
+        {
+            rollInputRight = 0;
+            rollInputLeft += -params.rollResponsiveness * fdt;
+        }
+        else
+        {
+            rollInputLeft = 0;
+            rollInputRight = 0;
+        }
 
-        if (IsKeyDown(KEY_W)) pitchInput = 1;
-        else if (IsKeyDown(KEY_S)) pitchInput = -1;
-        else pitchInput = 0;
+        if (IsKeyDown(KEY_S))
+        {
+            pitchInputDown = 0;
+            pitchInputUp += -params.pitchResponsiveness * fdt;
+        }
+        else if (IsKeyDown(KEY_W))
+        {
+            pitchInputUp = 0;
+            pitchInputDown += params.pitchResponsiveness * fdt;
+        }
+        else
+        {
+            pitchInputDown = 0;
+            pitchInputUp = 0;
+        }
     }
 
-    body.ApplyPitch(params.pitchPower * pitchInput * body.angularDamping.x);
-    body.ApplyRoll(params.rollPower * rollInput * body.angularDamping.z);
-    body.ApplyYaw(params.yawPower * yawInput * body.angularDamping.y);
+    float maxResponsiveness = 1000.0f;
+
+    Clamp(pitchInputUp, -maxResponsiveness, 0);
+    Clamp(rollInputRight, 0, maxResponsiveness);
+    Clamp(yawInputRight, -maxResponsiveness, 0);
+
+    Clamp(pitchInputDown, 0, maxResponsiveness);
+    Clamp(rollInputLeft, -maxResponsiveness, 0);
+    Clamp(yawInputLeft, 0, maxResponsiveness);
+
+    body.ApplyPitch(pitchInputUp * body.angularDamping.x);
+    body.ApplyRoll(rollInputRight * body.angularDamping.z);
+    body.ApplyYaw(yawInputRight * body.angularDamping.y);
+
+    body.ApplyPitch(pitchInputDown * body.angularDamping.x);
+    body.ApplyRoll(rollInputLeft * body.angularDamping.z);
+    body.ApplyYaw(yawInputLeft * body.angularDamping.y);
 
     // plane
 

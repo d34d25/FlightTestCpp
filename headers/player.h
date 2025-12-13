@@ -16,9 +16,13 @@ private:
     float originalMaxRollSpeed;
     float originalMaxYawSpeed;
 
-    int pitchInput;
-    int rollInput;
-    int yawInput;
+    float pitchInputUp;
+    float rollInputRight;
+    float yawInputRight;
+
+    float pitchInputDown;
+    float rollInputLeft;
+    float yawInputLeft;
 
     bool globalCamera = false;
     float orbitYaw;

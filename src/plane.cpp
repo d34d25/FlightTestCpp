@@ -16,6 +16,8 @@ PlaneParams GetPlaneParams(Planes plane)
     float angDamp = 3.0f;
     params.skipMaterialIndex = 2;
 
+    float responsive = 120;
+
     switch (plane)
     {
     case Planes::SF15:
@@ -27,7 +29,11 @@ PlaneParams GetPlaneParams(Planes plane)
         params.hitboxHeight = 2;
 
         angDamp = 3.0f;
-        params.angularDamping = {angDamp,angDamp,angDamp}; //3.0f
+        params.angularDamping = {
+            angDamp,
+            angDamp,
+            angDamp
+        }; //3.0f
 
         params.lateralDragMultiplier = 200.0f; //200.0f
         
@@ -47,13 +53,15 @@ PlaneParams GetPlaneParams(Planes plane)
         params.recoverySpeed = DEFAULT_RECOVERY_SPEED;
         params.mobilityLooseStartSpeed = DEFAULT_MOBILITY_LOOSE_START_SPEED;
        
-        params.pitchPower = 20.0f;
-        params.rollPower = 60.0f;
-        params.yawPower = 10.0f;
-
-        params.maxPitchSpeed = 0.8f;
+        params.maxPitchSpeed = 0.7f;
         params.maxRollSpeed = 1.6f;
         params.maxYawSpeed = 0.2f;
+
+        responsive = 150;
+
+        params.pitchResponsiveness = responsive * 0.75f;
+        params.rollResponsiveness = responsive * 3.0f;
+        params.yawResponsiveness = responsive * 0.5f;
 
         params.modelPath = "assets/sf15b.obj";
         params.skipMaterialIndex = 7;

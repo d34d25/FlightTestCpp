@@ -59,7 +59,7 @@ struct PlaneParams
 
 enum class Planes
 {
-    SF15
+    DEBUG_PLANE
 };
 
 PlaneParams GetPlaneParams(Planes plane);

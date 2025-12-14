@@ -4,6 +4,7 @@
 #include <vector>
 #include "simpleTransform.h"
 #include "target.h"
+#include <iostream>
 
 #define BULLET_YELLOW Color{255,255,100,255}
 
@@ -80,6 +81,33 @@ inline void DrawTgt(const Target& tgt)
     rlMultMatrixf(matrix);
     DrawCubeWires({0,0,0},tgt.width, tgt.height, tgt.length, GREEN);
     rlPopMatrix();
+}
+
+
+inline Model GenerateGroundMesh(Texture2D texture, float width, float height, int textureRepeatCount)
+{
+    Mesh mesh = GenMeshPlane(width, height,1,1);
+
+    for (int i = 0; i < mesh.vertexCount * 2; i++)
+    {
+        mesh.texcoords[i] *= textureRepeatCount;
+    }
+
+    UpdateMeshBuffer(mesh, 1, mesh.texcoords, mesh.vertexCount * 2 * sizeof(float), 0);
+
+    Model model = LoadModelFromMesh(mesh);
+
+    SetTextureWrap(texture, TEXTURE_WRAP_REPEAT);
+    
+    model.materials[0].maps[MATERIAL_MAP_ALBEDO].texture = texture;
+    
+    return model;
+}
+
+
+inline void DrawGround(Model model)
+{
+    DrawModel(model, {0,0,0},1,WHITE);
 }
 
 //DrawCircleSector({0,0}, radius, 0, PI, 10, ORANGE); this looks like an arrow, cool for using it in the HUD

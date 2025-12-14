@@ -26,3 +26,12 @@ RayCollision PrsimRayHit(Ray raycast, const vector<Vector3>& vertices);
 Vector3 ClosestPointOnPoly(const vector<Vector3>& verts, const Vector3& center);
 
 CollisionResult PrismVsSphere(const Vector3& positionA, const vector<Vector3>& verticesA, const Vector3& centerB, float radius);
+
+struct CollisionResult_CCD
+{
+    bool collision;
+    float timeOfImpact;
+    Vector3 normal;
+};
+
+CollisionResult_CCD SAT3DPrism_CCD(const Vector3& positionA, const vector<Vector3>& verticesA, const Vector3& positionB, const vector<Vector3>& verticesB, const Vector3& relVel);

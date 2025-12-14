@@ -26,20 +26,21 @@ int main()
     Player player = Player();
     Collider testCollider = Collider();
 
-    //the parameters passed are the half size, so the height is actually 4
+    //thinnest thickness of a collider is 2
+    //best n for 2x speed is 35, for x1 speed is 18 or 20
     testCollider.CreatePrismatoidForward(
         player.params.hitboxWidth,
         player.params.hitboxHeight,
-        player.params.hitboxWidth / 6,
+        player.params.hitboxWidth /6,
         player.params.hitboxHeight,
         player.params.hitboxLength);
 
     //test obstacle
     Collider obstacleCollider = Collider();
 
-    obstacleCollider.CreatePrismatoidUp(10500,4,10500,4,10300);
+    obstacleCollider.CreatePrismatoidUp(10500,2,10500,2,10300);
 
-    Vector3 obstacleColliderPos = {0,300,7000};
+    Vector3 obstacleColliderPos = {0,300,27000};
 
     Transform obstacleColliderTransform = {};
     obstacleColliderTransform.translation = obstacleColliderPos;
@@ -49,7 +50,7 @@ int main()
     Color obstacleColliderColor = ogObstacleColliderColor;
 
     // test targets
-    Target tgt1 = CreateTarget({0,100,400}, 10,10,10, 100, EnemyColliderType::BOX);
+    Target tgt1 = CreateTarget({0,100,400}, 4,4,4, 100, EnemyColliderType::BOX);
     
     Target tgt2 = CreateTarget({500,0,400}, 10,10,10, 100, EnemyColliderType::BOX);
 
@@ -82,6 +83,9 @@ int main()
 
     Texture2D groundTexture = LoadTexture("assets/groundTest.jpeg");
 
+    int groundsize = 100000;
+    Model ground = GenerateGroundMesh(groundTexture, groundsize,groundsize,20);
+
     //shader
 
     FlatShaderData shaderData = mLoadFlatShader("shaders/flatShader.vs", "shaders/flatShader.fs", player.params.skipMaterialIndex);
@@ -112,16 +116,23 @@ int main()
 
         while (accumulator >= FIXED_DELTA_TIME)
         {
-            CollisionResult r;
-
             shaderData.skipIntensity = player.GetEngineGlow();
+
+            CollisionResult_CCD r;
 
             for(int i = 0; i < iterations; i++)
             {
-                player.UpdatePlayer(FIXED_DELTA_TIME, iterations);
+                Vector3 subStepMovement = Vector3Scale(player.body.GetTrueVelocity(), dt / iterations);
+
+                r = SAT3DPrism_CCD(player.GetPosition(), testCollider.GetTransformedVertices(player.GetHitboxTransform()), 
+                obstacleColliderPos, obstacleCollider.GetTransformedVertices(obstacleColliderTransform), subStepMovement);
+
+                if (r.collision)
+                {
+                    std::cout<<"PLAYER HIT at: "<<player.GetSpeed()<<"\n";
+                }
                 
-                r = SAT3DPrism(player.GetPosition(), testCollider.GetTransformedVertices(player.GetHitboxTransform()), 
-                obstacleColliderPos, obstacleCollider.GetTransformedVertices(obstacleColliderTransform));
+                player.UpdatePlayer(FIXED_DELTA_TIME, iterations);
 
                 for (int b = 0; b < player.bulletPool.activeBullets.size(); b++)
                 {
@@ -139,11 +150,6 @@ int main()
                     }
                 }
 
-                if (r.collision)
-                {
-                    std::cout<<"PLAYER HIT at: "<<player.GetSpeed()<<"\n";
-                }
-                
                 for (int m = 0; m < player.missilePoolA.activeMissiles.size(); m++)
                 {
                     Missile* currentMissile = player.missilePoolA.activeMissiles[m];
@@ -218,14 +224,13 @@ int main()
                     }
                 }
 
+                //update of position
                 for (int a = 0; a < enemyList.size(); a++)
                 {
                     enemyList[a]->UpdateEnemy(FIXED_DELTA_TIME, iterations, 
                         player.GetPosition(),
                         player.missilePoolA.activeMissiles, player.missilePoolB.activeMissiles);
                 }
-
-                obstacleColliderColor = ogObstacleColliderColor;
             }
 
             for (int a = 0; a < enemyList.size(); a++)
@@ -266,14 +271,7 @@ int main()
             DrawBullet(currentBullet->transform, currentBullet->radius, BULLET_YELLOW);
         }        
 
-        rlPushMatrix();
-        rlRotatef(90,1,0,0);
-        int scale = 100;
-        Vector2 grpos;
-        grpos.x = -(groundTexture.width / 2) * scale;
-        grpos.y = -(groundTexture.height / 2) * scale; 
-        DrawTextureEx(groundTexture, grpos, 0.0f,scale,WHITE);
-        rlPopMatrix();
+        DrawGround(ground);
         
         DrawCollider(obstacleCollider.GetTransformedVertices(obstacleColliderTransform), {255,255,0,100});
         DrawColliderWire(obstacleCollider.GetTransformedVertices(obstacleColliderTransform), obstacleColliderColor);
@@ -346,7 +344,8 @@ int main()
 
         DrawText(TextFormat("MAX SPEED: %0.2f", player.GetMaxSpeed()),SCREEN_WIDTH * 0.25, SCREEN_HEIGHT * 0.15, 20, GREEN);
         DrawText(TextFormat("IDLE SPEED: %0.2f", player.GetIdleSpeed()),SCREEN_WIDTH * 0.75, SCREEN_HEIGHT * 0.15, 20, GREEN);
-        DrawText(TextFormat("SPEED: %0.2f", player.GetTrueSpeed()),SCREEN_WIDTH * 0.25, SCREEN_HEIGHT * 0.5, 20, GREEN);
+        DrawText(TextFormat("TRUE SPEED: %0.2f", player.GetTrueSpeed()),SCREEN_WIDTH * 0.25, SCREEN_HEIGHT * 0.5, 20, GREEN);
+        DrawText(TextFormat("DISPLAY SPEED: %0.2f", player.GetTrueSpeed() * 2.0f),SCREEN_WIDTH * 0.25, SCREEN_HEIGHT * 0.65, 20, GREEN);
         DrawText(TextFormat("THRUST: %0.2f", player.thrust),SCREEN_WIDTH * 0.25, SCREEN_HEIGHT * 0.25, 20, GREEN);
 
 
@@ -361,6 +360,7 @@ int main()
 
     UnloadShader(shaderData.__shader);
     UnloadModel(planeModel);
+    UnloadModel(ground);
     UnloadTexture(groundTexture);
     UnloadRenderTexture(renderTarget);
     CloseWindow();

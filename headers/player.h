@@ -28,6 +28,7 @@ private:
     float rollInputLeft;
     float yawInputLeft;
 
+    //camera
     bool globalCamera = false;
     float orbitYaw;
     float orbitPitch;
@@ -35,16 +36,23 @@ private:
 
     Vector3 smoothedOffset;
 
+    float cameraAlpha;
+    float FOVY;
+    float currentFovy;
+
+    //engine glow
     float engineGlow;
     float idleEngineGlow;
 
     int maxEngineGlow;
     float engineGlowChange;
 
+    //bullets
     Transform bulletTransform;
     float fireTimerBullet;
     float firerateBullet;
     
+    //missiles
     Transform missileTransformA;
     float fireTimerMissileA;
     float firerateMissile;

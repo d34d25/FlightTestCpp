@@ -20,12 +20,12 @@ PlaneParams GetPlaneParams(Planes plane)
 
     switch (plane)
     {
-    case Planes::SF15:
+    case Planes::DEBUG_PLANE:
 
         params.scale = 2.0f;
 
-        params.hitboxWidth = 20;
-        params.hitboxLength = 23;
+        params.hitboxWidth = 2; //20
+        params.hitboxLength = 2; //23
         params.hitboxHeight = 2;
 
         angDamp = 3.0f;
@@ -37,28 +37,28 @@ PlaneParams GetPlaneParams(Planes plane)
 
         params.lateralDragMultiplier = 200.0f; //200.0f
         
-        params.maxThrust = 175000;
-        params.idleThrust = 37500;
+        params.maxThrust = 175000 *30;
+        params.idleThrust = 30000;
 
-        params.acceleration = 10500;
-        params.brake = 9500;
+        params.acceleration = 10500 *900;//  / 2.0f;
+        params.brake = 9500 / 2.0f;
 
-        params.returnSpeedHigh = 4000;
-        params.returnSpeedLow = 2500;
+        params.returnSpeedHigh = 4000 / 2.0f;
+        params.returnSpeedLow = 2500 / 2.0f;
 
-        params.mobilityProportionHigh = 0.6f; //0.8f;
-        params.mobilityProportionLow = 0.3f; //0.6f;
+        params.mobilityProportionHigh = 0.7f; //0.8f;
+        params.mobilityProportionLow = 0.4f; //0.6f;
 
-        params.responsivenessProportionHigh = 2.25f;
-        params.responsivenessProportionLow = 0.5f;
+        params.responsivenessProportionHigh = 4.0f;
+        params.responsivenessProportionLow = 0.4f;
 
         params.stallSpeed = DEFAULT_STALL_SPEED;
         params.recoverySpeed = DEFAULT_RECOVERY_SPEED;
         params.mobilityLooseStartSpeed = DEFAULT_MOBILITY_LOOSE_START_SPEED;
        
-        params.maxPitchSpeed = 0.7f;
-        params.maxRollSpeed = 1.6f;
-        params.maxYawSpeed = 0.2f;
+        params.maxPitchSpeed = 0.65f;
+        params.maxRollSpeed = 1.2f;
+        params.maxYawSpeed = 0.1f;
 
         responsive = 100;
 

@@ -22,7 +22,7 @@ const float STALL_TORQUE_SPEED = 15.0f * ALT_ANGULAR_DAMPING;
 
 Player::Player()
 {
-    params = GetPlaneParams(Planes::SF15);
+    params = GetPlaneParams(Planes::DEBUG_PLANE);
 
     originalMaxPitchSpeed = params.maxPitchSpeed;
     originalMaxRollSpeed = params.maxRollSpeed;
@@ -45,7 +45,8 @@ Player::Player()
     body.linearVelocity.z = 360;
 
     // camera
-    camera.fovy = 60.0f;
+    FOVY = 60.0f;
+    camera.fovy = FOVY;
     camera.up.x = 0.0f;
     camera.up.y = -1.0f;
     camera.up.z = 0.0f;
@@ -59,14 +60,9 @@ Player::Player()
     cameraOffset.y = 5.0f;
     cameraOffset.z = -39.0f;
 
-    pitchInputUp = 0;
-    rollInputRight = 0;
-    yawInputRight = 0;
-
-    pitchInputDown = 0;
-    rollInputLeft = 0;
-    yawInputLeft = 0;
-
+    cameraAlpha = 10.0f;
+    currentFovy = FOVY;
+    
     globalCamera = false;
     orbitYaw = 0.0f;
     orbitPitch = 0.0f;
@@ -76,6 +72,15 @@ Player::Player()
     smoothedOffset.y = 0.0f;
     smoothedOffset.z = 0.0f;
 
+    //input
+    pitchInputUp = 0;
+    rollInputRight = 0;
+    yawInputRight = 0;
+
+    pitchInputDown = 0;
+    rollInputLeft = 0;
+    yawInputLeft = 0;
+
     // engine glow
     engineGlow = 0.5f;
     idleEngineGlow = 0.5f;
@@ -84,6 +89,7 @@ Player::Player()
 
     engineGlowChange = 0.2f;
 
+    //bullets
     bulletPool = BulletPool(60, 1);
     bulletTransform = {};
     bulletTransform.scale = {1.0f, 1.0f, 1.0f};
@@ -91,6 +97,7 @@ Player::Player()
     fireTimerBullet = 0.0f;
     firerateBullet = 0.1f;
 
+    //missiles
     fireTimerMissileA = 0.0f;
     firerateMissile = 1.0f;
 
@@ -459,7 +466,27 @@ void Player::UpdateCamera(float dt)
     {
         returnToIdle = true;
 
-        float alpha = 10.0f * dt;
+        float alpha = cameraAlpha * dt;
+
+        float fovyFactor = 1.0f;
+
+        float speed = GetTrueSpeed();
+
+        float minFovy = 0.85f;
+        float maxFovy = 1.15f;
+
+        if(speed <= GetIdleSpeed())
+        {
+            fovyFactor = 1 - (1 - minFovy) * (speed - GetIdleSpeed()) / (-GetIdleSpeed());
+            fovyFactor = Clamp(fovyFactor, minFovy, 1.0f);
+        }
+        else
+        {
+            fovyFactor = 1 - (1 - maxFovy) * (speed - GetIdleSpeed()) / (GetMaxSpeed() * 0.75f - GetIdleSpeed());
+            fovyFactor = Clamp(fovyFactor, 1.0f, maxFovy);
+        }
+
+        camera.fovy = FOVY * fovyFactor;
 
         smoothedOffset.x += alpha * (rotatedOffset.x - smoothedOffset.x);
         smoothedOffset.y += alpha * (rotatedOffset.y - smoothedOffset.y);

@@ -335,3 +335,216 @@ CollisionResult PrismVsSphere(const Vector3 &positionA, const vector<Vector3> &v
 
     return result;
 }
+
+CollisionResult_CCD SAT3DPrism_CCD(const Vector3 &positionA, const vector<Vector3> &verticesA, const Vector3 &positionB, const vector<Vector3> &verticesB, const Vector3 &relVel)
+{
+    CollisionResult_CCD result = {};
+
+    vector<Vector3> axes;
+
+    switch (verticesA.size())
+    {
+    case 8: //prism
+
+        //top
+        axes.push_back(Vector3Normalize(
+            Vector3CrossProduct(verticesA[1] - verticesA[0],
+            verticesA[2] - verticesA[0])
+        ));
+
+        //bottom
+        axes.push_back(Vector3Normalize(
+            Vector3CrossProduct(verticesA[5] - verticesA[4], verticesA[6] - verticesA[4])
+        ));
+
+        //sides
+        for (int i = 0; i < 4; ++i)
+        {
+            int next = (i+1)%4;
+            Vector3 edge1 = verticesA[4 + i] - verticesA[i];
+            Vector3 edge2 = verticesA[4 + next] - verticesA[i];
+            axes.push_back(Vector3Normalize(
+                Vector3CrossProduct(edge1,edge2)
+            ));
+        }
+        break;
+    
+    case 5: //pyramid
+        
+        //base
+        axes.push_back(Vector3Normalize(
+            Vector3CrossProduct(verticesA[1] - verticesA[0], verticesA[2] - verticesA[0])
+        ));
+
+        for (int i = 0; i < 4; ++i) //sides
+        {
+            int next = (i+1)%4;
+            Vector3 edge1 = verticesA[4] - verticesA[i];
+            Vector3 edge2 = verticesA[next] - verticesA[i];
+            axes.push_back(Vector3Normalize(
+                Vector3CrossProduct(edge1,edge2)
+            ));
+        }
+
+        break;
+
+    default:
+
+        result.collision = false;
+
+        return result;
+        break;
+    }
+
+    switch (verticesB.size())
+    {
+    case 8: //prismatoid
+
+        //top
+        axes.push_back(Vector3Normalize(
+            Vector3CrossProduct(verticesB[1] - verticesB[0],
+            verticesB[2] - verticesB[0])
+        ));
+
+        //bottom
+        axes.push_back(Vector3Normalize(
+            Vector3CrossProduct(verticesB[5] - verticesB[4], verticesB[6] - verticesB[4])
+        ));
+
+        //sides
+        for (int i = 0; i < 4; ++i)
+        {
+            int next = (i+1)%4;
+            Vector3 edge1 = verticesB[4 + i] - verticesB[i];
+            Vector3 edge2 = verticesB[4 + next] - verticesB[i];
+            axes.push_back(Vector3Normalize(
+                Vector3CrossProduct(edge1,edge2)
+            ));
+        }
+        break;
+    
+    case 5: //pyramid
+        
+        //base
+        axes.push_back(Vector3Normalize(
+            Vector3CrossProduct(verticesB[1] - verticesB[0], verticesB[2] - verticesB[0])
+        ));
+
+        for (int i = 0; i < 4; ++i) //sides
+        {
+            int next = (i+1)%4;
+            Vector3 edge1 = verticesB[4] - verticesB[i];
+            Vector3 edge2 = verticesB[next] - verticesB[i];
+            axes.push_back(Vector3Normalize(
+                Vector3CrossProduct(edge1,edge2)
+            ));
+        }
+
+        break;
+
+    default:
+
+        result.collision = false;
+
+        return result;
+        break;
+    }
+
+    for (int i = 0; i < verticesA.size(); i++)
+    {
+        Vector3 edgeA = verticesA[(i+1) % verticesA.size()] - verticesA[i];
+
+        for (int j = 0; j < verticesB.size(); j++)
+        {
+            Vector3 edgeB = verticesB[(j+1)%verticesB.size()] - verticesB[j];
+            Vector3 axis = Vector3CrossProduct(edgeA,edgeB);
+            if(Vector3Length(axis) > 1e-6f)
+            {
+                axes.push_back(Vector3Normalize(axis));
+            }
+        }
+    }
+
+
+
+    float tStart = 0.0f;
+    float tEnd = 1.0f;
+
+    Vector3 mtvNormal = {0,0,0};
+
+
+    for (int i = 0; i < axes.size(); i++)
+    {
+        Vector3 axis = axes[i];
+
+        Projection projA = ProjectVertices3D(verticesA, axis);
+        Projection projB = ProjectVertices3D(verticesB, axis);
+
+        float speedRel = Vector3DotProduct(relVel, axis);
+
+        float timeIn;
+        float timeOut;
+
+        if(speedRel != 0.0f)
+        {
+            timeIn = (projA.min - projB.max) / speedRel;
+            timeOut = (projA.max - projB.min) /speedRel;
+
+            if(timeIn > timeOut)
+            {
+                std::swap(timeIn, timeOut);
+            }
+        }
+        else
+        {
+            if (projA.max < projB.min || projB.max < projA.min)
+            {
+                result.collision = false;
+                result.timeOfImpact = 1.0f;
+                return result;
+            }
+
+            timeIn = 0.0f;
+            timeOut = 1.0f;
+        }
+
+        if(timeIn > tEnd)
+        {
+            result.collision = false;
+            result.timeOfImpact = 1.0f;
+            return result;
+        }
+
+        if (timeOut < tStart)
+        {
+            result.collision = false;
+            result.timeOfImpact = 1.0f;
+            return result;
+        }
+
+        if(timeIn > tStart)
+        {
+            tStart = timeIn;
+            mtvNormal = axis;
+        }
+
+        if(timeOut < tEnd)
+        {
+            tEnd = timeOut;
+        }
+    }
+
+    if(tStart < tEnd && tStart >= 0.0f && tStart <= 1.0f)
+    {
+        result.collision = true;
+        result.timeOfImpact = tStart;
+        result.normal = mtvNormal;
+    }
+    else
+    {
+        result.collision = false;
+        result.timeOfImpact = 1.0f;
+    }
+
+    return result;
+}

@@ -57,7 +57,7 @@ public:
 
     Enemy(Target target, EnemyType type);
 
-    void UpdateEnemy(float dt, int iterations, const Vector3& playerPos,const std::vector<Missile*>& activeMissilesA, const std::vector<Missile*>& activeMissilesB);
+    void UpdateEnemy(float dt, const Vector3& playerPos,const std::vector<Missile*>& activeMissilesA, const std::vector<Missile*>& activeMissilesB);
 
     void FireB(float dt, const Vector3 &playerPos, const Vector3& playerVel);
 
@@ -75,7 +75,7 @@ public:
 
 private:
 
-    void UpdateAATank(float dt, int iterations, const Vector3& playerPos,const std::vector<Missile*>& activeMissilesA, const std::vector<Missile*>& activeMissilesB);
+    void UpdateAATank(float dt, const Vector3& playerPos,const std::vector<Missile*>& activeMissilesA, const std::vector<Missile*>& activeMissilesB);
 
     bool IsLockedByMissile(const std::vector<Missile*>& activeMissiles);
 

@@ -4,7 +4,7 @@
 #include <iostream>
 
 
-void Missile::UpdateMissile(float dt, float iterations)
+void Missile::UpdateMissile(float dt)
 {
     Vector3 forward = GetWorldForwardVector(body.transform);
 
@@ -27,27 +27,27 @@ void Missile::UpdateMissile(float dt, float iterations)
 
                 body.worldAngularTorque = 10 * ALT_ANGULAR_DAMPING;
 
-                body.ApplyAlternateWorldTorque(axisOfRotation, dt / iterations);
+                body.ApplyAlternateWorldTorque(axisOfRotation, dt);
             }
         }
     }
 
     //missile update
-    if(thrust < maxThrust) thrust += 500000 * (dt / iterations);
+    if(thrust < maxThrust) thrust += 500000 * dt;
     else thrust = maxThrust;
 
     body.ApplyForce(forward, thrust);
-    body.UpdateBody(dt, iterations);
+    body.UpdateBody(dt);
 
     //missile particles
     if(isAlive)
     {
-        if(fireTimerParticle > 0.0f) fireTimerParticle -= (dt / iterations);
+        if(fireTimerParticle > 0.0f) fireTimerParticle -= dt;
 
         if(fireTimerParticle <= 0.0f)
         {
             Vector3 forward = GetWorldForwardVector(body.transform);
-            Vector3 particleVel = Vector3Add(body.linearVelocity, Vector3Scale(forward, 50));
+            Vector3 particleVel = Vector3Add(body.linearVelocity, Vector3Scale(forward, 0));
 
             Vector3 right = GetWorldRightVector(body.transform);
             Vector3 up = GetWorldUpVector(body.transform);
@@ -67,7 +67,7 @@ void Missile::UpdateMissile(float dt, float iterations)
         }        
     }
    
-    particlePool.UpdateParticles(dt / iterations);
+    particlePool.UpdateParticles(dt);
 }
 
 
@@ -116,17 +116,15 @@ MissilePool::MissilePool(int quantity, float lifetime, float maxThrust)
     }
 }
 
-void MissilePool::UpdateMissiles(float dt, int iterations)
+void MissilePool::UpdateMissiles(float dt)
 {
-    float fdt = dt;
-    fdt /= iterations;
 
     for (int i = 0; i < activeMissiles.size();)
     {
         Missile* m = activeMissiles[i];
-        m->UpdateMissile(dt, iterations);
+        m->UpdateMissile(dt);
 
-        m->currentTime += fdt;
+        m->currentTime += dt;
 
         if(m->currentTime >= m->lifetime || m->didHit)
         {

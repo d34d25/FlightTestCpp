@@ -101,13 +101,13 @@ public:
         alternateTorque.x += amount;
     }
 
-    void AlternateUpdateBody(float dt, int iterations);
+    void AlternateUpdateBody(float dt);
 
     void ApplyAlternateWorldTorque(Vector3 axis, float dt);
 
-    void UpdateBody(float dt, int iterations);
+    void UpdateBody(float dt);
 
-    void SingleBodyUpdate(float dt, int iterations);
+    void SingleBodyUpdate(float dt);
 
     //consults
 

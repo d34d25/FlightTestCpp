@@ -28,9 +28,28 @@ Player::Player()
     originalMaxRollSpeed = params.maxRollSpeed;
     originalMaxYawSpeed = params.maxYawSpeed;
 
-    originalPitchResponsiveness = params.pitchResponsiveness;
-    originalRollResponsiveness = params.rollResponsiveness;
-    originalYawResponsiveness = params.yawResponsiveness;
+    originalPitchResponse = params.pitchAcceleration;
+    originalRollResponse = params.rollAcceleration;
+    originalYawResponse = params.yawAcceleration;
+
+    pitchUpKey = false;
+    pitchDownKey = false;
+
+    rollRightKey = false;
+    rollLeftKey = false;
+
+    yawRightKey = false;
+    yawLeftKey = false;
+
+    acclerationKey = false;
+    brakeKey = false;
+
+    missileKey = false;
+    gunKey = false;
+
+    targetSwitchKey = false;
+
+    //body
 
     body = Body3D(this->params.lateralDragMultiplier,
                   this->params.angularDamping);
@@ -124,201 +143,187 @@ Player::Player()
     tgtLocked = false;
 }
 
-void Player::UpdatePlayer(float dt, int iterations)
+void Player::UpdatePlayer(float dt)
 {
-    float fdt = dt;
-    fdt /= iterations;
-
     Vector3 forward = GetWorldForwardVector(body.transform);
     forward = Vector3Normalize(forward);
 
-    if (!globalCamera)
+    if(!globalCamera)
     {
-        if (IsKeyDown(KEY_W))
+        pitchUpKey = IsKeyDown(KEY_DOWN);
+        pitchDownKey = IsKeyDown(KEY_UP);
+
+        rollRightKey = IsKeyDown(KEY_RIGHT);
+        rollLeftKey = IsKeyDown(KEY_LEFT);
+
+        yawRightKey = IsKeyDown(KEY_D);
+        yawLeftKey = IsKeyDown(KEY_A);
+
+        acclerationKey = IsKeyDown(KEY_W);
+        brakeKey = IsKeyDown(KEY_S);
+
+        missileKey = IsKeyPressed(KEY_SPACE);
+        gunKey = IsKeyDown(KEY_LEFT_SHIFT);
+
+        targetSwitchKey = IsKeyPressed(KEY_E);
+    }
+    else
+    {
+        pitchUpKey = IsKeyDown(KEY_S);
+        pitchDownKey = IsKeyDown(KEY_W);
+
+        rollRightKey = IsKeyDown(KEY_D);
+        rollLeftKey = IsKeyDown(KEY_A);
+
+        yawRightKey = IsKeyDown(KEY_E);
+        yawLeftKey = IsKeyDown(KEY_Q);
+
+        acclerationKey = IsKeyDown(KEY_LEFT_SHIFT);
+        brakeKey = IsKeyDown(KEY_LEFT_CONTROL);
+
+        missileKey = IsKeyPressed(KEY_SPACE);
+        gunKey = IsKeyDown(KEY_LEFT_ALT);
+
+        targetSwitchKey = IsKeyPressed(KEY_TAB);
+
+        engineGlow = thrust / params.maxThrust;
+    }
+
+    if(acclerationKey)
+    {
+        thrust += params.acceleration * dt;
+
+        if(!globalCamera)
         {
-            thrust += params.acceleration * fdt;
+            hasInput = true;
+            engineGlow += engineGlowChange * dt;
+        }
+    }
+    else if (brakeKey)
+    {
+        thrust -= params.brake * dt;
 
-            engineGlow += engineGlowChange * fdt;
-
+        if(!globalCamera)
+        {
+            engineGlow -= engineGlowChange * dt;
             hasInput = true;
         }
-        else if (IsKeyDown(KEY_S))
-        {
-            thrust -= params.brake * fdt;
-
-            engineGlow -= engineGlowChange * fdt;
-
-            hasInput = true;
-        }
-        else
+    }
+    else
+    {
+        if(!globalCamera)
         {
             hasInput = false;
 
             if (engineGlow < idleEngineGlow)
             {
-                engineGlow += engineGlowChange * fdt;
+                engineGlow += engineGlowChange * dt;
             }
             else if (engineGlow > idleEngineGlow)
             {
-                engineGlow -= engineGlowChange * fdt;
+                engineGlow -= engineGlowChange * dt;
             }
             else
             {
                 engineGlow = idleEngineGlow;
             }
         }
+    }
 
-        engineGlow = Clamp(engineGlow, 0, maxEngineGlow);
+    engineGlow = Clamp(engineGlow, 0, maxEngineGlow);
 
-        if (IsKeyDown(KEY_D)) 
-        {   
-            yawInputLeft = 0;
-            yawInputRight += -params.yawResponsiveness * fdt;
-        }   
-        else if (IsKeyDown(KEY_A))
-        {
-            yawInputRight = 0;
-            yawInputLeft += params.yawResponsiveness * fdt;
-        } 
-        else
-        {
-            yawInputLeft = 0;
-            yawInputRight = 0;
-        } 
-
-        if (IsKeyDown(KEY_RIGHT))
-        {
-            rollInputLeft = 0;
-            rollInputRight += params.rollResponsiveness * fdt;
-        } 
-        else if (IsKeyDown(KEY_LEFT))
-        {
-            rollInputRight = 0;
-            rollInputLeft += -params.rollResponsiveness * fdt;
-        } 
-        else
-        {
-            rollInputLeft = 0;
-            rollInputRight = 0;
-        }
-
-        if (IsKeyDown(KEY_DOWN))
-        {
-            pitchInputDown = 0;
-            pitchInputUp += -params.pitchResponsiveness * fdt;
-        } 
-        else if (IsKeyDown(KEY_UP)) 
-        {
-            pitchInputUp = 0;
-            pitchInputDown += params.pitchResponsiveness * fdt;
-        } 
-        else
-        {
-            pitchInputDown = 0;
-            pitchInputUp = 0;
-        } 
+    if(pitchUpKey)
+    {
+        pitchInputDown = 0;
+        pitchInputUp -= params.pitchAcceleration * dt;
+    }
+    else if (pitchDownKey)
+    {
+        pitchInputUp = 0;
+        pitchInputDown += params.pitchAcceleration * dt;
     }
     else
     {
-        engineGlow = thrust / params.maxThrust;
-
-        if (IsKeyDown(KEY_LEFT_SHIFT))
-        {
-            thrust += params.acceleration * fdt;
-        }
-        else if (IsKeyDown(KEY_LEFT_CONTROL))
-        {
-            thrust -= params.brake * fdt;
-        }
-
-        if (IsKeyDown(KEY_E))
-        {
-            yawInputLeft = 0;
-            yawInputRight += -params.yawResponsiveness * fdt;
-        } 
-        else if (IsKeyDown(KEY_Q))
-        {
-            yawInputRight = 0;
-            yawInputLeft += params.yawResponsiveness * fdt;
-        }
-        else
-        {
-            yawInputLeft = 0;
-            yawInputRight = 0;
-        } 
-
-        if (IsKeyDown(KEY_D))
-        {
-            rollInputLeft = 0;
-            rollInputRight += params.rollResponsiveness * fdt;
-        }
-        else if (IsKeyDown(KEY_A))
-        {
-            rollInputRight = 0;
-            rollInputLeft += -params.rollResponsiveness * fdt;
-        }
-        else
-        {
-            rollInputLeft = 0;
-            rollInputRight = 0;
-        }
-
-        if (IsKeyDown(KEY_S))
-        {
-            pitchInputDown = 0;
-            pitchInputUp += -params.pitchResponsiveness * fdt;
-        }
-        else if (IsKeyDown(KEY_W))
-        {
-            pitchInputUp = 0;
-            pitchInputDown += params.pitchResponsiveness * fdt;
-        }
-        else
-        {
-            pitchInputDown = 0;
-            pitchInputUp = 0;
-        }
+        pitchInputDown = 0;
+        pitchInputUp = 0;
     }
 
-    float maxResponsiveness = 1000.0f;
+    if(rollRightKey)
+    {
+        rollInputLeft = 0;
+        rollInputRight += params.rollAcceleration * dt;
+    }
+    else if (rollLeftKey)
+    {
+        rollInputRight = 0;
+        rollInputLeft -= params.rollAcceleration * dt;
+    }
+    else
+    {
+        rollInputLeft = 0;
+        rollInputRight = 0;
+    }
 
-    Clamp(pitchInputUp, -maxResponsiveness, 0);
-    Clamp(rollInputRight, 0, maxResponsiveness);
-    Clamp(yawInputRight, -maxResponsiveness, 0);
+    if(yawRightKey)
+    {
+        yawInputLeft = 0;
+        yawInputRight -= params.yawAcceleration * dt;
+    }
+    else if (yawLeftKey)
+    {
+        yawInputRight = 0;
+        yawInputLeft += params.yawAcceleration * dt;
+    }
+    else
+    {
+        yawInputLeft = 0;
+        yawInputRight = 0;
+    }
 
-    Clamp(pitchInputDown, 0, maxResponsiveness);
-    Clamp(rollInputLeft, -maxResponsiveness, 0);
-    Clamp(yawInputLeft, 0, maxResponsiveness);
+    pitchInputUp = Clamp(pitchInputUp, -params.pitchPower, 0);
+    rollInputRight = Clamp(rollInputRight, 0, params.rollPower);
+    yawInputRight = Clamp(yawInputRight, -params.yawPower, 0);
 
-    body.ApplyPitch(pitchInputUp * body.angularDamping.x);
-    body.ApplyRoll(rollInputRight * body.angularDamping.z);
-    body.ApplyYaw(yawInputRight * body.angularDamping.y);
+    pitchInputDown = Clamp(pitchInputDown, 0, params.pitchPower);
+    rollInputLeft = Clamp(rollInputLeft, -params.rollPower, 0);
+    yawInputLeft = Clamp(yawInputLeft, 0, params.yawPower);
 
-    body.ApplyPitch(pitchInputDown * body.angularDamping.x);
-    body.ApplyRoll(rollInputLeft * body.angularDamping.z);
-    body.ApplyYaw(yawInputLeft * body.angularDamping.y);
+    /*std::cout<<"pitch up : "<<pitchInputUp<<"\n";
+    std::cout<<"roll right : "<<rollInputRight<<"\n";
+    std::cout<<"yaw right : "<<yawInputRight<<"\n";
+
+    std::cout<<"pitch down : "<<pitchInputDown<<"\n";
+    std::cout<<"roll left : "<<rollInputLeft<<"\n";
+    std::cout<<"yaw left : "<<yawInputLeft<<"\n";*/
+
+    float finalPtich = pitchInputUp + pitchInputDown;
+    float finalRoll = rollInputLeft + rollInputRight;
+    float finalYaw = yawInputLeft + yawInputRight;
+
+    body.ApplyPitch(finalPtich);
+    body.ApplyRoll(finalRoll);
+    body.ApplyYaw(finalYaw);
 
     // plane
 
-    if (body.angularVelocity.x >= params.maxPitchSpeed) body.angularVelocity.x = params.maxPitchSpeed;
-    else if (body.angularVelocity.x <= -params.maxPitchSpeed) body.angularVelocity.x = -params.maxPitchSpeed;
+    body.angularVelocity.x = Clamp(body.angularVelocity.x, -params.maxPitchSpeed, params.maxPitchSpeed); 
+    body.angularVelocity.z = Clamp(body.angularVelocity.z, -params.maxRollSpeed, params.maxRollSpeed); 
+    body.angularVelocity.y = Clamp(body.angularVelocity.y, -params.maxYawSpeed, params.maxYawSpeed); 
 
-    if (body.angularVelocity.y >= params.maxYawSpeed) body.angularVelocity.y = params.maxYawSpeed;
-    else if (body.angularVelocity.y <= -params.maxYawSpeed) body.angularVelocity.y = -params.maxYawSpeed;
-
-    if (body.angularVelocity.z >= params.maxRollSpeed) body.angularVelocity.z = params.maxRollSpeed;
-    else if (body.angularVelocity.z <= -params.maxRollSpeed) body.angularVelocity.z = -params.maxRollSpeed;
+    /*std::cout<<"angular vel x: "<<body.angularVelocity.x<<"\n";
+    std::cout<<"angular vel z: "<<body.angularVelocity.z<<"\n";
+    std::cout<<"angular vel y: "<<body.angularVelocity.y<<"\n";*/
 
     if (!hasInput && returnToIdle)
     {
         if (thrust <= params.idleThrust)
         {
-            thrust += params.returnSpeedLow * fdt;
+            thrust += params.returnSpeedLow * dt;
             if (thrust >= params.idleThrust) thrust = params.idleThrust;
         }
         else
         {
-            thrust -= params.returnSpeedHigh * fdt;
+            thrust -= params.returnSpeedHigh * dt;
             if (thrust <= params.idleThrust) thrust = params.idleThrust;
         }
     }
@@ -400,22 +405,23 @@ void Player::UpdatePlayer(float dt, int iterations)
     params.maxRollSpeed = originalMaxRollSpeed * mobilityFactor;
     params.maxYawSpeed = originalMaxYawSpeed * mobilityFactor;
 
-    float responsivenessFactor = 1.0f;
-
+    float responseFactor = 1.0f;
+    
     if (speed <= params.mobilityLooseStartSpeed)
     {
-        responsivenessFactor = 1 - (1 - params.responsivenessProportionLow) * (speed - params.mobilityLooseStartSpeed) / (params.stallSpeed - params.mobilityLooseStartSpeed);
-        responsivenessFactor = Clamp(responsivenessFactor, params.responsivenessProportionLow, 1.0f);
+        responseFactor = 1 - (1 - params.responsivenessProportionLow) * (speed - params.mobilityLooseStartSpeed) / (params.stallSpeed - params.mobilityLooseStartSpeed);
+        responseFactor = Clamp(responseFactor, params.responsivenessProportionLow, 1.0f);
     }
     else
     {
-        responsivenessFactor = 1 - (1 - params.responsivenessProportionHigh) * (speed - params.mobilityLooseStartSpeed) / (GetMaxSpeed() - params.mobilityLooseStartSpeed);
-        responsivenessFactor = Clamp(responsivenessFactor, 1.0f, params.responsivenessProportionHigh);
+        responseFactor = 1 - (1 - params.responsivenessProportionHigh) * (speed - params.mobilityLooseStartSpeed) / (GetMaxSpeed() - params.mobilityLooseStartSpeed);
+        responseFactor = Clamp(responseFactor, 1.0f, params.responsivenessProportionHigh);
     }
 
-    params.pitchResponsiveness = originalPitchResponsiveness * responsivenessFactor;
-    params.rollResponsiveness = originalRollResponsiveness * responsivenessFactor;
-    params.yawResponsiveness = originalYawResponsiveness * responsivenessFactor;
+    params.pitchAcceleration = originalPitchResponse * responseFactor;
+    params.rollAcceleration = originalRollResponse * responseFactor;
+    params.yawAcceleration =  originalYawResponse * responseFactor;
+
 
     if (stalling)
     {
@@ -439,18 +445,18 @@ void Player::UpdatePlayer(float dt, int iterations)
         body.worldAngularTorque = STALL_TORQUE_SPEED;
     }
 
-    body.ApplyAlternateWorldTorque(axisOfRotation, fdt); //stall
+    body.ApplyAlternateWorldTorque(axisOfRotation, dt); //stall
 
-    //body.AlternateUpdateBody(dt, iterations); //external forces
+    //body.AlternateUpdateBody(dt); //external forces
 
-    //body.UpdateBody(dt, iterations); //player input
+    //body.UpdateBody(dt); //player input
 
-    body.SingleBodyUpdate(dt,iterations);
+    body.SingleBodyUpdate(dt);
 
-    bulletPool.UpdateBullets(fdt);
+    bulletPool.UpdateBullets(dt);
 
-    missilePoolA.UpdateMissiles(dt, iterations);
-    missilePoolB.UpdateMissiles(dt,iterations);
+    missilePoolA.UpdateMissiles(dt);
+    missilePoolB.UpdateMissiles(dt);
 }
 
 void Player::UpdateCamera(float dt)
@@ -565,9 +571,7 @@ void Player::FireB(float dt)
     // call it gun position
     if (fireTimerBullet > 0.0f) fireTimerBullet -= dt;
 
-    bool fireKey = (!globalCamera && IsKeyDown(KEY_LEFT_SHIFT)) || (globalCamera && IsKeyDown(KEY_SPACE));
-
-    if (fireKey && fireTimerBullet <= 0.0f)
+    if (gunKey && fireTimerBullet <= 0.0f)
     {
         while (fireTimerBullet <= 0.0f)
         {
@@ -605,9 +609,7 @@ void Player::FireM(float dt)
     if (fireTimerMissileA > 0.0f) fireTimerMissileA -= dt;
     if (fireTimerMissileB > 0.0f) fireTimerMissileB -= dt;
 
-    bool fireKey = (!globalCamera && IsKeyPressed(KEY_SPACE)) || (globalCamera && IsKeyPressed(KEY_LEFT_ALT));
-
-    if(fireKey)
+    if(missileKey)
     {
         Vector3 forward = GetWorldForwardVector(body.transform);
         Vector3 missileInitialSpeed = Vector3Scale(forward, GetSpeed());
@@ -679,9 +681,7 @@ void Player::ChooseTarget()
         currentTarget = targets[tgtIndex];
     }
 
-    bool switchPressed = (!globalCamera && IsKeyPressed(KEY_E)) || ( globalCamera && IsKeyPressed(KEY_TAB));
-
-    if (switchPressed)
+    if (targetSwitchKey)
     {
         int startIndex = tgtIndex;
 

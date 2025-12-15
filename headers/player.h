@@ -16,9 +16,9 @@ private:
     float originalMaxRollSpeed;
     float originalMaxYawSpeed;
 
-    float originalPitchResponsiveness;
-    float originalRollResponsiveness;
-    float originalYawResponsiveness;
+    float originalPitchResponse;
+    float originalRollResponse;
+    float originalYawResponse;
 
     float pitchInputUp;
     float rollInputRight;
@@ -27,6 +27,12 @@ private:
     float pitchInputDown;
     float rollInputLeft;
     float yawInputLeft;
+
+    bool pitchUpKey, rollRightKey, yawRightKey, 
+    pitchDownKey, rollLeftKey, yawLeftKey,
+    acclerationKey, brakeKey,
+    missileKey, gunKey,
+    targetSwitchKey;
 
     //camera
     bool globalCamera = false;
@@ -92,7 +98,7 @@ public:
 
     Player();
 
-    void UpdatePlayer(float dt, int iterations);
+    void UpdatePlayer(float dt);
     
     void UpdateCamera(float dt);
 

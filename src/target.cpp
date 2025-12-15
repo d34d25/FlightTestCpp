@@ -65,12 +65,12 @@ Enemy::Enemy(Target target, EnemyType type)
     bulletspeed = 1200;
 }
 
-void Enemy::UpdateEnemy(float dt, int iterations, const Vector3 &playerPos, const std::vector<Missile *>& activeMissilesA, const std::vector<Missile *>& activeMissilesB)
+void Enemy::UpdateEnemy(float dt, const Vector3 &playerPos, const std::vector<Missile *>& activeMissilesA, const std::vector<Missile *>& activeMissilesB)
 {
     switch (type)
     {
     case EnemyType::AA_TANK:
-        UpdateAATank(dt,iterations,playerPos, activeMissilesA, activeMissilesB);
+        UpdateAATank(dt,playerPos, activeMissilesA, activeMissilesB);
         break;
     
     default:
@@ -136,7 +136,7 @@ void Enemy::FireM(float dt, const Vector3& playerPos)
 }
 
 
-void Enemy::UpdateAATank(float dt, int iterations, const Vector3 &playerPos, const std::vector<Missile *> &activeMissilesA, const std::vector<Missile *> &activeMissilesB)
+void Enemy::UpdateAATank(float dt, const Vector3 &playerPos, const std::vector<Missile *> &activeMissilesA, const std::vector<Missile *> &activeMissilesB)
 {
     Vector3 dirToPlayer = Vector3Subtract(playerPos, target->body.transform.translation);
 
@@ -156,9 +156,9 @@ void Enemy::UpdateAATank(float dt, int iterations, const Vector3 &playerPos, con
 
     target->body.linearVelocity = {0,0,300};
 
-    target->body.UpdateBody(dt, iterations);
+    target->body.UpdateBody(dt);
 
-    bulletPool.UpdateBullets(dt / iterations);
+    bulletPool.UpdateBullets(dt);
 }
 
 bool Enemy::IsLockedByMissile(const std::vector<Missile *> &activeMissiles)

@@ -44,13 +44,17 @@ struct PlaneParams
     float recoverySpeed;
     float mobilityLooseStartSpeed;
 
+    float pitchPower;
+    float rollPower;
+    float yawPower;
+
     float maxPitchSpeed;
     float maxRollSpeed;
     float maxYawSpeed;
 
-    float pitchResponsiveness;
-    float rollResponsiveness;
-    float yawResponsiveness;
+    float pitchAcceleration;
+    float rollAcceleration;
+    float yawAcceleration;
 
     //model variables
     const char* modelPath;

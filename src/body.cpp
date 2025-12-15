@@ -57,10 +57,8 @@ Body3D::Body3D(float sideDrag, Vector3 angularDamping)
 }
 
 
-void Body3D::AlternateUpdateBody(float dt, int iterations)
+void Body3D::AlternateUpdateBody(float dt)
 {
-    dt /= iterations;
-
     Vector3 forward = GetWorldForwardVector(transform);
 
     float altDrag = linearDrag * FORWARD_DRAG_MULTIPLIER;
@@ -191,10 +189,8 @@ void Body3D::ApplyAlternateWorldTorque(Vector3 axis, float dt)
     worldAngularTorque = 0.0f;
 }
 
-void Body3D::UpdateBody(float dt, int iterations)
+void Body3D::UpdateBody(float dt)
 {   
-    dt /= iterations;
-
     Vector3 forward = GetWorldForwardVector(transform);
 
     float forwardSpeed = Vector3DotProduct(linearVelocity, forward);
@@ -317,10 +313,8 @@ void Body3D::UpdateBody(float dt, int iterations)
     torque.z = 0.0f;
 }
 
-void Body3D::SingleBodyUpdate(float dt, int iterations)
+void Body3D::SingleBodyUpdate(float dt)
 {
-    dt /= iterations;
-
     Vector3 forward = GetWorldForwardVector(transform);
 
     //linear

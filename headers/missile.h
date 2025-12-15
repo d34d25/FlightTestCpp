@@ -34,7 +34,7 @@ public:
 
     Missile() = default;
 
-    void UpdateMissile(float dt, float iterations);
+    void UpdateMissile(float dt);
 
 };
 
@@ -50,7 +50,7 @@ public:
 
     MissilePool(int quantity, float lifetime, float maxTrhust);
 
-    void UpdateMissiles(float dt, int iterations);
+    void UpdateMissiles(float dt);
 
     void FireMissile(const Transform& transform, Vector3 initialSpeed, float initialThrust, Vector3* target, bool locked);
 };

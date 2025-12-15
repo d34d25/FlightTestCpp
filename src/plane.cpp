@@ -16,7 +16,7 @@ PlaneParams GetPlaneParams(Planes plane)
     float angDamp = 3.0f;
     params.skipMaterialIndex = 2;
 
-    float responsive = 120;
+    float response = 120;
 
     switch (plane)
     {
@@ -24,11 +24,11 @@ PlaneParams GetPlaneParams(Planes plane)
 
         params.scale = 2.0f;
 
-        params.hitboxWidth = 2; //20
-        params.hitboxLength = 2; //23
+        params.hitboxWidth = 20; //20
+        params.hitboxLength = 23; //23
         params.hitboxHeight = 2;
 
-        angDamp = 3.0f;
+        angDamp = 2.0f;
         params.angularDamping = {
             angDamp,
             angDamp,
@@ -37,14 +37,14 @@ PlaneParams GetPlaneParams(Planes plane)
 
         params.lateralDragMultiplier = 200.0f; //200.0f
         
-        params.maxThrust = 175000 *30;
+        params.maxThrust = 175000;// *30;
         params.idleThrust = 30000;
 
-        params.acceleration = 10500 *900;//  / 2.0f;
-        params.brake = 9500 / 2.0f;
+        params.acceleration = 10500;// *900;//  / 2.0f;
+        params.brake = 9500;
 
-        params.returnSpeedHigh = 4000 / 2.0f;
-        params.returnSpeedLow = 2500 / 2.0f;
+        params.returnSpeedHigh = 4000;
+        params.returnSpeedLow = 2500;
 
         params.mobilityProportionHigh = 0.7f; //0.8f;
         params.mobilityProportionLow = 0.4f; //0.6f;
@@ -55,16 +55,19 @@ PlaneParams GetPlaneParams(Planes plane)
         params.stallSpeed = DEFAULT_STALL_SPEED;
         params.recoverySpeed = DEFAULT_RECOVERY_SPEED;
         params.mobilityLooseStartSpeed = DEFAULT_MOBILITY_LOOSE_START_SPEED;
-       
-        params.maxPitchSpeed = 0.65f;
-        params.maxRollSpeed = 1.2f;
-        params.maxYawSpeed = 0.1f;
+        
+        params.pitchPower = 20;
+        params.rollPower = 35;
+        params.yawPower = 7;
 
-        responsive = 100;
+        params.maxPitchSpeed = 0.4f;
+        params.maxRollSpeed = 1.6f;
+        params.maxYawSpeed = 0.3f;
 
-        params.pitchResponsiveness = responsive * 0.75f;
-        params.rollResponsiveness = responsive * 3.0f;
-        params.yawResponsiveness = responsive * 0.5f;
+        response = 1000;
+        params.pitchAcceleration = response;
+        params.rollAcceleration = response * 1.5f;
+        params.yawAcceleration = response;
 
         params.modelPath = "assets/sf15b.obj";
         params.skipMaterialIndex = 7;
@@ -83,6 +86,10 @@ PlaneParams GetPlaneParams(Planes plane)
 
     params.acceleration *= FORWARD_DRAG_MULTIPLIER;
     params.brake *= FORWARD_DRAG_MULTIPLIER;
+
+    params.pitchPower *= params.angularDamping.x;
+    params.rollPower *= params.angularDamping.z;
+    params.yawPower *= params.angularDamping.y;
     
     params.position = {0,400,-700};
 

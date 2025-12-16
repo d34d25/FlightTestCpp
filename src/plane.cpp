@@ -22,13 +22,13 @@ PlaneParams GetPlaneParams(Planes plane)
     {
     case Planes::DEBUG_PLANE:
 
-        params.scale = 2.0f;
+        params.scale = 1.25f;
 
         params.hitboxWidth = 20; //20
         params.hitboxLength = 23; //23
         params.hitboxHeight = 2;
 
-        angDamp = 2.0f;
+        angDamp = 3.0f;
         params.angularDamping = {
             angDamp,
             angDamp,
@@ -56,21 +56,21 @@ PlaneParams GetPlaneParams(Planes plane)
         params.recoverySpeed = DEFAULT_RECOVERY_SPEED;
         params.mobilityLooseStartSpeed = DEFAULT_MOBILITY_LOOSE_START_SPEED;
         
-        params.pitchPower = 20;
-        params.rollPower = 35;
-        params.yawPower = 7;
+        params.pitchPower = 15;
+        params.rollPower = 60;
+        params.yawPower = 10;
 
-        params.maxPitchSpeed = 0.4f;
-        params.maxRollSpeed = 1.6f;
-        params.maxYawSpeed = 0.3f;
+        params.maxPitchSpeed = 0.6f;
+        params.maxRollSpeed = 1.7f;
+        params.maxYawSpeed = 0.2f;
 
-        response = 1000;
+        response = 200;
         params.pitchAcceleration = response;
-        params.rollAcceleration = response * 1.5f;
+        params.rollAcceleration = response * 4.0f;
         params.yawAcceleration = response;
 
-        params.modelPath = "assets/sf15b.obj";
-        params.skipMaterialIndex = 7;
+        params.modelPath = "assets/sf-15x.obj";//"assets/sf15b.obj";
+        params.skipMaterialIndex = 4;//7;
 
         break;
     

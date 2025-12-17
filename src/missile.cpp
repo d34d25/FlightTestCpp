@@ -33,7 +33,7 @@ void Missile::UpdateMissile(float dt)
     }
 
     //missile update
-    if(thrust < maxThrust) thrust += 500000 * dt;
+    if(thrust < maxThrust) thrust += 500000 * 1000 * dt;
     else thrust = maxThrust;
 
     body.ApplyForce(forward, thrust);
@@ -170,5 +170,6 @@ void MissilePool::FireMissile(const Transform &transform, Vector3 initialSpeed, 
         m->body.linearVelocity = Vector3Add(m->body.linearVelocity, Vector3Scale(worldUp, -7.0f));
         
         activeMissiles.push_back(m);
+        std::cout<<"MISSILE FIRED"<<"\n";
     }
 }

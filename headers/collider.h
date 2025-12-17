@@ -10,6 +10,10 @@ private:
 
 public:
 
+    std::vector<std::pair<int, int>> edges;
+
+    std::vector<std::vector<int>> faces;
+
     Collider() = default;
 
     void CreatePrismatoidUp(float baseWidth, float baseLenght, float topWidth, float topLength, float height);

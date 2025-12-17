@@ -118,16 +118,18 @@ Player::Player()
 
     //missiles
     fireTimerMissileA = 0.0f;
-    firerateMissile = 1.0f;
+    firerateMissile = 0.5f;
 
     fireTimerMissileB = 0.0f;
 
-    missilePoolA = MissilePool(6, 4, MAX_THRUST * 1.25f);
+    float missilespeed = MAX_THRUST * 60;
+
+    missilePoolA = MissilePool(6, 2, missilespeed);
     missileTransformA = {};
     missileTransformA.scale = {1.0f, 1.0f, 1.0f};
     missileTransformA.rotation = QuaternionIdentity();
 
-    missilePoolB = MissilePool(6, 4, MAX_THRUST * 1.25f);
+    missilePoolB = MissilePool(6, 2, missilespeed);
     missileTransformB = {};
     missileTransformB.scale = {1.0f, 1.0f, 1.0f};
     missileTransformB.rotation = QuaternionIdentity();
@@ -449,10 +451,10 @@ void Player::UpdatePlayer(float dt)
 
     body.SingleBodyUpdate(dt);
 
-    bulletPool.UpdateBullets(dt);
+    //bulletPool.UpdateBullets(dt);
 
-    missilePoolA.UpdateMissiles(dt);
-    missilePoolB.UpdateMissiles(dt);
+    //missilePoolA.UpdateMissiles(dt);
+    //missilePoolB.UpdateMissiles(dt);
 }
 
 void Player::UpdateCamera(float dt)
@@ -605,7 +607,7 @@ void Player::FireM(float dt)
     if (fireTimerMissileA > 0.0f) fireTimerMissileA -= dt;
     if (fireTimerMissileB > 0.0f) fireTimerMissileB -= dt;
 
-    if(missileKey)
+    if(!missileKey)
     {
         Vector3 forward = GetWorldForwardVector(body.transform);
         Vector3 missileInitialSpeed = Vector3Scale(forward, GetSpeed());

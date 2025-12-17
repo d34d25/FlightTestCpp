@@ -24,8 +24,8 @@ PlaneParams GetPlaneParams(Planes plane)
 
         params.scale = 1.25f;
 
-        params.hitboxWidth = 20; //20
-        params.hitboxLength = 23; //23
+        params.hitboxWidth = 2; //20
+        params.hitboxLength = 2; //23
         params.hitboxHeight = 2;
 
         angDamp = 3.0f;
@@ -37,10 +37,10 @@ PlaneParams GetPlaneParams(Planes plane)
 
         params.lateralDragMultiplier = 200.0f; //200.0f
         
-        params.maxThrust = 175000;// *30;
-        params.idleThrust = 30000;
+        params.maxThrust = 175000 * 30;
+        params.idleThrust = 30000; 
 
-        params.acceleration = 10500;// *900;//  / 2.0f;
+        params.acceleration = 10500 * 900;//  / 2.0f;
         params.brake = 9500;
 
         params.returnSpeedHigh = 4000;

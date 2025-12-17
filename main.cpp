@@ -40,7 +40,7 @@ int main()
 
     obstacleCollider.CreatePrismatoidUp(10500,2,10500,2,10300);
 
-    Vector3 obstacleColliderPos = {0,300,27000};
+    Vector3 obstacleColliderPos = {0,300,7000};
 
     Transform obstacleColliderTransform = {};
     obstacleColliderTransform.translation = obstacleColliderPos;
@@ -65,10 +65,10 @@ int main()
 
     std::vector<std::unique_ptr<Enemy>> enemyList;
 
-    enemyList.push_back(std::make_unique<Enemy>(tgt1, EnemyType::AA_TANK));
+    /*enemyList.push_back(std::make_unique<Enemy>(tgt1, EnemyType::AA_TANK));
     enemyList.push_back(std::make_unique<Enemy>(tgt2, EnemyType::AA_TANK));
     enemyList.push_back(std::make_unique<Enemy>(tgt3, EnemyType::AA_TANK));
-    enemyList.push_back(std::make_unique<Enemy>(tgt4, EnemyType::AA_TANK));
+    enemyList.push_back(std::make_unique<Enemy>(tgt4, EnemyType::AA_TANK));*/
 
     for(int i = 0; i < enemyList.size(); i++)
     {
@@ -99,6 +99,22 @@ int main()
     float accumulator = 0.0f;
     float FIXED_DELTA_TIME = 1.0f/60.0f;
 
+    int iterations = 10;
+
+    if(iterations < 1)
+    {
+        std::cerr<<"ITERATIONS CAN'T BE LESS THAN 1"<<std::endl;
+
+        UnloadShader(shaderData.__shader);
+        UnloadModel(planeModel);
+        UnloadModel(ground);
+        UnloadTexture(groundTexture);
+        UnloadRenderTexture(renderTarget);
+        CloseWindow();
+
+        return 0;
+    }
+
     while (!WindowShouldClose())
     {  
         float dt = GetFrameTime();
@@ -109,117 +125,173 @@ int main()
         {
             shaderData.skipIntensity = player.GetEngineGlow();
 
-            CollisionResult_CCD r;
-
-            Vector3 subStepMovement = Vector3Scale(player.body.GetTrueVelocity(), FIXED_DELTA_TIME);
-
-            r = SAT3DPrism_CCD(player.GetPosition(), testCollider.GetTransformedVertices(player.GetHitboxTransform()), 
-            obstacleColliderPos, obstacleCollider.GetTransformedVertices(obstacleColliderTransform), subStepMovement);
-
-            if (r.collision)
+            for(int i = 0; i < iterations; i++)
             {
-                std::cout<<"PLAYER HIT at: "<<player.GetSpeed()<<"\n";
-            }
+                float subDt = FIXED_DELTA_TIME / iterations;
+
+                CollisionResult_CCD r;
+
+                r = SAT3DPoly_CCD(
+                    testCollider,
+                    player.GetTransform(),
+                    obstacleCollider,
+                    obstacleColliderTransform,
+                    player.body.GetTrueVelocity()
+                );
+
+                if (r.collision)
+                {
+                    if(player.GetPosition().z > obstacleColliderPos.z + 4)
+                    {
+                        player.body.transform.translation = {0,400,-700};
+                    }
+
+                    std::cout<<"PLAYER HIT at: "<<player.GetSpeed()<<"\n";
+                }
                 
-            player.UpdatePlayer(FIXED_DELTA_TIME);
+               
 
-            for (int b = 0; b < player.bulletPool.activeBullets.size(); b++)
-            {
-                Bullet* currentBullet = player.bulletPool.activeBullets[b];
-                    
-                CollisionResult rb;
+                player.UpdatePlayer(subDt);
 
-                rb = PrismVsSphere(obstacleColliderPos,obstacleCollider.GetTransformedVertices(obstacleColliderTransform),
-                currentBullet->transform.translation, currentBullet->radius);
-                    
-                if(rb.collision)
+                for (int b = 0; b < player.bulletPool.activeBullets.size(); b++)
                 {
-                    std::cout<<"BULLET HIT at: "<<Vector3Length(currentBullet->linearVelocity)<<"\n";
-                    currentBullet->didHit = true;
+                    Bullet* currentBullet = player.bulletPool.activeBullets[b];
+                        
+                    CollisionResult_CCD rb;
+
+                    //relative velocity is (colliderA.vel - colliderB.vel)
+
+                    rb = PolyVsSphere_CCD(
+                        obstacleCollider,
+                        obstacleColliderTransform,
+                        currentBullet->transform.translation,
+                        currentBullet->radius, 
+                        currentBullet->linearVelocity
+                    );
+                        
+                    if(rb.collision)
+                    {
+                        std::cout<<"BULLET HIT at: "<<Vector3Length(currentBullet->linearVelocity)<<"\n";
+                        currentBullet->didHit = true;
+                    }
                 }
-            }
 
-            for (int m = 0; m < player.missilePoolA.activeMissiles.size(); m++)
-            {
-                Missile* currentMissile = player.missilePoolA.activeMissiles[m];
+                player.bulletPool.UpdateBullets(subDt);
 
-                CollisionResult rm;
-
-                rm = PrismVsSphere(obstacleColliderPos,obstacleCollider.GetTransformedVertices(obstacleColliderTransform),
-                currentMissile->body.transform.translation, currentMissile->radius);
-
-                if(rm.collision)
+                for (int m = 0; m < player.missilePoolA.activeMissiles.size(); m++)
                 {
-                    std::cout<<"MISSILE HIT at: "<<Vector3Length(currentMissile->body.linearVelocity)<<"\n";
-                    currentMissile->didHit = true;
-                }
-            }
+                    Missile* currentMissile = player.missilePoolA.activeMissiles[m];
 
-            for (int m = 0; m < player.missilePoolB.activeMissiles.size(); m++)
-            {
-                Missile* currentMissile = player.missilePoolB.activeMissiles[m];
+                    CollisionResult_CCD rm;
 
-                CollisionResult rm;
-
-                rm = PrismVsSphere(obstacleColliderPos,obstacleCollider.GetTransformedVertices(obstacleColliderTransform),
-                currentMissile->body.transform.translation, currentMissile->radius);
-
-                if(rm.collision)
-                {
-                    std::cout<<"MISSILE HIT at: "<<Vector3Length(currentMissile->body.linearVelocity)<<"\n";
-                    currentMissile->didHit = true;
-                }
-            }
-
-            for (int m = 0; m < player.missilePoolA.activeMissiles.size(); m++)
-            {
-                Missile* currentMissile = player.missilePoolA.activeMissiles[m];
-
-                CollisionResult rm;
-
-                for(int e = 0; e < enemyList.size(); e++)
-                {
-                    float a = 100;
-
-                    rm = PrismVsSphere(enemyList[e]->target->body.transform.translation,
-                        enemyList[e]->target->hitbox.GetTransformedVertices(enemyList[e]->target->body.transform),
-                        currentMissile->body.transform.translation, currentMissile->radius);
+                    rm = PolyVsSphere_CCD(
+                        obstacleCollider,
+                        obstacleColliderTransform,
+                        currentMissile->body.transform.translation,
+                        currentMissile->radius,
+                        currentMissile->body.linearVelocity
+                    );
 
                     if(rm.collision)
                     {
+                        std::cout<<"MISSILE A HIT at: "<<Vector3Length(currentMissile->body.linearVelocity)<<"\n";
                         currentMissile->didHit = true;
                     }
                 }
-            }
 
-            for (int m = 0; m < player.missilePoolB.activeMissiles.size(); m++)
-            {
-                Missile* currentMissile = player.missilePoolB.activeMissiles[m];
-
-                CollisionResult rm;
-
-                for(int e = 0; e < enemyList.size(); e++)
+                for (int m = 0; m < player.missilePoolB.activeMissiles.size(); m++)
                 {
-                    float a = 100;
+                    Missile* currentMissile = player.missilePoolB.activeMissiles[m];
 
-                    rm = PrismVsSphere(enemyList[e]->target->body.transform.translation,
-                        enemyList[e]->target->hitbox.GetTransformedVertices(enemyList[e]->target->body.transform),
-                        currentMissile->body.transform.translation, currentMissile->radius);
+                    CollisionResult_CCD rm;
+
+                    rm = PolyVsSphere_CCD(
+                        obstacleCollider,
+                        obstacleColliderTransform,
+                        currentMissile->body.transform.translation,
+                        currentMissile->radius, 
+                        currentMissile->body.GetTrueVelocity()
+                    );
 
                     if(rm.collision)
                     {
+                        std::cout<<"MISSILE B HIT at: "<<Vector3Length(currentMissile->body.linearVelocity)<<"\n";
                         currentMissile->didHit = true;
                     }
                 }
-            }
 
-            //update of position
-            for (int a = 0; a < enemyList.size(); a++)
-            {
-                enemyList[a]->UpdateEnemy(FIXED_DELTA_TIME, 
-                    player.GetPosition(),
-                    player.missilePoolA.activeMissiles, player.missilePoolB.activeMissiles);
+                for (int m = 0; m < player.missilePoolA.activeMissiles.size(); m++)
+                {
+                    Missile* currentMissile = player.missilePoolA.activeMissiles[m];
+
+                    CollisionResult_CCD rm;
+
+                    for(int e = 0; e < enemyList.size(); e++)
+                    {
+                        //relative speed is (poly - sphere)
+
+                        Vector3 relVel = Vector3Subtract(
+                            enemyList[e]->target->body.GetTrueVelocity(),
+                            currentMissile->body.GetTrueVelocity()
+                        );
+
+                        rm = PolyVsSphere_CCD(
+                            enemyList[e]->target->hitbox,
+                            enemyList[e]->target->body.transform,
+                            currentMissile->body.transform.translation,
+                            currentMissile->radius,
+                            relVel
+                        );
+
+                        if(rm.collision)
+                        {
+                            std::cout<<"MISSILE HIT ENEMY at: "<<Vector3Length(currentMissile->body.linearVelocity)<<"\n";
+                            currentMissile->didHit = true;
+                        }
+                    }
+                }
+
+                for (int m = 0; m < player.missilePoolB.activeMissiles.size(); m++)
+                {
+                    Missile* currentMissile = player.missilePoolB.activeMissiles[m];
+
+                    CollisionResult_CCD rm;
+
+                    for(int e = 0; e < enemyList.size(); e++)
+                    {
+                        //relative speed is (poly - sphere)
+                        Vector3 relVel = Vector3Subtract(
+                            enemyList[e]->target->body.GetTrueVelocity(),
+                            currentMissile->body.GetTrueVelocity()
+                        );
+
+                        rm = PolyVsSphere_CCD(
+                            enemyList[e]->target->hitbox,
+                            enemyList[e]->target->body.transform,
+                            currentMissile->body.transform.translation,
+                            currentMissile->radius,
+                            relVel
+                        );
+
+                        if(rm.collision)
+                        {
+                            std::cout<<"MISSILE HIT ENEMY at: "<<Vector3Length(currentMissile->body.linearVelocity)<<"\n";
+                            currentMissile->didHit = true;
+                        }
+                    }
+                }
+
+                player.missilePoolA.UpdateMissiles(subDt);
+                player.missilePoolB.UpdateMissiles(subDt);
+
+                for (int a = 0; a < enemyList.size(); a++)
+                {
+                    enemyList[a]->UpdateEnemy(subDt, 
+                        player.GetPosition(),
+                        player.missilePoolA.activeMissiles, player.missilePoolB.activeMissiles);
+                }
             }
+            
 
             for (int a = 0; a < enemyList.size(); a++)
             {
@@ -268,8 +340,9 @@ int main()
         {
             Missile* currentMissile = player.missilePoolA.activeMissiles[i];
 
-            DrawMissile(currentMissile->body.transform, currentMissile->radius);
+            //DrawMissile(currentMissile->body.transform, currentMissile->radius);
 
+            DrawSphere(currentMissile->body.transform.translation, currentMissile->radius, RED);
             for(int j = 0; j < currentMissile->particlePool.activeParticles.size(); j++)
             {
                 Particle* currentParticle = currentMissile->particlePool.activeParticles[j];
@@ -283,7 +356,9 @@ int main()
         {
             Missile* currentMissile = player.missilePoolB.activeMissiles[i];
 
-            DrawMissile(currentMissile->body.transform, currentMissile->radius);
+            //DrawMissile(currentMissile->body.transform, currentMissile->radius);
+
+            DrawSphere(currentMissile->body.transform.translation, currentMissile->radius, RED);
 
             for(int j = 0; j < currentMissile->particlePool.activeParticles.size(); j++)
             {

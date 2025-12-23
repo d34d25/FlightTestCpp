@@ -25,6 +25,6 @@ Projection ProjectVertices3D(const vector<Vector3>& vertices, const Vector3& axi
 
 bool SAT3DPoly_CCD(Collider& colliderA, const Transform& transformA, const Vector3& velocityA, Collider& colliderB, const Transform& transformB, const Vector3& velocityB, float dt);
 
-bool PolyVsSphere_CCD(Collider& colliderA, const Transform& transformA, const Vector3& centerB, float radius, const Vector3& relVel);
+bool PolyVsSphere_CCD(Collider& collider, const Transform& transform, const Vector3& velocityA, const Vector3& centerB, float radius, const Vector3& velocityB, float dt);
 
 RayCollision PrsimRayHit(Ray raycast, const vector<Vector3>& vertices);

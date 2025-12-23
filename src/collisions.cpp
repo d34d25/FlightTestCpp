@@ -248,8 +248,8 @@ bool SAT3DPoly_CCD(Collider& colliderA, const Transform& transformA, const Vecto
         }
     }
 
-    float tStart = 0.0f;
-    float tEnd = 1.0f;
+    double tStart = 0.0;
+    double tEnd = 1.0;
 
     for (int i = 0; i < axes.size(); i++)
     {
@@ -258,17 +258,17 @@ bool SAT3DPoly_CCD(Collider& colliderA, const Transform& transformA, const Vecto
         Projection projA = ProjectVertices3D(verticesA, axis);
         Projection projB = ProjectVertices3D(verticesB, axis);
 
-        float speedRel = Vector3DotProduct((velocityB - velocityA) * dt, axis);
+        double speedRel = Vector3DotProduct((velocityB - velocityA) * dt, axis);
 
         if (fabs(speedRel) > MIN_SPEED)
         {
-            float tEnter = (projA.min - projB.max) / speedRel;
-            float tExit = (projA.max - projB.min) / speedRel;
+            double tEnter = (projA.min - projB.max) / speedRel;
+            double tExit = (projA.max - projB.min) / speedRel;
 
             if(tEnter > tExit) swap(tEnter,tExit);
 
-            tEnter = max(tEnter,0.0f);
-            tExit = min(tExit,1.0f);
+            tEnter = max(tEnter,0.0);
+            tExit = min(tExit,1.0);
 
             if(tEnter > tExit) return false;
 
@@ -286,22 +286,22 @@ bool SAT3DPoly_CCD(Collider& colliderA, const Transform& transformA, const Vecto
     return tStart < 1.0f && tEnd > 0.0f && tStart <= tEnd && tEnd >= tStart;
 }
 
-bool PolyVsSphere_CCD(Collider& colliderA, const Transform& transformA, const Vector3& centerB, float radius, const Vector3& relVel)
+bool PolyVsSphere_CCD(Collider& collider, const Transform& transform, const Vector3& velocityA, const Vector3& centerB, float radius, const Vector3& velocityB, float dt)
 {
     vector <Vector3> axes;
 
-    std::vector<Vector3> verticesA = colliderA.GetTransformedVertices(transformA);
+    std::vector<Vector3> vertices = collider.GetTransformedVertices(transform);
 
     //faces
-    for(int i = 0; i < colliderA.faces.size(); i++)
+    for(int i = 0; i < collider.faces.size(); i++)
     {
-        const std::vector<int>& face_indices = colliderA.faces[i];
+        const std::vector<int>& face_indices = collider.faces[i];
 
         if (face_indices.size() < 3) continue;
 
-        Vector3 v0 = verticesA[face_indices[0]]; 
-        Vector3 v1 = verticesA[face_indices[1]]; 
-        Vector3 v2 = verticesA[face_indices[2]];
+        Vector3 v0 = vertices[face_indices[0]]; 
+        Vector3 v1 = vertices[face_indices[1]]; 
+        Vector3 v2 = vertices[face_indices[2]];
 
         Vector3 edge1 = v1 - v0;
         Vector3 edge2 = v2 - v0;
@@ -315,8 +315,8 @@ bool PolyVsSphere_CCD(Collider& colliderA, const Transform& transformA, const Ve
     }
 
     Vector3 closest = ClosestPointOnPoly(
-        verticesA, 
-        colliderA.faces, colliderA.edges,
+        vertices, 
+        collider.faces, collider.edges,
         centerB
     );
     
@@ -327,90 +327,46 @@ bool PolyVsSphere_CCD(Collider& colliderA, const Transform& transformA, const Ve
         axes.push_back(Vector3Normalize(axisVector));
     }
 
-    float tStart = 0.0f;
-    float tEnd = 1.0f;
+    double tStart = 0.0;
+    double tEnd = 1.0;
 
     for (int i = 0; i < axes.size(); i++)
     {
         Vector3 axis = axes[i];
 
-        float minA = INFINITY, maxA = -INFINITY;
-
-        for(int j = 0; j < verticesA.size(); j++)
-        {
-            Vector3 v = verticesA[j];
-
-            float proj = Vector3DotProduct(v, axis);
-            minA = min(minA, proj);
-            maxA = max(maxA, proj);
-        }
+        Projection proj = ProjectVertices3D(vertices, axis);
 
         float centerProj = Vector3DotProduct(centerB, axis);
+
         float minB = centerProj - radius;
         float maxB = centerProj + radius;
 
-        float speedRel = Vector3DotProduct(relVel, axis);
+        double speedRel = Vector3DotProduct((velocityB - velocityA) * dt, axis);
 
-        float timeIn;
-        float timeOut;
-
-        if (fabs(speedRel) > MY_EPSILON)
+        if (fabs(speedRel) > MIN_SPEED)
         {
-            timeIn = (minA - maxB) / speedRel;
-            timeOut = (maxA - minB) / speedRel;
+            double tEnter = (proj.min - maxB) / speedRel;
+            double tExit = (proj.max - minB) / speedRel;
 
-            if(timeIn > timeOut)
-            {
-                std::swap(timeIn, timeOut);
-            }
+            if(tEnter > tExit) swap(tEnter,tExit);
+
+            tEnter = max(tEnter,0.0);
+            tExit = min(tExit,1.0);
+
+            if(tEnter > tExit) return false;
+
+            tStart = max(tStart, tEnter);
+            tEnd = min(tEnd, tExit);
+
+            if(tStart > tEnd) return false;
         }
         else
         {
-            if(maxA < minB || maxB < minA)
-            {
-                return false;
-            }
-
-            timeIn = 0.0f;
-            timeOut = 1.0f;
-        }
-
-        if(timeIn > tEnd)
-        {
-            return false;
-        }
-
-        if (timeOut < tStart)
-        {
-            return false;
-        }
-
-        if(timeOut < 0.0f || timeIn > 1.0f)
-        {
-            return false;
-        }
-
-        if(timeIn > tStart)
-        {
-            tStart = timeIn;
-        }
-
-        if(timeOut < tEnd)
-        {
-            tEnd = timeOut;
+            if(proj.max < minB || maxB < proj.min) return false;
         }
     }
 
-    tStart = max(tStart,0.0f);
-
-    if(tStart < tEnd && tStart <= 1.0f)
-    {
-        return true;
-    }
-    else
-    {
-        return false;
-    }
+   return tStart < 1.0f && tEnd > 0.0f && tStart <= tEnd && tEnd >= tStart;
 }
 
 RayCollision PrsimRayHit(Ray raycast, const vector<Vector3> &vertices)

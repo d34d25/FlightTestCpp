@@ -34,11 +34,13 @@ int main()
         player.params.hitboxWidth /6,
         player.params.hitboxHeight,
         player.params.hitboxLength);
+    
+    Color testColliderColor = WHITE;
 
     //test obstacle
     Collider obstacleCollider = Collider();
 
-    obstacleCollider.CreatePrismatoidUp(10500,2,10500,2,10300);
+    obstacleCollider.CreatePrismatoidUp(500,2,50,2,50000);
 
     Vector3 obstacleColliderPos = {0,300,7000};
 
@@ -99,7 +101,7 @@ int main()
     float accumulator = 0.0f;
     float FIXED_DELTA_TIME = 1.0f/60.0f;
 
-    int iterations = 10;
+    int iterations = 1;
 
     if(iterations < 1)
     {
@@ -129,39 +131,34 @@ int main()
             {
                 float subDt = FIXED_DELTA_TIME / iterations;
 
-                CollisionResult_CCD r;
-
-                r = SAT3DPoly_CCD(
-                    testCollider,
-                    player.GetTransform(),
-                    obstacleCollider,
-                    obstacleColliderTransform,
-                    player.body.GetTrueVelocity()
+                bool r = SAT3DPoly_CCD(
+                    testCollider, player.GetHitboxTransform(), player.body.GetAbsoluteVelocity(),
+                    obstacleCollider, obstacleColliderTransform, {0,0,0}, subDt
                 );
 
-                if (r.collision)
+                if (r)
                 {
-                    if(player.GetPosition().z > obstacleColliderPos.z + 4)
-                    {
-                        player.body.transform.translation = {0,400,-700};
-                    }
+                    std::cout<<"PLAYER HIT at: "<<player.GetAbsoluteSpeed()<<"\n";
+                    player.body.transform.translation = {0,400,-700};
 
-                    std::cout<<"PLAYER HIT at: "<<player.GetSpeed()<<"\n";
+                    obstacleColliderColor = ORANGE;
+                    testColliderColor = RED;
                 }
-                
-               
+                else
+                {
+                    obstacleColliderColor = GRAY;
+                    testColliderColor = WHITE;
+                }
 
                 player.UpdatePlayer(subDt);
 
                 for (int b = 0; b < player.bulletPool.activeBullets.size(); b++)
                 {
                     Bullet* currentBullet = player.bulletPool.activeBullets[b];
-                        
-                    CollisionResult_CCD rb;
 
                     //relative velocity is (colliderA.vel - colliderB.vel)
 
-                    rb = PolyVsSphere_CCD(
+                    bool rb = PolyVsSphere_CCD(
                         obstacleCollider,
                         obstacleColliderTransform,
                         currentBullet->transform.translation,
@@ -169,7 +166,7 @@ int main()
                         currentBullet->linearVelocity
                     );
                         
-                    if(rb.collision)
+                    if(rb)
                     {
                         std::cout<<"BULLET HIT at: "<<Vector3Length(currentBullet->linearVelocity)<<"\n";
                         currentBullet->didHit = true;
@@ -182,9 +179,7 @@ int main()
                 {
                     Missile* currentMissile = player.missilePoolA.activeMissiles[m];
 
-                    CollisionResult_CCD rm;
-
-                    rm = PolyVsSphere_CCD(
+                    bool rm = PolyVsSphere_CCD(
                         obstacleCollider,
                         obstacleColliderTransform,
                         currentMissile->body.transform.translation,
@@ -192,7 +187,7 @@ int main()
                         currentMissile->body.linearVelocity
                     );
 
-                    if(rm.collision)
+                    if(rm)
                     {
                         std::cout<<"MISSILE A HIT at: "<<Vector3Length(currentMissile->body.linearVelocity)<<"\n";
                         currentMissile->didHit = true;
@@ -203,17 +198,15 @@ int main()
                 {
                     Missile* currentMissile = player.missilePoolB.activeMissiles[m];
 
-                    CollisionResult_CCD rm;
-
-                    rm = PolyVsSphere_CCD(
+                    bool rm = PolyVsSphere_CCD(
                         obstacleCollider,
                         obstacleColliderTransform,
                         currentMissile->body.transform.translation,
                         currentMissile->radius, 
-                        currentMissile->body.GetTrueVelocity()
+                        currentMissile->body.GetTrueLinearVelocity()
                     );
 
-                    if(rm.collision)
+                    if(rm)
                     {
                         std::cout<<"MISSILE B HIT at: "<<Vector3Length(currentMissile->body.linearVelocity)<<"\n";
                         currentMissile->didHit = true;
@@ -224,18 +217,16 @@ int main()
                 {
                     Missile* currentMissile = player.missilePoolA.activeMissiles[m];
 
-                    CollisionResult_CCD rm;
-
                     for(int e = 0; e < enemyList.size(); e++)
                     {
                         //relative speed is (poly - sphere)
 
                         Vector3 relVel = Vector3Subtract(
-                            enemyList[e]->target->body.GetTrueVelocity(),
-                            currentMissile->body.GetTrueVelocity()
+                            enemyList[e]->target->body.GetTrueLinearVelocity(),
+                            currentMissile->body.GetTrueLinearVelocity()
                         );
 
-                        rm = PolyVsSphere_CCD(
+                        bool rm = PolyVsSphere_CCD(
                             enemyList[e]->target->hitbox,
                             enemyList[e]->target->body.transform,
                             currentMissile->body.transform.translation,
@@ -243,7 +234,7 @@ int main()
                             relVel
                         );
 
-                        if(rm.collision)
+                        if(rm)
                         {
                             std::cout<<"MISSILE HIT ENEMY at: "<<Vector3Length(currentMissile->body.linearVelocity)<<"\n";
                             currentMissile->didHit = true;
@@ -255,17 +246,15 @@ int main()
                 {
                     Missile* currentMissile = player.missilePoolB.activeMissiles[m];
 
-                    CollisionResult_CCD rm;
-
                     for(int e = 0; e < enemyList.size(); e++)
                     {
                         //relative speed is (poly - sphere)
                         Vector3 relVel = Vector3Subtract(
-                            enemyList[e]->target->body.GetTrueVelocity(),
-                            currentMissile->body.GetTrueVelocity()
+                            enemyList[e]->target->body.GetTrueLinearVelocity(),
+                            currentMissile->body.GetTrueLinearVelocity()
                         );
 
-                        rm = PolyVsSphere_CCD(
+                        bool rm = PolyVsSphere_CCD(
                             enemyList[e]->target->hitbox,
                             enemyList[e]->target->body.transform,
                             currentMissile->body.transform.translation,
@@ -273,7 +262,7 @@ int main()
                             relVel
                         );
 
-                        if(rm.collision)
+                        if(rm)
                         {
                             std::cout<<"MISSILE HIT ENEMY at: "<<Vector3Length(currentMissile->body.linearVelocity)<<"\n";
                             currentMissile->didHit = true;
@@ -295,7 +284,7 @@ int main()
 
             for (int a = 0; a < enemyList.size(); a++)
             {
-                enemyList[a]->FireB(FIXED_DELTA_TIME, player.GetPosition(), player.body.GetTrueVelocity());
+                enemyList[a]->FireB(FIXED_DELTA_TIME, player.GetPosition(), player.body.GetTrueLinearVelocity());
             }
 
             player.ChooseTarget();
@@ -318,9 +307,11 @@ int main()
         rlScalef(-1,-1,-1);
         rlPopMatrix();
         
-        DrawFlatShadedModel(player.GetTransform(), planeModel, &shaderData);
+        //DrawFlatShadedModel(player.GetTransform(), planeModel, &shaderData);
 
-        //DrawColliderWire(testCollider.GetTransformedVertices(player.GetHitboxTransform()), RED);
+        DrawColliderWire(testCollider,player.GetHitboxTransform(), BLACK);
+        DrawCollider(testCollider, player.GetHitboxTransform(), testColliderColor);
+        DrawColliderFaceNormals(testCollider, player.GetHitboxTransform(), 10);
 
         //DrawSphere(player.GetTransform().translation, 2, MAGENTA);
 
@@ -333,9 +324,11 @@ int main()
 
         DrawGround(ground);
         
-        DrawCollider(obstacleCollider.GetTransformedVertices(obstacleColliderTransform), {255,255,0,100});
-        DrawColliderWire(obstacleCollider.GetTransformedVertices(obstacleColliderTransform), obstacleColliderColor);
+        DrawCollider(obstacleCollider, obstacleColliderTransform, obstacleColliderColor);
+        DrawColliderWire(obstacleCollider,obstacleColliderTransform, BLACK);
         
+        DrawColliderFaceNormals(obstacleCollider,obstacleColliderTransform, 10);
+
         for(int i = 0; i < player.missilePoolA.activeMissiles.size(); i++)
         {
             Missile* currentMissile = player.missilePoolA.activeMissiles[i];
@@ -407,8 +400,8 @@ int main()
 
         DrawText(TextFormat("MAX SPEED: %0.2f", player.GetMaxSpeed()),SCREEN_WIDTH * 0.25, SCREEN_HEIGHT * 0.15, 20, GREEN);
         DrawText(TextFormat("IDLE SPEED: %0.2f", player.GetIdleSpeed()),SCREEN_WIDTH * 0.75, SCREEN_HEIGHT * 0.15, 20, GREEN);
-        DrawText(TextFormat("TRUE SPEED: %0.2f", player.GetTrueSpeed()),SCREEN_WIDTH * 0.25, SCREEN_HEIGHT * 0.5, 20, GREEN);
-        DrawText(TextFormat("DISPLAY SPEED: %0.2f", player.GetTrueSpeed() * 2.0f),SCREEN_WIDTH * 0.25, SCREEN_HEIGHT * 0.65, 20, GREEN);
+        DrawText(TextFormat("TRUE SPEED: %0.2f", player.GetTrueLinearSpeed()),SCREEN_WIDTH * 0.25, SCREEN_HEIGHT * 0.5, 20, GREEN);
+        //DrawText(TextFormat("DISPLAY SPEED: %0.2f", player.GetTrueSpeed() * 2.0f),SCREEN_WIDTH * 0.25, SCREEN_HEIGHT * 0.65, 20, GREEN);
         DrawText(TextFormat("THRUST: %0.2f", player.thrust),SCREEN_WIDTH * 0.25, SCREEN_HEIGHT * 0.25, 20, GREEN);
 
 

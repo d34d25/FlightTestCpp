@@ -5,6 +5,7 @@
 #include <iostream>
 
 const float MY_EPSILON = 1e-5f;
+const float MIN_SPEED = 1e-4f;
 const float MY_EPSILON_SQ = 1e-10f;
 
 //helpers
@@ -156,24 +157,23 @@ Vector3 ClosestPointOnTriangle(const Vector3 &va, const Vector3 &vb, const Vecto
 
 Projection ProjectVertices3D(const vector<Vector3> &vertices, const Vector3 &axis)
 {
-    float min = INFINITY;
-    float max = -INFINITY;
+    Projection proj = {};
+    proj.min = INFINITY;
+    proj.max = -INFINITY;
 
     for (int i = 0; i < vertices.size(); i++)
     {
         float projection = Vector3DotProduct(vertices[i], axis);
-        if (projection < min) min = projection;
-        if (projection > max) max = projection;
+        if (projection < proj.min) proj.min = projection;
+        if (projection > proj.max) proj.max = projection;
     }
 
-    return {min, max};
+    return proj;
 }
 
 //continious collision detection
-CollisionResult_CCD SAT3DPoly_CCD(Collider& colliderA, const Transform& transformA, Collider& colliderB, const Transform& transformB, const Vector3& relVel)
+bool SAT3DPoly_CCD(Collider& colliderA, const Transform& transformA, const Vector3& velocityA, Collider& colliderB, const Transform& transformB, const Vector3& velocityB, float dt)
 {
-    CollisionResult_CCD result = {};
-
     vector<Vector3> axes;
 
     std::vector<Vector3> verticesA = colliderA.GetTransformedVertices(transformA);
@@ -248,101 +248,6 @@ CollisionResult_CCD SAT3DPoly_CCD(Collider& colliderA, const Transform& transfor
         }
     }
 
-    if(Vector3LengthSqr(relVel) > MY_EPSILON_SQ)
-    {
-        for(int i = 0; i < colliderA.edges.size(); i++)
-        {
-            const std::pair<int, int>& edgeA_indices = colliderA.edges[i];
-
-            Vector3 edge = Vector3Subtract(
-                verticesA[edgeA_indices.first],
-                verticesA[edgeA_indices.second]
-            );
-
-            Vector3 axis = Vector3CrossProduct(edge, relVel);
-
-            if(Vector3LengthSqr(axis) > MY_EPSILON_SQ)
-            {
-                axes.push_back(Vector3Normalize(axis));
-            }
-        }
-
-        for(int i = 0; i < colliderB.edges.size(); i++)
-        {
-            const std::pair<int, int>& edgeB_indices = colliderB.edges[i];
-
-            Vector3 edge = Vector3Subtract(
-                verticesB[edgeB_indices.first],
-                verticesB[edgeB_indices.second]
-            );
-
-            Vector3 axis = Vector3CrossProduct(edge, relVel);
-
-            if(Vector3LengthSqr(axis) > MY_EPSILON_SQ)
-            {
-                axes.push_back(Vector3Normalize(axis));
-            }
-        }
-    }
-
-    for(int i = 0; i < verticesA.size(); i++)
-    {
-        Vector3 vertex = verticesA[i];
-
-        for(int j = 0; j < colliderB.faces.size(); j++)
-        {
-            const std::vector<int>& face_indices = colliderB.faces[j];
-
-            Vector3 v0 = verticesB[face_indices[0]]; 
-            Vector3 v1 = verticesB[face_indices[1]]; 
-            Vector3 v2 = verticesB[face_indices[2]];
-
-            Vector3 edge1 = v1 - v0;
-            Vector3 edge2 = v2 - v0;
-
-            Vector3 normal = Vector3CrossProduct(edge1, edge2);
-
-            if(Vector3LengthSqr(normal) > MY_EPSILON_SQ)
-            {
-                normal = Vector3Normalize(normal);
-
-                if(Vector3DotProduct(relVel, normal) < -MY_EPSILON)
-                {
-                    axes.push_back(normal);
-                }
-            }
-        }   
-    }
-
-    for(int i = 0; i < verticesB.size(); i++)
-    {
-        Vector3 vertex = verticesB[i];
-
-        for(int j = 0; j < colliderA.faces.size(); j++)
-        {
-            const std::vector<int>& face_indices = colliderA.faces[j];
-
-            Vector3 v0 = verticesA[face_indices[0]]; 
-            Vector3 v1 = verticesA[face_indices[1]]; 
-            Vector3 v2 = verticesA[face_indices[2]];
-
-            Vector3 edge1 = v1 - v0;
-            Vector3 edge2 = v2 - v0;
-
-            Vector3 normal = Vector3CrossProduct(edge1, edge2);
-
-            if(Vector3LengthSqr(normal) > MY_EPSILON_SQ)
-            {
-                normal = Vector3Normalize(normal);
-
-                if(Vector3DotProduct(relVel, normal) < -MY_EPSILON)
-                {
-                    axes.push_back(normal);
-                }
-            }
-        }   
-    }
-
     float tStart = 0.0f;
     float tEnd = 1.0f;
 
@@ -353,86 +258,36 @@ CollisionResult_CCD SAT3DPoly_CCD(Collider& colliderA, const Transform& transfor
         Projection projA = ProjectVertices3D(verticesA, axis);
         Projection projB = ProjectVertices3D(verticesB, axis);
 
-        float speedRel = Vector3DotProduct(relVel, axis);
+        float speedRel = Vector3DotProduct((velocityB - velocityA) * dt, axis);
 
-        float timeIn;
-        float timeOut;
-
-        if (fabs(speedRel) > MY_EPSILON)
+        if (fabs(speedRel) > MIN_SPEED)
         {
-            timeIn = (projA.min - projB.max) / speedRel;
-            timeOut = (projA.max - projB.min) / speedRel;
+            float tEnter = (projA.min - projB.max) / speedRel;
+            float tExit = (projA.max - projB.min) / speedRel;
 
-            if(timeIn > timeOut)
-            {
-                std::swap(timeIn, timeOut);
-            }
+            if(tEnter > tExit) swap(tEnter,tExit);
+
+            tEnter = max(tEnter,0.0f);
+            tExit = min(tExit,1.0f);
+
+            if(tEnter > tExit) return false;
+
+            tStart = max(tStart, tEnter);
+            tEnd = min(tEnd, tExit);
+
+            if(tStart > tEnd) return false;
         }
         else
         {
-            if (projA.max < projB.min || projB.max < projA.min)
-            {
-                result.collision = false;
-                result.timeOfImpact = 1.0f;
-                return result;
-            }
-
-            timeIn = 0.0f;
-            timeOut = 1.0f;
-        }
-
-        if(timeIn > tEnd)
-        {
-            result.collision = false;
-            result.timeOfImpact = 1.0f;
-            return result;
-        }
-
-        if (timeOut < tStart)
-        {
-            result.collision = false;
-            result.timeOfImpact = 1.0f;
-            return result;
-        }
-
-        if(timeOut < 0.0f || timeIn > 1.0f)
-        {
-            result.collision = false;
-            result.timeOfImpact = 1.0f;
-            return result;
-        }
-
-        if(timeIn > tStart)
-        {
-            tStart = timeIn;
-        }
-
-        if(timeOut < tEnd)
-        {
-            tEnd = timeOut;
+            if (projA.max < projB.min || projB.max < projA.min) return false;
         }
     }
 
-    tStart = max(tStart, 0.0f);
-
-    if(tStart < tEnd && tStart <= 1.0f)
-    {
-        result.collision = true;
-        result.timeOfImpact = tStart;
-    }
-    else
-    {
-        result.collision = false;
-        result.timeOfImpact = 1.0f;
-    }
-
-    return result;
+    return tStart < 1.0f && tEnd > 0.0f && tStart <= tEnd && tEnd >= tStart;
 }
 
-CollisionResult_CCD PolyVsSphere_CCD(Collider& colliderA, const Transform& transformA, const Vector3& centerB, float radius, const Vector3& relVel)
+bool PolyVsSphere_CCD(Collider& colliderA, const Transform& transformA, const Vector3& centerB, float radius, const Vector3& relVel)
 {
-    CollisionResult_CCD result = {};
-
     vector <Vector3> axes;
 
     std::vector<Vector3> verticesA = colliderA.GetTransformedVertices(transformA);
@@ -513,9 +368,7 @@ CollisionResult_CCD PolyVsSphere_CCD(Collider& colliderA, const Transform& trans
         {
             if(maxA < minB || maxB < minA)
             {
-                result.collision = false;
-                result.timeOfImpact = 1.0f;
-                return result;
+                return false;
             }
 
             timeIn = 0.0f;
@@ -524,23 +377,17 @@ CollisionResult_CCD PolyVsSphere_CCD(Collider& colliderA, const Transform& trans
 
         if(timeIn > tEnd)
         {
-            result.collision = false;
-            result.timeOfImpact = 1.0f;
-            return result;
+            return false;
         }
 
         if (timeOut < tStart)
         {
-            result.collision = false;
-            result.timeOfImpact = 1.0f;
-            return result;
+            return false;
         }
 
         if(timeOut < 0.0f || timeIn > 1.0f)
         {
-            result.collision = false;
-            result.timeOfImpact = 1.0f;
-            return result;
+            return false;
         }
 
         if(timeIn > tStart)
@@ -558,16 +405,12 @@ CollisionResult_CCD PolyVsSphere_CCD(Collider& colliderA, const Transform& trans
 
     if(tStart < tEnd && tStart <= 1.0f)
     {
-        result.collision = true;
-        result.timeOfImpact = tStart;
+        return true;
     }
     else
     {
-        result.collision = false;
-        result.timeOfImpact = 1.0f;
+        return false;
     }
-
-    return result;
 }
 
 RayCollision PrsimRayHit(Ray raycast, const vector<Vector3> &vertices)

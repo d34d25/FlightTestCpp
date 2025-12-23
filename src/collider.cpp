@@ -1,56 +1,52 @@
 #include "collider.h"
 #include "raymath.h"
 
-void Collider::CreatePrismatoidUp(float baseWidth, float baseLenght, float topWidth, float topLength, float height)
+void Collider::CreatePrismatoidUp(float baseWidth, float baseLength, float topWidth, float topLength, float height)
 {
     float halfBW = baseWidth * 0.5f;
-    float halfBL = baseLenght * 0.5f;
+    float halfBL = baseLength * 0.5f;
     float halfTW = topWidth * 0.5f;
     float halfTL = topLength * 0.5f;
-    float halfH = height * 0.5f;
+    float halfH  = height * 0.5f;
 
     localVertices =
     {
         // Bottom face (y = -halfH)
-        { -halfBW, -halfH, -halfBL }, // back-left
-        {  halfBW, -halfH, -halfBL }, // back-right
-        {  halfBW, -halfH,  halfBL }, // front-right
-        { -halfBW, -halfH,  halfBL }, // front-left
+        { -halfBW, -halfH, -halfBL }, // 0
+        {  halfBW, -halfH, -halfBL }, // 1
+        {  halfBW, -halfH,  halfBL }, // 2
+        { -halfBW, -halfH,  halfBL }, // 3
 
         // Top face (y = +halfH)
-        { -halfTW,  halfH, -halfTL }, // back-left
-        {  halfTW,  halfH, -halfTL }, // back-right
-        {  halfTW,  halfH,  halfTL }, // front-right
-        { -halfTW,  halfH,  halfTL }  // front-left
+        { -halfTW,  halfH, -halfTL }, // 4
+        {  halfTW,  halfH, -halfTL }, // 5
+        {  halfTW,  halfH,  halfTL }, // 6
+        { -halfTW,  halfH,  halfTL }  // 7
     };
 
     faces.clear();
     edges.clear();
 
-    //bottom face
-    faces.push_back({0, 3, 2, 1});
+    // --- FACES (Flipped for Outward Normals) ---
 
-    //top face
-    faces.push_back({4, 5, 6, 7});
+    faces.push_back({0, 1, 2, 3});
 
-    //side faces
-    faces.push_back({0, 1, 5, 4}); 
-    faces.push_back({1, 2, 6, 5}); 
-    faces.push_back({2, 3, 7, 6}); 
-    faces.push_back({3, 0, 4, 7});
+    faces.push_back({4, 7, 6, 5});
 
-    // Base Edges
+    // Side faces (Flipped winding)
+    faces.push_back({0, 4, 5, 1}); // Back side
+    faces.push_back({1, 5, 6, 2}); // Right side
+    faces.push_back({2, 6, 7, 3}); // Front side
+    faces.push_back({3, 7, 4, 0}); // Left side
+
     edges.push_back({0, 1}); edges.push_back({1, 2}); 
     edges.push_back({2, 3}); edges.push_back({3, 0});
-    
-    // Top Edges
     edges.push_back({4, 5}); edges.push_back({5, 6}); 
     edges.push_back({6, 7}); edges.push_back({7, 4});
-    
-    // Vertical Edges
     edges.push_back({0, 4}); edges.push_back({1, 5}); 
     edges.push_back({2, 6}); edges.push_back({3, 7});
 }
+
 
 void Collider::CreatePrismatoidForward(float backWidth, float backHeight, float frontWidth, float frontHeight, float length)
 {

@@ -43,9 +43,100 @@ inline void DrawFlatShadedModel(const Transform& transform, const Model& model, 
     rlPopMatrix();
 }
 
-void DrawColliderWire(const std::vector<Vector3>& transformedVertices, Color color);
+inline void DrawColliderWire(Collider& collider, const Transform& transform, Color color)
+{
+    std::vector<Vector3> vertices = collider.GetTransformedVertices(transform);
 
-void DrawCollider(const std::vector<Vector3>& v, Color color);
+    for(int i = 0; i < collider.edges.size(); i++)
+    {
+        const std::pair<int,int>& edge = collider.edges[i];
+
+        Vector3 startPos = vertices[edge.first];
+        Vector3 endPos = vertices[edge.second];
+
+        DrawLine3D(startPos, endPos, color);
+    }
+}
+
+inline void DrawCollider(Collider& collider, const Transform& transform, Color color)
+{
+    std::vector<Vector3> vertices = collider.GetTransformedVertices(transform);
+
+    for (int i = 0; i < collider.faces.size(); i++)
+    {
+        const std::vector<int>& face_indices = collider.faces[i];
+
+        if (face_indices.size() < 3) continue;
+
+        Vector3 v0 = vertices[face_indices[0]];
+
+        for(int j = 0; j < face_indices.size(); j++)
+        {
+            Vector3 v1 = vertices[face_indices[j]];
+            Vector3 v2 = vertices[face_indices[(j + 1) % face_indices.size()]];
+
+            DrawTriangle3D(v0,v1,v2, color);
+        }         
+    }
+}
+
+inline Color GetNormalColor(const Vector3& normal)
+{
+    Vector3 normalN = Vector3Normalize(normal);
+
+    float ax = fabsf(normalN.x);
+    float ay = fabsf(normalN.y);
+    float az = fabsf(normalN.z);
+
+    if (ax > ay && ax > az) return RED;
+    if (ay > ax && ay > az) return GREEN;
+    return BLUE;           
+}
+
+inline void DrawColliderFaceNormals(Collider& collider, const Transform& transform, float size)
+{
+    std::vector<Vector3> vertices = collider.GetTransformedVertices(transform);
+
+    for (int i = 0; i < collider.faces.size(); i++)
+    {
+        const std::vector<int>& face_indices = collider.faces[i];
+
+        if (face_indices.size() < 3) continue;
+
+        Vector3 v0 = vertices[face_indices[0]]; 
+        Vector3 v1 = vertices[face_indices[1]]; 
+        Vector3 v2 = vertices[face_indices[2]];
+
+        Vector3 edge1 = v1 - v0;
+        Vector3 edge2 = v2 - v0;
+
+        Vector3 normal = Vector3CrossProduct(edge1, edge2);
+        normal = Vector3Normalize(normal);
+
+        Vector3 center = {0,0,0};
+
+        for(int j = 0; j < face_indices.size(); j++)
+        {
+            center = Vector3Add(center, vertices[face_indices[j]]);
+        }
+
+        center = Vector3Scale(center, 1.0f / face_indices.size());
+
+        Vector3 lv0 = collider.localVertices[face_indices[0]];
+        Vector3 lv1 = collider.localVertices[face_indices[1]];
+        Vector3 lv2 = collider.localVertices[face_indices[2]];
+
+        Vector3 localNormal = Vector3Normalize(
+            Vector3CrossProduct(lv1 - lv0, lv2 - lv0)
+        );
+
+        Color normalColor = GetNormalColor(localNormal);
+        
+        DrawLine3D(center, Vector3Add(center, Vector3Scale(normal, size)), normalColor);
+
+        DrawSphere(center, 0.05f, YELLOW);
+    }
+}
 
 inline void DrawBullet(const Transform& transform, float radius, Color color)
 {

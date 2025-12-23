@@ -74,6 +74,10 @@ private:
 
     int tgtIndex;
     bool tgtLocked;
+
+    bool debugMode = false;
+    bool debugModeOnKey = false;
+    bool debugModeOffKey = false;
     
 public:
 
@@ -183,9 +187,14 @@ public:
         return Vector3Length(body.linearVelocity);
     }
     
-    inline float GetTrueSpeed()
+    inline float GetTrueLinearSpeed()
     {
-        return Vector3Length(body.GetTrueVelocity());    
+        return Vector3Length(body.GetTrueLinearVelocity());    
+    }
+
+    inline float GetAbsoluteSpeed()
+    {
+        return Vector3Length(body.GetAbsoluteVelocity());
     }
 
     inline float GetScale()

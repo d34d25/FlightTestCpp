@@ -4,11 +4,9 @@
 
 class Collider
 {
-private:
-
-    std::vector<Vector3> localVertices;
 
 public:
+    std::vector<Vector3> localVertices;
 
     std::vector<std::pair<int, int>> edges;
 

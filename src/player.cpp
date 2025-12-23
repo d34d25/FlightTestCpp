@@ -122,7 +122,7 @@ Player::Player()
 
     fireTimerMissileB = 0.0f;
 
-    float missilespeed = MAX_THRUST * 60;
+    float missilespeed = MAX_THRUST;
 
     missilePoolA = MissilePool(6, 2, missilespeed);
     missileTransformA = {};
@@ -191,263 +191,316 @@ void Player::UpdatePlayer(float dt)
         engineGlow = thrust / params.maxThrust;
     }
 
-    if(acclerationKey)
-    {
-        thrust += params.acceleration * dt;
+    debugModeOnKey = IsKeyDown(KEY_F);
+    debugModeOffKey = IsKeyDown(KEY_G);
 
-        if(!globalCamera)
-        {
-            hasInput = true;
-            engineGlow += engineGlowChange * dt;
-        }
+    if(debugModeOnKey)
+    {
+        debugMode = true;
     }
-    else if (brakeKey)
+    else if(debugModeOffKey)
     {
-        thrust -= params.brake * dt;
-
-        if(!globalCamera)
-        {
-            engineGlow -= engineGlowChange * dt;
-            hasInput = true;
-        }
+        debugMode = false;
     }
-    else
-    {
-        if(!globalCamera)
-        {
-            hasInput = false;
 
-            if (engineGlow < idleEngineGlow)
+    if(debugMode)
+    {
+        Vector3 dir = {0,0,0};
+
+        float yawDir = 0;
+        float pitchDir = 0;
+        float rollDir = 0;
+
+        if(IsKeyDown(KEY_W)) dir.z = 1;
+        else if(IsKeyDown(KEY_S)) dir.z = -1;
+        else dir.z = 0;
+
+        if(IsKeyDown(KEY_A)) dir.x = 1;
+        else if(IsKeyDown(KEY_D)) dir.x = -1;
+        else dir.x = 0;
+
+        if(IsKeyDown(KEY_SPACE)) dir.y = 1;
+        else if(IsKeyDown(KEY_LEFT_CONTROL)) dir.y = -1;
+        else dir.y = 0;
+
+        if(IsKeyDown(KEY_Q)) yawDir = 1;
+        else if(IsKeyDown(KEY_E)) yawDir = -1;
+        else yawDir = 0;
+
+        if(IsKeyDown(KEY_UP)) pitchDir = 1;
+        else if (IsKeyDown(KEY_DOWN)) pitchDir = -1;
+        else pitchDir = 0;
+
+        if(IsKeyDown(KEY_LEFT)) rollDir = -1;
+        else if (IsKeyDown(KEY_RIGHT)) rollDir = 1;
+        else rollDir = 0;
+
+        body.ApplyAlternateLocalForce(dir, 30000);
+        body.ApplyAlternateYaw(yawDir * 30);
+        body.ApplyAlternatePitch(pitchDir * 30);
+        body.ApplyAlternateRoll(rollDir * 30);
+    }
+
+    if(!debugMode)
+    {
+        if(acclerationKey)
+        {
+            thrust += params.acceleration * dt;
+
+            if(!globalCamera)
             {
+                hasInput = true;
                 engineGlow += engineGlowChange * dt;
             }
-            else if (engineGlow > idleEngineGlow)
+        }
+        else if (brakeKey)
+        {
+            thrust -= params.brake * dt;
+
+            if(!globalCamera)
             {
                 engineGlow -= engineGlowChange * dt;
+                hasInput = true;
             }
-            else
-            {
-                engineGlow = idleEngineGlow;
-            }
-        }
-    }
-
-    engineGlow = Clamp(engineGlow, 0, maxEngineGlow);
-
-    if(pitchUpKey)
-    {
-        pitchInputDown = 0;
-        pitchInputUp -= params.pitchAcceleration * dt;
-    }
-    else if (pitchDownKey)
-    {
-        pitchInputUp = 0;
-        pitchInputDown += params.pitchAcceleration * dt;
-    }
-    else
-    {
-        pitchInputDown = 0;
-        pitchInputUp = 0;
-    }
-
-    if(rollRightKey)
-    {
-        rollInputLeft = 0;
-        rollInputRight += params.rollAcceleration * dt;
-    }
-    else if (rollLeftKey)
-    {
-        rollInputRight = 0;
-        rollInputLeft -= params.rollAcceleration * dt;
-    }
-    else
-    {
-        rollInputLeft = 0;
-        rollInputRight = 0;
-    }
-
-    if(yawRightKey)
-    {
-        yawInputLeft = 0;
-        yawInputRight -= params.yawAcceleration * dt;
-    }
-    else if (yawLeftKey)
-    {
-        yawInputRight = 0;
-        yawInputLeft += params.yawAcceleration * dt;
-    }
-    else
-    {
-        yawInputLeft = 0;
-        yawInputRight = 0;
-    }
-
-    pitchInputUp = Clamp(pitchInputUp, -params.pitchPower, 0);
-    rollInputRight = Clamp(rollInputRight, 0, params.rollPower);
-    yawInputRight = Clamp(yawInputRight, -params.yawPower, 0);
-
-    pitchInputDown = Clamp(pitchInputDown, 0, params.pitchPower);
-    rollInputLeft = Clamp(rollInputLeft, -params.rollPower, 0);
-    yawInputLeft = Clamp(yawInputLeft, 0, params.yawPower);
-
-    /*std::cout<<"pitch up : "<<pitchInputUp<<"\n";
-    std::cout<<"roll right : "<<rollInputRight<<"\n";
-    std::cout<<"yaw right : "<<yawInputRight<<"\n";
-
-    std::cout<<"pitch down : "<<pitchInputDown<<"\n";
-    std::cout<<"roll left : "<<rollInputLeft<<"\n";
-    std::cout<<"yaw left : "<<yawInputLeft<<"\n";*/
-
-    float finalPtich = pitchInputUp + pitchInputDown;
-    float finalRoll = rollInputLeft + rollInputRight;
-    float finalYaw = yawInputLeft + yawInputRight;
-
-    body.ApplyPitch(finalPtich);
-    body.ApplyRoll(finalRoll);
-    body.ApplyYaw(finalYaw);
-
-    // plane
-
-    body.angularVelocity.x = Clamp(body.angularVelocity.x, -params.maxPitchSpeed, params.maxPitchSpeed); 
-    body.angularVelocity.z = Clamp(body.angularVelocity.z, -params.maxRollSpeed, params.maxRollSpeed); 
-    body.angularVelocity.y = Clamp(body.angularVelocity.y, -params.maxYawSpeed, params.maxYawSpeed); 
-
-    /*std::cout<<"angular vel x: "<<body.angularVelocity.x<<"\n";
-    std::cout<<"angular vel z: "<<body.angularVelocity.z<<"\n";
-    std::cout<<"angular vel y: "<<body.angularVelocity.y<<"\n";*/
-
-    if (!hasInput && returnToIdle)
-    {
-        if (thrust <= params.idleThrust)
-        {
-            thrust += params.returnSpeedLow * dt;
-            if (thrust >= params.idleThrust) thrust = params.idleThrust;
         }
         else
         {
-            thrust -= params.returnSpeedHigh * dt;
-            if (thrust <= params.idleThrust) thrust = params.idleThrust;
+            if(!globalCamera)
+            {
+                hasInput = false;
+
+                if (engineGlow < idleEngineGlow)
+                {
+                    engineGlow += engineGlowChange * dt;
+                }
+                else if (engineGlow > idleEngineGlow)
+                {
+                    engineGlow -= engineGlowChange * dt;
+                }
+                else
+                {
+                    engineGlow = idleEngineGlow;
+                }
+            }
         }
+
+        engineGlow = Clamp(engineGlow, 0, maxEngineGlow);
+
+        if(pitchUpKey)
+        {
+            pitchInputDown = 0;
+            pitchInputUp -= params.pitchAcceleration * dt;
+        }
+        else if (pitchDownKey)
+        {
+            pitchInputUp = 0;
+            pitchInputDown += params.pitchAcceleration * dt;
+        }
+        else
+        {
+            pitchInputDown = 0;
+            pitchInputUp = 0;
+        }
+
+        if(rollRightKey)
+        {
+            rollInputLeft = 0;
+            rollInputRight += params.rollAcceleration * dt;
+        }
+        else if (rollLeftKey)
+        {
+            rollInputRight = 0;
+            rollInputLeft -= params.rollAcceleration * dt;
+        }
+        else
+        {
+            rollInputLeft = 0;
+            rollInputRight = 0;
+        }
+
+        if(yawRightKey)
+        {
+            yawInputLeft = 0;
+            yawInputRight -= params.yawAcceleration * dt;
+        }
+        else if (yawLeftKey)
+        {
+            yawInputRight = 0;
+            yawInputLeft += params.yawAcceleration * dt;
+        }
+        else
+        {
+            yawInputLeft = 0;
+            yawInputRight = 0;
+        }
+
+        pitchInputUp = Clamp(pitchInputUp, -params.pitchPower, 0);
+        rollInputRight = Clamp(rollInputRight, 0, params.rollPower);
+        yawInputRight = Clamp(yawInputRight, -params.yawPower, 0);
+
+        pitchInputDown = Clamp(pitchInputDown, 0, params.pitchPower);
+        rollInputLeft = Clamp(rollInputLeft, -params.rollPower, 0);
+        yawInputLeft = Clamp(yawInputLeft, 0, params.yawPower);
+
+        /*std::cout<<"pitch up : "<<pitchInputUp<<"\n";
+        std::cout<<"roll right : "<<rollInputRight<<"\n";
+        std::cout<<"yaw right : "<<yawInputRight<<"\n";
+
+        std::cout<<"pitch down : "<<pitchInputDown<<"\n";
+        std::cout<<"roll left : "<<rollInputLeft<<"\n";
+        std::cout<<"yaw left : "<<yawInputLeft<<"\n";*/
+
+        float finalPtich = pitchInputUp + pitchInputDown;
+        float finalRoll = rollInputLeft + rollInputRight;
+        float finalYaw = yawInputLeft + yawInputRight;
+
+        body.ApplyPitch(finalPtich);
+        body.ApplyRoll(finalRoll);
+        body.ApplyYaw(finalYaw);
+
+        // plane
+
+        body.angularVelocity.x = Clamp(body.angularVelocity.x, -params.maxPitchSpeed, params.maxPitchSpeed); 
+        body.angularVelocity.z = Clamp(body.angularVelocity.z, -params.maxRollSpeed, params.maxRollSpeed); 
+        body.angularVelocity.y = Clamp(body.angularVelocity.y, -params.maxYawSpeed, params.maxYawSpeed);
+
+        /*std::cout<<"angular vel x: "<<body.angularVelocity.x<<"\n";
+        std::cout<<"angular vel z: "<<body.angularVelocity.z<<"\n";
+        std::cout<<"angular vel y: "<<body.angularVelocity.y<<"\n";*/
+
+        if (!hasInput && returnToIdle)
+        {
+            if (thrust <= params.idleThrust)
+            {
+                thrust += params.returnSpeedLow * dt;
+                if (thrust >= params.idleThrust) thrust = params.idleThrust;
+            }
+            else
+            {
+                thrust -= params.returnSpeedHigh * dt;
+                if (thrust <= params.idleThrust) thrust = params.idleThrust;
+            }
+        }
+        else
+        {
+            if (thrust >= params.maxThrust) thrust = params.maxThrust;
+            else if (thrust <= 0.0f) thrust = 0.0f;
+        }
+
+        body.ApplyLocalForce(forwardDir, thrust);
+
+        // drag / fake gravity
+
+        float dotFU = Vector3DotProduct(forward, upDir);
+
+        float forwardSpeed = Vector3DotProduct(body.GetTrueLinearVelocity(), forward);
+
+        if (dotFU > 0.1)
+        {
+            if (forwardSpeed > 0.0f) body.ApplyAlternateLocalForce(backDir, FAKE_GRAVITY_FORCE * dotFU);
+        }
+        else if (dotFU < -0.1)
+        {
+            body.ApplyAlternateLocalForce(backDir, FAKE_GRAVITY_FORCE * dotFU);
+        }
+
+        // fake banking
+
+        Vector3 right = GetWorldRightVector(body.transform);
+        right = Vector3Normalize(right);
+
+        float rDot = Vector3DotProduct(upDir, right);
+
+        body.ApplyAlternateYaw(MAX_BANK_TORQUE_YAW * -rDot);
+
+        // upside down case
+
+        Vector3 up = GetWorldUpVector(body.transform);
+        up = Vector3Normalize(up);
+
+        float uDot = Vector3DotProduct(upDir, up);
+
+        if (uDot <= -0.1)
+        {
+            body.ApplyAlternatePitch(MAX_BANK_TORQUE_PITCH * uDot);
+        }
+
+        // fake stall
+
+        float speed = GetTrueLinearSpeed();
+
+        float fDot = Vector3DotProduct(downDir, forward);
+
+        float fDotTarget = 0.6f;
+
+        if (speed < params.stallSpeed)
+        {
+            stalling = true;
+        }
+        else if (speed >= params.recoverySpeed)
+        {
+            stalling = false;
+        }
+
+        float mobilityFactor = 1.0f;
+
+        if (speed <= params.mobilityLooseStartSpeed)
+        {
+            mobilityFactor = 1 - (1 - params.mobilityProportionLow) * (speed - params.mobilityLooseStartSpeed) / (params.stallSpeed - params.mobilityLooseStartSpeed);
+            mobilityFactor = Clamp(mobilityFactor, params.mobilityProportionLow, 1.0f);
+        }
+        else
+        {
+            mobilityFactor = 1 - (1 - params.mobilityProportionHigh) * (speed - params.mobilityLooseStartSpeed) / (GetMaxSpeed() - params.mobilityLooseStartSpeed);
+            mobilityFactor = Clamp(mobilityFactor, params.mobilityProportionHigh, 1.0f);
+        }
+
+        params.maxPitchSpeed = originalMaxPitchSpeed * mobilityFactor;
+        params.maxRollSpeed = originalMaxRollSpeed * mobilityFactor;
+        params.maxYawSpeed = originalMaxYawSpeed * mobilityFactor;
+
+        float responseFactor = 1.0f;
+        
+        if (speed <= params.mobilityLooseStartSpeed)
+        {
+            responseFactor = 1 - (1 - params.responsivenessProportionLow) * (speed - params.mobilityLooseStartSpeed) / (params.stallSpeed - params.mobilityLooseStartSpeed);
+            responseFactor = Clamp(responseFactor, params.responsivenessProportionLow, 1.0f);
+        }
+        else
+        {
+            responseFactor = 1 - (1 - params.responsivenessProportionHigh) * (speed - params.mobilityLooseStartSpeed) / (GetMaxSpeed() - params.mobilityLooseStartSpeed);
+            responseFactor = Clamp(responseFactor, 1.0f, params.responsivenessProportionHigh);
+        }
+
+        params.pitchAcceleration = originalPitchResponse * responseFactor;
+        params.rollAcceleration = originalRollResponse * responseFactor;
+        params.yawAcceleration =  originalYawResponse * responseFactor;
+
+
+        if (stalling)
+        {
+            body.torque.x = 0.0f;
+            body.torque.y = 0.0f;
+            body.torque.z = 0.0f;
+
+            body.alternateTorque.x = 0.0f;
+            body.alternateTorque.y = 0.0f;
+            body.alternateTorque.z = 0.0f;
+
+            body.alternateForce.y = -STALL_DOWNWARD_FORCE;
+        }
+
+        Vector3 axisOfRotation = Vector3CrossProduct(forward, downDir);
+
+        axisOfRotation = Vector3Normalize(axisOfRotation);
+
+        if (stalling && fDot < fDotTarget)
+        {
+            body.worldAngularTorque = STALL_TORQUE_SPEED;
+        }
+
+        body.ApplyAlternateWorldTorque(axisOfRotation, dt); //stall
     }
-    else
-    {
-        if (thrust >= params.maxThrust) thrust = params.maxThrust;
-        else if (thrust <= 0.0f) thrust = 0.0f;
-    }
-
-    body.ApplyLocalForce(forwardDir, thrust);
-
-    // drag / fake gravity
-
-    float dotFU = Vector3DotProduct(forward, upDir);
-
-    float forwardSpeed = Vector3DotProduct(body.GetTrueVelocity(), forward);
-
-    if (dotFU > 0.1)
-    {
-        if (forwardSpeed > 0.0f) body.ApplyAlternateLocalForce(backDir, FAKE_GRAVITY_FORCE * dotFU);
-    }
-    else if (dotFU < -0.1)
-    {
-        body.ApplyAlternateLocalForce(backDir, FAKE_GRAVITY_FORCE * dotFU);
-    }
-
-    // fake banking
-
-    Vector3 right = GetWorldRightVector(body.transform);
-    right = Vector3Normalize(right);
-
-    float rDot = Vector3DotProduct(upDir, right);
-
-    body.ApplyAlternateYaw(MAX_BANK_TORQUE_YAW * -rDot);
-
-    // upside down case
-
-    Vector3 up = GetWorldUpVector(body.transform);
-    up = Vector3Normalize(up);
-
-    float uDot = Vector3DotProduct(upDir, up);
-
-    if (uDot <= -0.1)
-    {
-        body.ApplyAlternatePitch(MAX_BANK_TORQUE_PITCH * uDot);
-    }
-
-    // fake stall
-
-    float speed = GetTrueSpeed();
-
-    float fDot = Vector3DotProduct(downDir, forward);
-
-    float fDotTarget = 0.6f;
-
-    if (speed < params.stallSpeed)
-    {
-        stalling = true;
-    }
-    else if (speed >= params.recoverySpeed)
-    {
-        stalling = false;
-    }
-
-    float mobilityFactor = 1.0f;
-
-    if (speed <= params.mobilityLooseStartSpeed)
-    {
-        mobilityFactor = 1 - (1 - params.mobilityProportionLow) * (speed - params.mobilityLooseStartSpeed) / (params.stallSpeed - params.mobilityLooseStartSpeed);
-        mobilityFactor = Clamp(mobilityFactor, params.mobilityProportionLow, 1.0f);
-    }
-    else
-    {
-        mobilityFactor = 1 - (1 - params.mobilityProportionHigh) * (speed - params.mobilityLooseStartSpeed) / (GetMaxSpeed() - params.mobilityLooseStartSpeed);
-        mobilityFactor = Clamp(mobilityFactor, params.mobilityProportionHigh, 1.0f);
-    }
-
-    params.maxPitchSpeed = originalMaxPitchSpeed * mobilityFactor;
-    params.maxRollSpeed = originalMaxRollSpeed * mobilityFactor;
-    params.maxYawSpeed = originalMaxYawSpeed * mobilityFactor;
-
-    float responseFactor = 1.0f;
-    
-    if (speed <= params.mobilityLooseStartSpeed)
-    {
-        responseFactor = 1 - (1 - params.responsivenessProportionLow) * (speed - params.mobilityLooseStartSpeed) / (params.stallSpeed - params.mobilityLooseStartSpeed);
-        responseFactor = Clamp(responseFactor, params.responsivenessProportionLow, 1.0f);
-    }
-    else
-    {
-        responseFactor = 1 - (1 - params.responsivenessProportionHigh) * (speed - params.mobilityLooseStartSpeed) / (GetMaxSpeed() - params.mobilityLooseStartSpeed);
-        responseFactor = Clamp(responseFactor, 1.0f, params.responsivenessProportionHigh);
-    }
-
-    params.pitchAcceleration = originalPitchResponse * responseFactor;
-    params.rollAcceleration = originalRollResponse * responseFactor;
-    params.yawAcceleration =  originalYawResponse * responseFactor;
-
-
-    if (stalling)
-    {
-        body.torque.x = 0.0f;
-        body.torque.y = 0.0f;
-        body.torque.z = 0.0f;
-
-        body.alternateTorque.x = 0.0f;
-        body.alternateTorque.y = 0.0f;
-        body.alternateTorque.z = 0.0f;
-
-        body.alternateForce.y = -STALL_DOWNWARD_FORCE;
-    }
-
-    Vector3 axisOfRotation = Vector3CrossProduct(forward, downDir);
-
-    axisOfRotation = Vector3Normalize(axisOfRotation);
-
-    if (stalling && fDot < fDotTarget)
-    {
-        body.worldAngularTorque = STALL_TORQUE_SPEED;
-    }
-
-    body.ApplyAlternateWorldTorque(axisOfRotation, dt); //stall
 
     body.SingleBodyUpdate(dt);
 
@@ -474,10 +527,10 @@ void Player::UpdateCamera(float dt)
 
         float fovyFactor = 1.0f;
 
-        float speed = GetTrueSpeed();
+        float speed = GetTrueLinearSpeed();
 
         float minFovy = 0.85f;
-        float maxFovy = 1.15f;
+        float maxFovy = 1.05f;
 
         if(speed <= GetIdleSpeed())
         {
@@ -569,7 +622,7 @@ void Player::FireB(float dt)
     // call it gun position
     if (fireTimerBullet > 0.0f) fireTimerBullet -= dt;
 
-    if (gunKey && fireTimerBullet <= 0.0f)
+    if (gunKey && !debugMode)
     {
         while (fireTimerBullet <= 0.0f)
         {
@@ -607,7 +660,7 @@ void Player::FireM(float dt)
     if (fireTimerMissileA > 0.0f) fireTimerMissileA -= dt;
     if (fireTimerMissileB > 0.0f) fireTimerMissileB -= dt;
 
-    if(!missileKey)
+    if(missileKey && !debugMode)
     {
         Vector3 forward = GetWorldForwardVector(body.transform);
         Vector3 missileInitialSpeed = Vector3Scale(forward, GetSpeed());

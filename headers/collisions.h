@@ -8,19 +8,6 @@ struct Projection
     float min, max;
 };
 
-struct CollisionResult
-{
-    bool collision;
-    float depth;
-    Vector3 normal;
-};
-
-struct CollisionResult_CCD
-{
-    bool collision;
-    float timeOfImpact;
-    Vector3 normal;
-};
 
 using namespace std;
 
@@ -36,8 +23,8 @@ Projection ProjectVertices3D(const vector<Vector3>& vertices, const Vector3& axi
 
 //continious collision detection
 
-CollisionResult_CCD SAT3DPoly_CCD(Collider& colliderA, const Transform& transformA, Collider& colliderB, const Transform& transformB, const Vector3& relVel);
+bool SAT3DPoly_CCD(Collider& colliderA, const Transform& transformA, const Vector3& velocityA, Collider& colliderB, const Transform& transformB, const Vector3& velocityB, float dt);
 
-CollisionResult_CCD PolyVsSphere_CCD(Collider& colliderA, const Transform& transformA, const Vector3& centerB, float radius, const Vector3& relVel);
+bool PolyVsSphere_CCD(Collider& colliderA, const Transform& transformA, const Vector3& centerB, float radius, const Vector3& relVel);
 
 RayCollision PrsimRayHit(Ray raycast, const vector<Vector3>& vertices);

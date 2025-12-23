@@ -101,6 +101,11 @@ public:
         alternateTorque.x += amount;
     }
 
+    inline void ApplyAlternateRoll(float amount)
+    {
+        alternateTorque.z += amount;
+    }
+
     void AlternateUpdateBody(float dt);
 
     void ApplyAlternateWorldTorque(Vector3 axis, float dt);
@@ -149,8 +154,24 @@ public:
         return linearDrag * FORWARD_DRAG_MULTIPLIER;
     }
 
-    inline Vector3 GetTrueVelocity()
+    inline Vector3 GetTrueLinearVelocity()
     {
         return Vector3Add(linearVelocity, alternateLinearVelocity);
+    }
+    
+    inline Vector3 GetTrueAngularVelocity()
+    {
+        return Vector3Add(angularVelocity, alternateAngularVelocity);
+    }
+
+    inline Vector3 GetAbsoluteVelocity()
+    {
+        Vector3 absoluteLinearVelocity  = Vector3Add(linearVelocity, alternateLinearVelocity);
+
+        Vector3 absoluteAngularVelocity = Vector3Add(angularVelocity, alternateAngularVelocity);
+
+        Vector3 absoluteVelocity = Vector3Add(absoluteLinearVelocity, absoluteAngularVelocity);
+
+        return absoluteVelocity;
     }
 };

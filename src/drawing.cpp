@@ -51,7 +51,6 @@ void mApplyFlatShader(FlatShaderData* shaderData, Model* model)
     std::cout<<"shader applied correclty" <<"\n";
 }
 
-
 void DrawShadedMesh(FlatShaderData* shaderData, Model model)
 {
     float baseColorArray[4];
@@ -91,84 +90,3 @@ void DrawShadedMesh(FlatShaderData* shaderData, Model model)
     }
 }
 
-
-void DrawColliderWire(const std::vector<Vector3>& transformedVertices, Color color)
-{
-    switch (transformedVertices.size())
-    {
-    case 8:
-        DrawLine3D(transformedVertices[0], transformedVertices[1], color);
-        DrawLine3D(transformedVertices[1], transformedVertices[2], color);
-        DrawLine3D(transformedVertices[2], transformedVertices[3], color);
-        DrawLine3D(transformedVertices[3], transformedVertices[0], color);
-
-        DrawLine3D(transformedVertices[4], transformedVertices[5], color);
-        DrawLine3D(transformedVertices[5], transformedVertices[6], color);
-        DrawLine3D(transformedVertices[6], transformedVertices[7], color);
-        DrawLine3D(transformedVertices[7], transformedVertices[4], color);
-
-        DrawLine3D(transformedVertices[0], transformedVertices[4], color);
-        DrawLine3D(transformedVertices[1], transformedVertices[5], color);
-        DrawLine3D(transformedVertices[2], transformedVertices[6], color);
-        DrawLine3D(transformedVertices[3], transformedVertices[7], color);
-        break;
-    case 5:
-        DrawLine3D(transformedVertices[0], transformedVertices[1], color);
-        DrawLine3D(transformedVertices[1], transformedVertices[2], color);
-        DrawLine3D(transformedVertices[2], transformedVertices[3], color);
-        DrawLine3D(transformedVertices[3], transformedVertices[0], color);
-
-        DrawLine3D(transformedVertices[0], transformedVertices[4], color);
-        DrawLine3D(transformedVertices[1], transformedVertices[4], color);
-        DrawLine3D(transformedVertices[2], transformedVertices[4], color);
-        DrawLine3D(transformedVertices[3], transformedVertices[4], color);
-        break;
-
-    default:
-        return;
-        break;
-    }
-
-    
-}
-
-void DrawCollider(const std::vector<Vector3> &v, Color color)
-{
-    if (v.size() == 8)
-    {
-        // Bottom face (0,1,2,3)
-        DrawTriangle3D(v[0], v[1], v[2], color);
-        DrawTriangle3D(v[0], v[2], v[3], color);
-
-        // Top face (4,5,6,7)
-        DrawTriangle3D(v[4], v[5], v[6], color);
-        DrawTriangle3D(v[4], v[6], v[7], color);
-
-        // Sides
-        DrawTriangle3D(v[0], v[1], v[5], color);
-        DrawTriangle3D(v[0], v[5], v[4], color);
-
-        DrawTriangle3D(v[1], v[2], v[6], color);
-        DrawTriangle3D(v[1], v[6], v[5], color);
-
-        DrawTriangle3D(v[2], v[3], v[7], color);
-        DrawTriangle3D(v[2], v[7], v[6], color);
-
-        DrawTriangle3D(v[3], v[0], v[4], color);
-        DrawTriangle3D(v[3], v[4], v[7], color);
-    }
-
-    // --- PYRAMID (5 vertices) ---
-    else if (v.size() == 5)
-    {
-        // Base quad (0,1,2,3)
-        DrawTriangle3D(v[0], v[1], v[2], color);
-        DrawTriangle3D(v[0], v[2], v[3], color);
-
-        // Sides (triangles to apex 4)
-        DrawTriangle3D(v[0], v[1], v[4], color);
-        DrawTriangle3D(v[1], v[2], v[4], color);
-        DrawTriangle3D(v[2], v[3], v[4], color);
-        DrawTriangle3D(v[3], v[0], v[4], color);
-    }
-}

@@ -97,8 +97,8 @@ public:
 
     float thrust = 0.0f;
 
-    std::vector<std::weak_ptr<Target>> targets; 
-    std::weak_ptr<Target> currentTarget;
+    std::vector<Target*> targets; 
+    Target* currentTarget;
 
     Player();
 
@@ -132,7 +132,7 @@ public:
     {
         Transform colliderTransform = {};
 
-        FollowTransform(&colliderTransform, GetTransform(),{0,0,2});
+        FollowTransform(&colliderTransform, GetTransform(),params.colliderPos);
 
         return colliderTransform;
     }

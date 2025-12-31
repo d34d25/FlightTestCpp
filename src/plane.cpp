@@ -22,11 +22,18 @@ PlaneParams GetPlaneParams(Planes plane)
     {
     case Planes::DEBUG_PLANE:
 
-        params.scale = 1.25f;
+        params.scale = 1.0f;
 
-        params.hitboxWidth = 2; //20
-        params.hitboxLength = 2; //23
+        params.hitboxWidth = 15; //20
+        params.hitboxLength = 24; //23
         params.hitboxHeight = 2;
+
+        params.colliderPos = {0,0,2};
+
+        params.camOffsetY = 5.0f;
+        params.camOffsetZ = -30.0f;
+
+        params.gunPos = {-2.45f, 0.9f, 7.0f};
 
         angDamp = 3.0f;
         params.angularDamping = {
@@ -37,10 +44,10 @@ PlaneParams GetPlaneParams(Planes plane)
 
         params.lateralDragMultiplier = 200.0f; //200.0f
         
-        params.maxThrust = 175000 * 30;
+        params.maxThrust = 175000;// * 30;
         params.idleThrust = 30000; 
 
-        params.acceleration = 10500 * 900;//  / 2.0f;
+        params.acceleration = 10500;// * 900;//  / 2.0f;
         params.brake = 9500;
 
         params.returnSpeedHigh = 4000;
@@ -56,21 +63,21 @@ PlaneParams GetPlaneParams(Planes plane)
         params.recoverySpeed = DEFAULT_RECOVERY_SPEED;
         params.mobilityLooseStartSpeed = DEFAULT_MOBILITY_LOOSE_START_SPEED;
         
-        params.pitchPower = 15;
+        params.pitchPower = 20;
         params.rollPower = 60;
         params.yawPower = 10;
 
         params.maxPitchSpeed = 0.6f;
         params.maxRollSpeed = 1.7f;
-        params.maxYawSpeed = 0.2f;
+        params.maxYawSpeed = 0.15f;
 
         response = 200;
-        params.pitchAcceleration = response;
+        params.pitchAcceleration = response * 2.0f;
         params.rollAcceleration = response * 4.0f;
         params.yawAcceleration = response;
 
         params.modelPath = "assets/sf-15x.obj";//"assets/sf15b.obj";
-        params.skipMaterialIndex = 4;//7;
+        params.skipMaterialIndex = 8;//4;//7;
 
         break;
     

@@ -76,8 +76,8 @@ Player::Player()
     camera.projection = CAMERA_PERSPECTIVE;
 
     cameraOffset.x = 0.0f;
-    cameraOffset.y = 5.0f;
-    cameraOffset.z = -39.0f;
+    cameraOffset.y = params.camOffsetY;
+    cameraOffset.z = params.camOffsetZ;
 
     cameraAlpha = 10.0f;
     currentFovy = FOVY;
@@ -122,14 +122,14 @@ Player::Player()
 
     fireTimerMissileB = 0.0f;
 
-    float missilespeed = MAX_THRUST;
+    float missilespeed = MAX_THRUST * 1.25f;
 
-    missilePoolA = MissilePool(6, 2, missilespeed);
+    missilePoolA = MissilePool(6, 4, missilespeed);
     missileTransformA = {};
     missileTransformA.scale = {1.0f, 1.0f, 1.0f};
     missileTransformA.rotation = QuaternionIdentity();
 
-    missilePoolB = MissilePool(6, 2, missilespeed);
+    missilePoolB = MissilePool(6, 4, missilespeed);
     missileTransformB = {};
     missileTransformB.scale = {1.0f, 1.0f, 1.0f};
     missileTransformB.rotation = QuaternionIdentity();
@@ -139,7 +139,7 @@ Player::Player()
     //targets
 
     targets = {};
-    currentTarget.reset();
+    currentTarget = nullptr;
 
     tgtIndex = 0;
     tgtLocked = false;
@@ -530,7 +530,7 @@ void Player::UpdateCamera(float dt)
         float speed = GetTrueLinearSpeed();
 
         float minFovy = 0.85f;
-        float maxFovy = 1.05f;
+        float maxFovy = 1.15f;
 
         if(speed <= GetIdleSpeed())
         {
@@ -626,7 +626,7 @@ void Player::FireB(float dt)
     {
         while (fireTimerBullet <= 0.0f)
         {
-            FollowTransform(&bulletTransform, GetTransform(), {-2.75f, 0.9f, 10.0f});
+            FollowTransform(&bulletTransform, GetTransform(), params.gunPos);
 
             Vector3 forward = GetWorldForwardVector(body.transform);
             Vector3 bulletVelocity = Vector3Add(body.linearVelocity, Vector3Scale(forward, bulletspeed));
@@ -646,10 +646,10 @@ void Player::FireM(float dt)
 
     if(tgtLocked)
     {
-        if(auto t = currentTarget.lock())
+        if(currentTarget)
         {
             locked = true;
-            tgtPos = &t->body.transform.translation;
+            tgtPos = &currentTarget->body.transform.translation;
         }
         else
         {
@@ -698,9 +698,11 @@ void Player::ChooseTarget()
 
     for (int i = 0; i < targets.size(); i++)
     {
-        if (auto t = targets[i].lock()) 
+        Target* tgt = targets[i];
+
+        if (tgt) 
         {
-            Vector3 diff = Vector3Subtract(t->body.transform.translation, GetPosition());
+            Vector3 diff = Vector3Subtract(tgt->body.transform.translation, GetPosition());
             float dist = Vector3Length(diff);
 
             if (dist > maxDist) continue;
@@ -720,7 +722,7 @@ void Player::ChooseTarget()
 
     if (bestTarget < 0)
     {
-        currentTarget.reset();
+        currentTarget = nullptr;
         tgtLocked = false;
         return;
     }
@@ -740,9 +742,11 @@ void Player::ChooseTarget()
         {
             tgtIndex = (tgtIndex + 1) % targets.size();
 
-            if (auto t = targets[tgtIndex].lock()) 
+            Target* tgt = targets[tgtIndex];
+
+            if (tgt) 
             {
-                Vector3 diff = Vector3Subtract(t->body.transform.translation, GetPosition());
+                Vector3 diff = Vector3Subtract(tgt->body.transform.translation, GetPosition());
                 float dist = Vector3Length(diff);
                 Vector3 dir = Vector3Normalize(diff);
 

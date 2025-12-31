@@ -33,7 +33,7 @@ void Missile::UpdateMissile(float dt)
     }
 
     //missile update
-    if(thrust < maxThrust) thrust += 500000 * 1000 * dt;
+    if(thrust < maxThrust) thrust += 500000 * dt;
     else thrust = maxThrust;
 
     body.ApplyForce(forward, thrust);
@@ -47,7 +47,9 @@ void Missile::UpdateMissile(float dt)
         if(fireTimerParticle <= 0.0f)
         {
             Vector3 forward = GetWorldForwardVector(body.transform);
-            Vector3 particleVel = Vector3Add(body.linearVelocity, Vector3Scale(forward, 0));
+            Vector3 particleVel = Vector3Add(body.GetAbsoluteVelocity(), Vector3Scale(forward, 4000));
+
+            particleVel *= dt;
 
             Vector3 right = GetWorldRightVector(body.transform);
             Vector3 up = GetWorldUpVector(body.transform);
@@ -64,7 +66,7 @@ void Missile::UpdateMissile(float dt)
             particlePool.FireParticle(body.transform, particleVel);
 
             fireTimerParticle = firerateParticle;
-        }        
+        }
     }
    
     particlePool.UpdateParticles(dt);
@@ -90,7 +92,7 @@ MissilePool::MissilePool(int quantity, float lifetime, float maxThrust)
 
         tempMissile->body = Body3D(4.5f, {3.0f,3.0f,3.0f});
         
-        tempMissile->particlePool = ParticlePool(30,1); 
+        tempMissile->particlePool = ParticlePool(80,0.25f); 
         tempMissile->fireTimerParticle = 0.0f;
         tempMissile->firerateParticle = 0.05f;
 
@@ -142,7 +144,7 @@ void MissilePool::UpdateMissiles(float dt)
     }    
 }
 
-void MissilePool::FireMissile(const Transform &transform, Vector3 initialSpeed, float initialThrust, Vector3* target, bool locked)
+void MissilePool::FireMissile(const Transform &transform, Vector3 initialSpeed, float initialThrust, const Vector3* target, bool locked)
 {
     if(!inactiveMissiles.empty())
     {
@@ -170,6 +172,5 @@ void MissilePool::FireMissile(const Transform &transform, Vector3 initialSpeed, 
         m->body.linearVelocity = Vector3Add(m->body.linearVelocity, Vector3Scale(worldUp, -7.0f));
         
         activeMissiles.push_back(m);
-        std::cout<<"MISSILE FIRED"<<"\n";
     }
 }

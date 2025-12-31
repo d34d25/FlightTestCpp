@@ -33,7 +33,8 @@ int main()
         player.params.hitboxHeight,
         player.params.hitboxWidth /6,
         player.params.hitboxHeight,
-        player.params.hitboxLength);
+        player.params.hitboxLength
+    );
     
     Color testColliderColor = WHITE;
 
@@ -51,30 +52,22 @@ int main()
 
     Color obstacleColliderColor = ogObstacleColliderColor;
 
-    // test targets
-    Target tgt1 = CreateTarget({0,100,400}, 4,4,4, 100, EnemyColliderType::BOX);
-    
-    Target tgt2 = CreateTarget({500,0,400}, 10,10,10, 100, EnemyColliderType::BOX);
+    Target tgt1 = Target({100,4,400}, 4,4,4,100,EnemyColliderType::BOX,EnemyType::AA_GUN);
+    Target tgt2 = Target({500,4,400}, 4,4,4,100,EnemyColliderType::BOX,EnemyType::AA_GUN);
+    Target tgt3 = Target({0,4,400}, 4,4,4,100,EnemyColliderType::BOX,EnemyType::AA_GUN);
+    Target tgt4 = Target({0,4,900}, 4,4,4,100,EnemyColliderType::BOX,EnemyType::SAM);
 
-    Target tgt3 = CreateTarget({0,600,400}, 10,10,10, 100, EnemyColliderType::PRISMATOID_FORWARD);
+    std::vector<Target*> enemyList;
 
-    Target tgt4 = CreateTarget({0,0,900}, 10,10,10, 100, EnemyColliderType::PRISMATOID_UP);
-
-    Enemy aatank1 = Enemy(tgt1, EnemyType::AA_TANK);
-    Enemy aatank2 = Enemy(tgt2, EnemyType::AA_TANK);
-    Enemy aatank3 = Enemy(tgt3, EnemyType::AA_TANK);
-    Enemy aatank4 = Enemy(tgt4, EnemyType::AA_TANK);
-
-    std::vector<std::unique_ptr<Enemy>> enemyList;
-
-    /*enemyList.push_back(std::make_unique<Enemy>(tgt1, EnemyType::AA_TANK));
-    enemyList.push_back(std::make_unique<Enemy>(tgt2, EnemyType::AA_TANK));
-    enemyList.push_back(std::make_unique<Enemy>(tgt3, EnemyType::AA_TANK));
-    enemyList.push_back(std::make_unique<Enemy>(tgt4, EnemyType::AA_TANK));*/
+    enemyList.push_back(&tgt1);
+    enemyList.push_back(&tgt2);
+    enemyList.push_back(&tgt3);
+    enemyList.push_back(&tgt4);
 
     for(int i = 0; i < enemyList.size(); i++)
     {
-        player.targets.push_back(enemyList[i]->target);
+        std::cout<<"Enemy address init: "<<enemyList[i]<<"\n";
+        player.targets.push_back(enemyList[i]);
     }
 
     InitWindow(SCREEN_WIDTH,SCREEN_HEIGHT,"");
@@ -104,7 +97,7 @@ int main()
     Vector3 obstacleVel = {0,0,0};
 
     while (!WindowShouldClose())
-    {  
+    {
         float dt = GetFrameTime();
         //update
         accumulator += dt;
@@ -113,23 +106,23 @@ int main()
         {
             shaderData.skipIntensity = player.GetEngineGlow();
 
-            /*bool r = SAT3DPoly_CCD(
+            bool r = SAT3DPoly_CCD(
                 testCollider, player.GetHitboxTransform(), player.body.GetAbsoluteVelocity(),
                 obstacleCollider, obstacleColliderTransform, obstacleVel, FIXED_DELTA_TIME
-            );*/
+            );
 
-            bool r = PolyVsSphere_CCD(
+            /*bool r = PolyVsSphere_CCD(
                 obstacleCollider, obstacleColliderTransform, obstacleVel,
                 player.GetPosition(), testColliderRadius, player.body.GetAbsoluteVelocity(),
                 FIXED_DELTA_TIME
-            );
+            );*/
 
             if (r)
             {
                 std::cout<<"PLAYER HIT at: "<<player.GetAbsoluteSpeed()<<"\n";
-                player.body.transform.translation = {0,400,-700};
+                //player.body.transform.translation = {0,400,-700};
 
-                obstacleColliderTransform.translation = {0,300,7000};
+                //obstacleColliderTransform.translation = {0,300,7000};
 
                 obstacleColliderColor = ORANGE;
                 testColliderColor = RED;
@@ -211,15 +204,10 @@ int main()
                 for(int e = 0; e < enemyList.size(); e++)
                 {
 
-                    Vector3 relVel = Vector3Subtract(
-                        enemyList[e]->target->body.GetTrueLinearVelocity(),
-                        currentMissile->body.GetTrueLinearVelocity()
-                    );
-
                     bool rm = PolyVsSphere_CCD(
-                        enemyList[e]->target->hitbox,
-                        enemyList[e]->target->body.transform,
-                        enemyList[e]->target->body.GetAbsoluteVelocity(),
+                        enemyList[e]->hitbox,
+                        enemyList[e]->body.transform,
+                        enemyList[e]->body.GetAbsoluteVelocity(),
                         currentMissile->body.transform.translation, 
                         currentMissile->radius,
                         currentMissile->body.GetAbsoluteVelocity(),
@@ -240,16 +228,11 @@ int main()
 
                 for(int e = 0; e < enemyList.size(); e++)
                 {
-                        //relative speed is (poly - sphere)
-                    Vector3 relVel = Vector3Subtract(
-                        enemyList[e]->target->body.GetTrueLinearVelocity(),
-                        currentMissile->body.GetTrueLinearVelocity()
-                    );
-
+            
                     bool rm = PolyVsSphere_CCD(
-                        enemyList[e]->target->hitbox,
-                        enemyList[e]->target->body.transform,
-                        enemyList[e]->target->body.GetAbsoluteVelocity(),
+                        enemyList[e]->hitbox,
+                        enemyList[e]->body.transform,
+                        enemyList[e]->body.GetAbsoluteVelocity(),
                         currentMissile->body.transform.translation, 
                         currentMissile->radius,
                         currentMissile->body.GetAbsoluteVelocity(),
@@ -269,14 +252,17 @@ int main()
 
             for (int a = 0; a < enemyList.size(); a++)
             {
-                enemyList[a]->UpdateEnemy(FIXED_DELTA_TIME, 
+                enemyList[a]->UpdateEnemy(
+                    FIXED_DELTA_TIME, 
                     player.GetPosition(),
-                    player.missilePoolA.activeMissiles, player.missilePoolB.activeMissiles);
+                    player.missilePoolA.activeMissiles, player.missilePoolB.activeMissiles
+                );
             }
 
             for (int a = 0; a < enemyList.size(); a++)
             {
-                enemyList[a]->FireB(FIXED_DELTA_TIME, player.GetPosition(), player.body.GetTrueLinearVelocity());
+                enemyList[a]->FireBullet(FIXED_DELTA_TIME, player.GetPosition(), player.body.GetTrueLinearVelocity());
+                enemyList[a]->FireMissile(FIXED_DELTA_TIME, player.GetPosition());
             }
 
             player.ChooseTarget();
@@ -299,13 +285,13 @@ int main()
         rlScalef(-1,-1,-1);
         rlPopMatrix();
         
-        //DrawFlatShadedModel(player.GetTransform(), planeModel, &shaderData);
+        DrawFlatShadedModel(player.GetTransform(), planeModel, &shaderData);
 
-        //DrawColliderWire(testCollider,player.GetHitboxTransform(), BLACK);
+        //DrawColliderWire(testCollider,player.GetHitboxTransform(), RED);
         //DrawCollider(testCollider, player.GetHitboxTransform(), testColliderColor);
         //DrawColliderFaceNormals(testCollider, player.GetHitboxTransform(), 10);
 
-        DrawSphere(player.GetTransform().translation, testColliderRadius, testColliderColor);
+        //DrawSphere(player.GetTransform().translation, testColliderRadius, testColliderColor);
 
         for(int i = 0; i < player.bulletPool.activeBullets.size(); i++)
         {
@@ -325,9 +311,10 @@ int main()
         {
             Missile* currentMissile = player.missilePoolA.activeMissiles[i];
 
-            //DrawMissile(currentMissile->body.transform, currentMissile->radius);
+            DrawMissile(currentMissile->body.transform, currentMissile->radius);
 
-            DrawSphere(currentMissile->body.transform.translation, currentMissile->radius, RED);
+            //DrawSphere(currentMissile->body.transform.translation, currentMissile->radius, RED);
+
             for(int j = 0; j < currentMissile->particlePool.activeParticles.size(); j++)
             {
                 Particle* currentParticle = currentMissile->particlePool.activeParticles[j];
@@ -341,9 +328,9 @@ int main()
         {
             Missile* currentMissile = player.missilePoolB.activeMissiles[i];
 
-            //DrawMissile(currentMissile->body.transform, currentMissile->radius);
+            DrawMissile(currentMissile->body.transform, currentMissile->radius);
 
-            DrawSphere(currentMissile->body.transform.translation, currentMissile->radius, RED);
+            //DrawSphere(currentMissile->body.transform.translation, currentMissile->radius, RED);
 
             for(int j = 0; j < currentMissile->particlePool.activeParticles.size(); j++)
             {
@@ -356,7 +343,7 @@ int main()
 
         for (int i = 0; i < enemyList.size(); i++)
         {
-            DrawTgt(*enemyList[i]->target);
+            DrawTgt(*enemyList[i]);
 
             for(int j = 0; j < enemyList[i]->bulletPool.activeBullets.size(); j++)
             {
@@ -366,11 +353,26 @@ int main()
 
                 //DrawSphere(currentBullet->transform.translation,currentBullet->radius, BULLET_YELLOW);
             }
+
+            for (int j = 0; j < enemyList[i]->missilePool.activeMissiles.size(); j++)
+            {
+                Missile* currentMissile = enemyList[i]->missilePool.activeMissiles[j];
+
+                DrawMissile(currentMissile->body.transform, currentMissile->radius);
+
+                for(int p = 0; p < currentMissile->particlePool.activeParticles.size(); p++)
+                {
+                    Particle* currentParticle = currentMissile->particlePool.activeParticles[p];
+
+                    RotateTowardsCamera(&currentParticle->transform, player.camera);
+                    DrawCircleRotated3D(currentParticle->transform, currentParticle->radius, {255,255,255,static_cast<unsigned char>(currentParticle->alpha)});
+                }
+            }
         }
 
-        if(auto c = player.currentTarget.lock())
+        if(player.currentTarget)
         {
-            DrawLine3D(player.GetPosition(), c->body.transform.translation, RED);
+            DrawLine3D(player.GetPosition(), player.currentTarget->body.transform.translation, RED);
         }
 
         EndMode3D();

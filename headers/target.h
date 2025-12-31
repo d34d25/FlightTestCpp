@@ -13,11 +13,34 @@ enum class EnemyColliderType
 
 enum class EnemyType
 {
-    AA_TANK
+    AA_GUN,
+    SAM
 };
 
-struct Target
+class Target
 {
+private:
+
+    Vector3 predictedPos;
+    Vector3 predictedDir;
+    float bulletspeed;
+
+    void UpdateAATank(float dt, const Vector3& playerPos,const std::vector<Missile*>& activeMissilesA, const std::vector<Missile*>& activeMissilesB);
+
+    void UpdateSAM(float dt, const Vector3& playerPos,const std::vector<Missile*>& activeMissilesA, const std::vector<Missile*>& activeMissilesB);
+
+    bool IsLockedByMissile(const std::vector<Missile*>& activeMissiles);
+
+    Vector3 SolveIntercept(const Vector3& playerPos, const Vector3& playerVel, float dt);
+
+    void FireBullet_AAGun(float dt, const Vector3 &playerPos, const Vector3& playerVel);
+
+    void FireMissile_SAM(float dt, const Vector3& playerPos);
+
+public:
+
+    EnemyType type;
+
     Body3D body;
     
     float width, height, length;
@@ -27,23 +50,6 @@ struct Target
     float health;
 
     bool isLocked;
-};
-
-Target CreateTarget(Vector3 position, float width, float height, float length, float health, EnemyColliderType colliderType);
-
-class Enemy
-{
-private:
-
-    Vector3 predictedPos;
-    Vector3 predictedDir;
-    int bulletspeed;
-
-public:
-
-    EnemyType type;
-
-    std::shared_ptr<Target> target;
 
     BulletPool bulletPool;
     float fireTimerBullet;
@@ -53,31 +59,27 @@ public:
     float fireTimerMissile;
     float firerateMissile;
 
+    float thrust;
+
     bool playerInRange;
 
-    Enemy(Target target, EnemyType type);
+    Target() = default;
+
+    Target(Vector3 position, float width, float height, float length, float health, EnemyColliderType colliderType, EnemyType type);
 
     void UpdateEnemy(float dt, const Vector3& playerPos,const std::vector<Missile*>& activeMissilesA, const std::vector<Missile*>& activeMissilesB);
 
-    void FireB(float dt, const Vector3 &playerPos, const Vector3& playerVel);
+    void FireBullet(float dt, const Vector3 &playerPos, const Vector3& playerVel);
 
-    void FireM(float dt, const Vector3& playerPos);
+    void FireMissile(float dt, const Vector3& playerPos);
 
     inline Vector3 GetPosition()
     {
-        return target->body.transform.translation;
+        return body.transform.translation;
     }
 
     inline Vector3 GetVelocity()
     {
-        return target->body.linearVelocity;
+        return body.GetTrueLinearVelocity();
     }
-
-private:
-
-    void UpdateAATank(float dt, const Vector3& playerPos,const std::vector<Missile*>& activeMissilesA, const std::vector<Missile*>& activeMissilesB);
-
-    bool IsLockedByMissile(const std::vector<Missile*>& activeMissiles);
-
-    Vector3 SolveIntercept(const Vector3& playerPos, const Vector3& playerVel, int bulletspeed);
 };

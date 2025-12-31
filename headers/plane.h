@@ -19,6 +19,13 @@ struct PlaneParams
     float hitboxHeight;
     float hitboxLength;
 
+    Vector3 colliderPos;
+
+    Vector3 gunPos;
+
+    float camOffsetY;
+    float camOffsetZ;
+
     Vector3 angularDamping;
     Vector3 position;
 

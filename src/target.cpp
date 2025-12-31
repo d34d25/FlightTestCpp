@@ -3,59 +3,100 @@
 #include <iostream>
 #include <plane.h>
 
-//if this creates a segmentation fault use unique ptr for tgt
-Target CreateTarget(Vector3 position, float width, float height, float length, float health, EnemyColliderType colliderType)
+
+//private
+void Target::UpdateAATank(float dt, const Vector3 &playerPos, const std::vector<Missile *> &activeMissilesA, const std::vector<Missile *> &activeMissilesB)
 {
-    Target tgt = {};
+    body.ApplyForce({0,0,1}, thrust);
 
-    tgt.body = Body3D();
+    bulletPool.UpdateBullets(dt);
+}
 
-    tgt.body.transform.translation = position;
-    tgt.body.lateralDragMultiplier = 200;
-    tgt.body.angularDamping = {3,3,3};
+void Target::UpdateSAM(float dt, const Vector3 &playerPos, const std::vector<Missile *> &activeMissilesA, const std::vector<Missile *> &activeMissilesB)
+{
+    missilePool.UpdateMissiles(dt);
+}
 
-    tgt.hitbox = Collider();
+bool Target::IsLockedByMissile(const std::vector<Missile *> &activeMissiles)
+{
+    return false;
+}
 
-    tgt.width = width;
-    tgt.height = height;
-    tgt.length = length;
+Vector3 Target::SolveIntercept(const Vector3 &playerPos, const Vector3 &playerVel, float dt)
+{
+    Vector3 relativePos = playerPos - GetPosition();
+
+    Vector3 relativeVel = playerVel - GetVelocity();
+
+    float a = Vector3DotProduct(relativeVel, relativeVel) - (bulletspeed * bulletspeed);
+    float b = 2 * Vector3DotProduct(relativeVel, relativePos);
+    float c = Vector3DotProduct(relativePos, relativePos);
+
+    float t = -1.0f;
+
+    float det = (b*b) - (4 * a * c);
+
+    if(abs(a) < 0.0001f) return playerPos;
+
+    if (det <= 0.0f) return playerPos;
+
+    float t1 = (-b + sqrtf(det)) / (2 * a);
+    float t2 = (-b - sqrtf(det)) / (2 * a);
+
+    if(t1 > 0.0f && t2 > 0.0f) t = fminf(t1,t2);
+    else if (t1 > 0.0f) t = t1;
+    else if (t2 > 0.0f) t = t2;
+
+    if (t < 0.0f) return playerPos;
+
+    return playerPos + (playerVel * t);
+}
+
+//public
+
+Target::Target(Vector3 position, float width, float height, float length, float health, EnemyColliderType colliderType, EnemyType type)
+{
+    body = Body3D(4.0f, {3.0f,3.0f,3.0f});
+    body.transform.translation = position;
+
+    hitbox = Collider();
+
+    this->width = width;
+    this->height = height;
+    this->length = length;
+
+    thrust = 0.0f;
+
+    this->type = type;
 
     switch (colliderType)
     {
     case EnemyColliderType::BOX:
-        tgt.hitbox.CreatePrismatoidUp(tgt.width, tgt.length, tgt.width, tgt.length, tgt.height);
+        hitbox.CreatePrismatoidUp(width, length, width, length, height);
         break;
     case EnemyColliderType::PRISMATOID_FORWARD:
-        tgt.hitbox.CreatePrismatoidForward(tgt.width,tgt.height,tgt.width/2,tgt.height,tgt.length);
+        hitbox.CreatePrismatoidForward(width,height,width/2,height,length);
         break;
     case EnemyColliderType::PRISMATOID_UP:
-        tgt.hitbox.CreatePrismatoidUp(tgt.width,tgt.length, tgt.width /2, tgt.length /2, tgt.height);
+        hitbox.CreatePrismatoidUp(width,length, width /2, length /2, height);
         break;
     default:
-        tgt.hitbox.CreatePrismatoidUp(tgt.width, tgt.length, tgt.width, tgt.length, tgt.height);
+        hitbox.CreatePrismatoidUp(width, length, width, length, height);
         break;
     }
-    tgt.health = health;
 
-    tgt.isLocked = false;
+    this->health = health;
 
-    return tgt;
-}
+    isLocked = false;
 
-Enemy::Enemy(Target target, EnemyType type)
-{
     bulletPool = BulletPool(60, 3);
-    missilePool = MissilePool(4, 2, MAX_THRUST * 0.75f);
+    missilePool = MissilePool(4, 7, MAX_THRUST * 0.5f);
 
     fireTimerBullet = 0.0f;
-    firerateBullet = 0.3f;
+    firerateBullet = 0.13f;
 
     fireTimerMissile = 0.0f;
     firerateMissile = 1.5f;
-
-    this->target = std::make_shared<Target>(target);
-    this->type = type;
-    this->target->isLocked = false;
 
     playerInRange = false;
 
@@ -65,35 +106,63 @@ Enemy::Enemy(Target target, EnemyType type)
     bulletspeed = 1200;
 }
 
-void Enemy::UpdateEnemy(float dt, const Vector3 &playerPos, const std::vector<Missile *>& activeMissilesA, const std::vector<Missile *>& activeMissilesB)
+void Target::UpdateEnemy(float dt, const Vector3 &playerPos, const std::vector<Missile *> &activeMissilesA, const std::vector<Missile *> &activeMissilesB)
+{ 
+    Vector3 dirToPlayer = Vector3Subtract(playerPos, body.transform.translation);
+
+    isLocked = false;
+    playerInRange = false;
+
+    float distToPlayer = Vector3Length(dirToPlayer);
+
+    if (distToPlayer <= 4000)
+    {
+        playerInRange = true;
+    }
+
+    switch (type)
+    {
+    case EnemyType::AA_GUN:
+        UpdateAATank(dt,playerPos, activeMissilesA, activeMissilesB);
+        break;
+    case EnemyType::SAM:
+        UpdateSAM(dt, playerPos, activeMissilesA, activeMissilesB);
+    default:
+        break;
+    }
+
+    body.UpdateBody(dt);
+}
+
+void Target::FireBullet(float dt, const Vector3 &playerPos, const Vector3 &playerVel)
 {
     switch (type)
     {
-    case EnemyType::AA_TANK:
-        UpdateAATank(dt,playerPos, activeMissilesA, activeMissilesB);
+    case EnemyType::AA_GUN:
+        FireBullet_AAGun(dt, playerPos, playerVel);
         break;
-    
     default:
         break;
     }
 }
 
-void Enemy::FireB(float dt, const Vector3 &playerPos, const Vector3& playerVel)
+void Target::FireBullet_AAGun(float dt, const Vector3 &playerPos, const Vector3 &playerVel)
 {
     if(playerInRange)
     {    
-        for(int i = 0; i < 10; i++)
-        {
-            predictedPos = SolveIntercept(playerPos, playerVel, bulletspeed);
-            predictedDir = Vector3Subtract(predictedPos, GetPosition());
-            predictedDir = Vector3Normalize(predictedDir);
-        }
+        predictedPos = SolveIntercept(playerPos, playerVel, dt);
+        
+        predictedDir = Vector3Subtract(predictedPos, GetPosition());
+        predictedDir = Vector3Normalize(predictedDir);
 
         Transform bulletTransform = {};
 
+        //bullet spawn point
         bulletTransform.translation = GetPosition();
+
         bulletTransform.scale = {1,1,1};
         
+        //bullet rotation is just for visuals
         Vector3 localForward = {0,0,1};
         Vector3 rotationAxis = Vector3CrossProduct(localForward, predictedDir);
 
@@ -102,6 +171,7 @@ void Enemy::FireB(float dt, const Vector3 &playerPos, const Vector3& playerVel)
 
         bulletTransform.rotation = QuaternionFromAxisAngle(rotationAxis, angle);
 
+        //deviation
         Vector3 forward = GetWorldForwardVector(bulletTransform);
         Vector3 right = GetWorldRightVector(bulletTransform);
         Vector3 up = GetWorldUpVector(bulletTransform);
@@ -112,14 +182,16 @@ void Enemy::FireB(float dt, const Vector3 &playerPos, const Vector3& playerVel)
         float upDeviation = (2.0f * ((float)rand() / RAND_MAX) - 1.0f) * maxDeviation;
 
         Vector3 deviation = Vector3Add(
-                Vector3Scale(right, rightDeviation),
-                Vector3Scale(up, upDeviation));
+            Vector3Scale(right, rightDeviation),
+            Vector3Scale(up, upDeviation)
+        );
 
+        //firing the bullet
         if(fireTimerBullet > 0.0f) fireTimerBullet -= dt;
         
         while(fireTimerBullet <= 0.0f)
         {
-            Vector3 bulletVelocity = Vector3Add(GetVelocity(),Vector3Scale(predictedDir, bulletspeed));
+            Vector3 bulletVelocity = Vector3Scale(predictedDir, bulletspeed);
 
             bulletVelocity = Vector3Add(bulletVelocity, deviation);
 
@@ -130,93 +202,49 @@ void Enemy::FireB(float dt, const Vector3 &playerPos, const Vector3& playerVel)
     }
 }
 
-void Enemy::FireM(float dt, const Vector3& playerPos)
+void Target::FireMissile(float dt, const Vector3 &playerPos)
 {
-
-}
-
-
-void Enemy::UpdateAATank(float dt, const Vector3 &playerPos, const std::vector<Missile *> &activeMissilesA, const std::vector<Missile *> &activeMissilesB)
-{
-    Vector3 dirToPlayer = Vector3Subtract(playerPos, target->body.transform.translation);
-
-    target->isLocked = false;
-    playerInRange = false;
-
-    //target.isLocked = IsLockedByMissile(activeMissilesA) || IsLockedByMissile(activeMissilesB);
-    
-    float distToPlayer = Vector3Length(dirToPlayer);
-
-    if (distToPlayer <= 4000)
+    switch (type)
     {
-        playerInRange = true;
+    case EnemyType::SAM:
+        FireMissile_SAM(dt, playerPos);
+        break;
+    default:
+        break;
     }
-
-    //target.body.ApplyLocalForce({0,0,1}, 37500);
-
-    target->body.linearVelocity = {0,0,300};
-
-    target->body.UpdateBody(dt);
-
-    bulletPool.UpdateBullets(dt);
 }
 
-bool Enemy::IsLockedByMissile(const std::vector<Missile *> &activeMissiles)
+void Target::FireMissile_SAM(float dt, const Vector3 &playerPos)
 {
-    for (int i = 0; i < activeMissiles.size(); i++)
+    if(playerInRange)
     {
-        Missile* currentMissile = activeMissiles[i];
-    }
+        Vector3 dir = playerPos - GetPosition();
+        dir = Vector3Normalize(dir);
 
-    return false;
-}
+        Transform missileTransform = {};
 
-Vector3 Enemy::SolveIntercept(const Vector3 &playerPos, const Vector3 &playerVel, int bulletspeed)
-{
-    Vector3 relPos = Vector3Subtract(playerPos, GetPosition());
-    Vector3 relVel = Vector3Subtract(playerVel, GetVelocity());
+        missileTransform.scale = {1,1,1};
 
-    float a = bulletspeed * bulletspeed - Vector3DotProduct(relVel, relVel);
-    float b = 2 * Vector3DotProduct(relVel, relPos);
-    float c = Vector3DotProduct(relPos,relPos);
+        missileTransform.translation = GetPosition();
 
-    float time = 0.0f;
+        //missile rotation (visuals)
+        Vector3 localForward = {0,0,1};
+        Vector3 rotationAxis = Vector3CrossProduct(localForward, dir);
 
-    float A = a;
-    float B = -b;
-    float C = -c;
+        float dot = Vector3DotProduct(localForward, dir);
+        float angle = acosf(dot);
 
-    if (A > 0.001f || A < -0.001f)
-    {
-        float discriminant = B * B - 4.0f * A * C;
+        missileTransform.rotation =  QuaternionFromAxisAngle(rotationAxis, angle);
 
-        if(discriminant >= 0.0f)
+        //missile spawn
+        if(fireTimerMissile > 0.0f) fireTimerMissile -= dt;
+
+        if(fireTimerMissile <= 0.0f)
         {
-            float sqrtD = sqrtf(discriminant);
+            missilePool.FireMissile(missileTransform, GetVelocity(), thrust, &playerPos, true);
 
-            float t1 = (-B + sqrtD) / (2.0f * A);
-            float t2 = (-B - sqrtD) / (2.0f * A);
-
-            if (t1 > 0.0f && t2 > 0.0f) 
-            {
-                time = fminf(t1, t2); 
-            }
-            else if (t1 > 0.0f) 
-            {
-                time = t1;
-            }
-            else if (t2 > 0.0f) 
-            {
-                time = t2;
-            }
+            fireTimerMissile = firerateMissile;
         }
+        
     }
-
-    else if (abs(B) > 0.001f)
-    {
-        time = -C / B;
-    }
-
-    return Vector3Add(playerPos, Vector3Scale(playerVel, time));
 }
-

@@ -26,8 +26,7 @@ int main()
     Player player = Player();
     Collider testCollider = Collider();
 
-    //thinnest thickness of a collider is 2
-    //best n for 2x speed is 35, for x1 speed is 18 or 20
+    //make it part of plane
     testCollider.CreatePrismatoidForward(
         player.params.hitboxWidth,
         player.params.hitboxHeight,

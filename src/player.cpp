@@ -118,18 +118,18 @@ Player::Player()
 
     //missiles
     fireTimerMissileA = 0.0f;
-    firerateMissile = 0.5f;
+    firerateMissile = 2.0f;
 
     fireTimerMissileB = 0.0f;
 
     float missilespeed = MAX_THRUST * 1.25f;
 
-    missilePoolA = MissilePool(6, 4, missilespeed);
+    missilePoolA = MissilePool(6, 4, missilespeed, MISSILE_LOCK_ON_ANGLE, MISSILE_MOBILITY);
     missileTransformA = {};
     missileTransformA.scale = {1.0f, 1.0f, 1.0f};
     missileTransformA.rotation = QuaternionIdentity();
 
-    missilePoolB = MissilePool(6, 4, missilespeed);
+    missilePoolB = MissilePool(6, 4, missilespeed, MISSILE_LOCK_ON_ANGLE, MISSILE_MOBILITY);
     missileTransformB = {};
     missileTransformB.scale = {1.0f, 1.0f, 1.0f};
     missileTransformB.rotation = QuaternionIdentity();

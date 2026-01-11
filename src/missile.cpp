@@ -3,6 +3,9 @@
 #include <algorithm>
 #include <iostream>
 
+extern const float MISSILE_MOBILITY = 10.0f;
+
+extern const float MISSILE_LOCK_ON_ANGLE = 0.6f;
 
 void Missile::UpdateMissile(float dt)
 {
@@ -20,12 +23,12 @@ void Missile::UpdateMissile(float dt)
 
             float angleToTarget = Vector3DotProduct(forward,dirToTarget);
 
-            if(angleToTarget >= 0.6f)
+            if(angleToTarget >= lockOnAngle)
             {
                 Vector3 axisOfRotation = Vector3CrossProduct(forward, dirToTarget);
                 axisOfRotation = Vector3Normalize(axisOfRotation);
 
-                body.worldAngularTorque = 10 * ALT_ANGULAR_DAMPING;
+                body.worldAngularTorque = mobility * ALT_ANGULAR_DAMPING;
 
                 body.ApplyAlternateWorldTorque(axisOfRotation, dt);
             }
@@ -73,7 +76,7 @@ void Missile::UpdateMissile(float dt)
 }
 
 
-MissilePool::MissilePool(int quantity, float lifetime, float maxThrust)
+MissilePool::MissilePool(int quantity, float lifetime, float maxThrust, float lockOnAngle, float mobility)
 {
     for (int i = 0; i < quantity; i++)
     {
@@ -98,6 +101,9 @@ MissilePool::MissilePool(int quantity, float lifetime, float maxThrust)
 
         tempMissile->target = nullptr;
         tempMissile->lockedOnTarget = false;
+
+        tempMissile->lockOnAngle = lockOnAngle;
+        tempMissile->mobility = mobility;
 
         // 3. Move the object into the main vector (no copy occurs)
         this->missiles.push_back(std::move(tempMissile));

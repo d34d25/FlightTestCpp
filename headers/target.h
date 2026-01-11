@@ -14,7 +14,8 @@ enum class EnemyColliderType
 enum class EnemyType
 {
     AA_GUN,
-    SAM
+    SAM,
+    FIGHTER
 };
 
 class Target
@@ -29,6 +30,8 @@ private:
 
     void UpdateSAM(float dt, const Vector3& playerPos,const std::vector<Missile*>& activeMissilesA, const std::vector<Missile*>& activeMissilesB);
 
+    void UpdateFighter(float dt, const Vector3& playerPos,const std::vector<Missile*>& activeMissilesA, const std::vector<Missile*>& activeMissilesB);
+
     bool IsLockedByMissile(const std::vector<Missile*>& activeMissiles);
 
     Vector3 SolveIntercept(const Vector3& playerPos, const Vector3& playerVel, float dt);
@@ -36,6 +39,11 @@ private:
     void FireBullet_AAGun(float dt, const Vector3 &playerPos, const Vector3& playerVel);
 
     void FireMissile_SAM(float dt, const Vector3& playerPos);
+
+    //fighter
+    void FireBullet_Fighter(float dt, const Vector3 &playerPos, const Vector3& playerVel);
+
+    void FireMissile_Fighter(float dt, const Vector3& playerPos);
 
 public:
 

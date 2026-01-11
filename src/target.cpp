@@ -90,7 +90,7 @@ Target::Target(Vector3 position, float width, float height, float length, float 
     isLocked = false;
 
     bulletPool = BulletPool(60, 3);
-    missilePool = MissilePool(4, 7, MAX_THRUST * 0.5f);
+    missilePool = MissilePool(4, 7, MAX_THRUST * 0.5f, MISSILE_LOCK_ON_ANGLE, MISSILE_MOBILITY);
 
     fireTimerBullet = 0.0f;
     firerateBullet = 0.13f;
@@ -127,6 +127,9 @@ void Target::UpdateEnemy(float dt, const Vector3 &playerPos, const std::vector<M
         break;
     case EnemyType::SAM:
         UpdateSAM(dt, playerPos, activeMissilesA, activeMissilesB);
+        break;
+    case EnemyType::FIGHTER:
+        break;
     default:
         break;
     }

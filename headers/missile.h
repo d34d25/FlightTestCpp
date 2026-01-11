@@ -7,6 +7,11 @@
 #include "particles.h"
 #include <memory>
 
+extern const float MISSILE_MOBILITY;
+
+extern const float MISSILE_LOCK_ON_ANGLE;
+
+
 class Missile
 {
 public:
@@ -32,6 +37,9 @@ public:
     const Vector3* target;
     bool lockedOnTarget;
 
+    float lockOnAngle;
+    float mobility;
+
     Missile() = default;
 
     void UpdateMissile(float dt);
@@ -48,7 +56,7 @@ public:
     
     MissilePool() = default;
 
-    MissilePool(int quantity, float lifetime, float maxTrhust);
+    MissilePool(int quantity, float lifetime, float maxThrust, float lockOnAngle, float mobility);
 
     void UpdateMissiles(float dt);
 

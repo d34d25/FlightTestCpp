@@ -11,7 +11,7 @@
 struct FlatShaderData
 {
     float minIntensity = 0.4f;
-    float maxIntensity = 1.0f;
+    float maxIntensity = 0.9f;
 
     float skipIntensity;
 

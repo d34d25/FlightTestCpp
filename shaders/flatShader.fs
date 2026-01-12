@@ -18,8 +18,16 @@ void main()
     vec3 norm = normalize(fragNormal);
     vec3 light = normalize(lightDir);
 
+
+    float d = max(0.0, dot(norm, light));
+
     // Compute base intensity from lighting
-    float intensity = max(dot(norm, light), minIntensity);
+    //float intensity = max(dot(norm, light), minIntensity);
+
+    float smoothD = smoothstep(0.0, 0.5, d);
+
+    float intensity = mix(minIntensity, maxIntensity, smoothD);
+
     intensity = clamp(intensity, 0.0, maxIntensity);
 
     if(baseColor.a < 0.0)

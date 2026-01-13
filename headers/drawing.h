@@ -27,9 +27,32 @@ struct FlatShaderData
     Vector4 __lastBaseColor = {-100,-100,-100,-100};
 };
 
+struct GradientShaderData
+{
+    Shader __shader;
+
+    int baseColorLoc;
+    int topColorLoc;
+    int bottomColorLoc;
+
+    int minHeightLoc;
+    int maxHeightLoc;
+
+    Color baseColor;
+    Color topColor;
+    Color bottomColor;
+
+    float minHeight;
+    float maxHeight;
+};
+
 FlatShaderData mLoadFlatShader(const char* shaderVs, const char* shaderFs, int skipIndex);
 
+GradientShaderData mLoadGradientShader(const char* shaderVs, const char* shaderFs, Color baseColor, Color topColor, Color bottomColor, float minHeigth, float maxHeight);
+
 void mApplyFlatShader(FlatShaderData* shaderData, Model* model);
+
+void mApplyGradientShader(GradientShaderData* shaderData, Model* model);
 
 void DrawShadedMesh(FlatShaderData* shaderData, Model model);
 
@@ -40,6 +63,30 @@ inline void DrawFlatShadedModel(const Transform& transform, const Model& model, 
     rlMultMatrixf(matrix);
     rlScalef(transform.scale.x, transform.scale.y, transform.scale.z);
     DrawShadedMesh(shaderData, model);
+    rlPopMatrix();
+}
+
+inline void DrawSkySphere(const Model& model, GradientShaderData* shaderData, Camera3D camera)
+{
+    rlPushMatrix();
+    rlDisableBackfaceCulling();
+    rlDisableDepthMask();
+
+    Matrix originalView = rlGetMatrixModelview();
+
+    Matrix view = GetCameraMatrix(camera);
+    view.m12 = 0.0f;
+    view.m13 = 0.0f;
+    view.m14 = 0.0f;
+
+    rlSetMatrixModelview(view);
+
+    DrawModel(model, {0,0,0}, 1, WHITE);
+    rlEnableDepthMask();
+    rlEnableBackfaceCulling();
+
+    rlSetMatrixModelview(originalView);
+
     rlPopMatrix();
 }
 

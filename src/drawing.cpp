@@ -20,6 +20,29 @@ FlatShaderData mLoadFlatShader(const char* shaderVs, const char* shaderFs, int s
     return shaderData;
 }
 
+GradientShaderData mLoadGradientShader(const char* shaderVs, const char* shaderFs, Color baseColor, Color topColor, Color bottomColor, float minHeigth, float maxHeight)
+{
+    GradientShaderData shaderData;
+
+    shaderData.baseColor = baseColor;
+    shaderData.topColor = topColor;
+    shaderData.bottomColor = bottomColor;
+
+    shaderData.__shader = LoadShader(shaderVs, shaderFs);
+
+    shaderData.baseColorLoc = GetShaderLocation(shaderData.__shader, "baseColor");
+    shaderData.topColorLoc = GetShaderLocation(shaderData.__shader, "topColor");
+    shaderData.bottomColorLoc = GetShaderLocation(shaderData.__shader, "bottomColor");
+
+    shaderData.minHeightLoc = GetShaderLocation(shaderData.__shader, "minHeight");
+    shaderData.maxHeightLoc = GetShaderLocation(shaderData.__shader, "maxHeight");
+
+    shaderData.minHeight = minHeigth;
+    shaderData.maxHeight = maxHeight;
+
+    return shaderData;
+}
+
 void mApplyFlatShader(FlatShaderData* shaderData, Model* model)
 {
     for (int i = 0; i < model->materialCount; i++)
@@ -49,6 +72,48 @@ void mApplyFlatShader(FlatShaderData* shaderData, Model* model)
     SHADER_UNIFORM_FLOAT);
 
     std::cout<<"shader applied correclty" <<"\n";
+}
+
+void mApplyGradientShader(GradientShaderData *shaderData, Model *model)
+{
+    for (int i = 0; i < model->materialCount; i++)
+    {
+        model->materials[i].shader = shaderData->__shader; 
+    }
+
+    float colorArray_Base[4];
+    float colorArray_Top[4];
+    float colorArray_Bottom[4];
+
+    colorArray_Base[0] = shaderData->baseColor.r / 255.0f;
+    colorArray_Base[1] = shaderData->baseColor.g / 255.0f;
+    colorArray_Base[2] = shaderData->baseColor.b / 255.0f;
+    colorArray_Base[3] = shaderData->baseColor.a / 255.0f;
+
+    colorArray_Top[0] = shaderData->topColor.r / 255.0f;
+    colorArray_Top[1] = shaderData->topColor.g / 255.0f;
+    colorArray_Top[2] = shaderData->topColor.b / 255.0f;
+    colorArray_Top[3] = shaderData->topColor.a / 255.0f;
+
+    colorArray_Bottom[0] = shaderData->bottomColor.r / 255.0f;
+    colorArray_Bottom[1] = shaderData->bottomColor.g / 255.0f;
+    colorArray_Bottom[2] = shaderData->bottomColor.b / 255.0f;
+    colorArray_Bottom[3] = shaderData->bottomColor.a / 255.0f;
+
+    SetShaderValue(shaderData->__shader, 
+    shaderData->baseColorLoc, colorArray_Base, SHADER_UNIFORM_VEC4);
+    
+    SetShaderValue(shaderData->__shader, 
+    shaderData->topColorLoc, colorArray_Top, SHADER_UNIFORM_VEC4);
+
+    SetShaderValue(shaderData->__shader, 
+    shaderData->bottomColorLoc, colorArray_Bottom, SHADER_UNIFORM_VEC4);
+
+    SetShaderValue(shaderData->__shader,
+    shaderData->minHeightLoc, &shaderData->minHeight, SHADER_UNIFORM_FLOAT);
+
+    SetShaderValue(shaderData->__shader,
+    shaderData->maxHeightLoc, &shaderData->maxHeight, SHADER_UNIFORM_FLOAT);
 }
 
 void DrawShadedMesh(FlatShaderData* shaderData, Model model)

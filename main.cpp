@@ -8,8 +8,8 @@
 #include "collisions.h"
 #include "target.h"
 
-int INTERNAL_WIDTH = (int)426 * 2;
-int INTERNAL_HEIGHT = (int)240 * 2;
+int INTERNAL_WIDTH = (int)426 * 3;
+int INTERNAL_HEIGHT = (int)240 * 3;
 
 int SCREEN_WIDTH = 1280;
 int SCREEN_HEIGHT = 720;
@@ -85,6 +85,17 @@ int main()
     FlatShaderData shaderData = mLoadFlatShader("shaders/flatShader.vs", "shaders/flatShader.fs", player.params.skipMaterialIndex);
 
     mApplyFlatShader(&shaderData, &planeModel);
+
+    //sky
+    float skyBoxRadius = 10000;
+    Mesh shpereSkyMesh = GenMeshSphere(skyBoxRadius,32,32);
+
+    Model shpereSkyModel = LoadModelFromMesh(shpereSkyMesh);
+
+    GradientShaderData gradientSkyShader = mLoadGradientShader("shaders/gradient.vs", "shaders/gradient.fs", 
+        {150,150,255,255}, WHITE, {25,25,100,255}, skyBoxRadius, 0);
+
+    mApplyGradientShader(&gradientSkyShader, &shpereSkyModel);
 
     SetTargetFPS(60);
     
@@ -284,6 +295,10 @@ int main()
         rlScalef(-1,-1,-1);
         rlPopMatrix();
         
+        DrawSkySphere(shpereSkyModel, &gradientSkyShader, player.camera);
+
+        //DrawModel(shpereSkyModel, {0,0,0}, 1,{255,255,255,100});
+
         DrawFlatShadedModel(player.GetTransform(), planeModel, &shaderData);
 
         //DrawColliderWire(testCollider,player.GetHitboxTransform(), RED);

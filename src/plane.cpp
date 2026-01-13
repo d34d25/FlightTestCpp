@@ -77,7 +77,7 @@ PlaneParams GetPlaneParams(Planes plane)
         params.yawAcceleration = response;
 
         params.modelPath = "assets/F15Actived.obj";
-        params.skipMaterialIndex = 2;
+        params.skipMaterialIndex = 4;
 
         break;
     

@@ -24,8 +24,8 @@ PlaneParams GetPlaneParams(Planes plane)
 
         params.scale = 1.0f;
 
-        params.hitboxWidth = 15; //20
-        params.hitboxLength = 24; //23
+        params.hitboxWidth = 15;
+        params.hitboxLength = 20;
         params.hitboxHeight = 2;
 
         params.colliderPos = {0,0,2};
@@ -76,8 +76,8 @@ PlaneParams GetPlaneParams(Planes plane)
         params.rollAcceleration = response * 4.0f;
         params.yawAcceleration = response;
 
-        params.modelPath = "assets/F15Activeb.obj";//"assets/sf15b.obj";
-        params.skipMaterialIndex = 6;//4;//7;
+        params.modelPath = "assets/F15Actived.obj";
+        params.skipMaterialIndex = 2;
 
         break;
     

@@ -8,8 +8,8 @@
 #include "collisions.h"
 #include "target.h"
 
-int INTERNAL_WIDTH = (int)426 * 1;
-int INTERNAL_HEIGHT = (int)240 * 1;
+int INTERNAL_WIDTH = (int)426 * 2;
+int INTERNAL_HEIGHT = (int)240 * 2;
 
 int SCREEN_WIDTH = 1280;
 int SCREEN_HEIGHT = 720;

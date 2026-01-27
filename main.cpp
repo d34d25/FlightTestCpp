@@ -8,8 +8,8 @@
 #include "collisions.h"
 #include "target.h"
 
-int INTERNAL_WIDTH = (int)426 * 3;
-int INTERNAL_HEIGHT = (int)240 * 3;
+int INTERNAL_WIDTH = (int)426 * 1.25f;
+int INTERNAL_HEIGHT = (int)240 * 1.25f;
 
 int SCREEN_WIDTH = 1280;
 int SCREEN_HEIGHT = 720;
@@ -93,7 +93,9 @@ int main()
     Model shpereSkyModel = LoadModelFromMesh(shpereSkyMesh);
 
     GradientShaderData gradientSkyShader = mLoadGradientShader("shaders/gradient.vs", "shaders/gradient.fs", 
-        {150,150,255,255}, WHITE, {25,25,100,255}, skyBoxRadius, 0);
+        {150,150,255,255}, WHITE, {25,25,100,255}, skyBoxRadius, 0); //skyBoxRadius, 0
+    //by updating the minimum height of the gradient, i could make an effect where the top part of the gradient
+    //covers a larger part of the sphere making it look like you're gaining altitude
 
     mApplyGradientShader(&gradientSkyShader, &shpereSkyModel);
 
@@ -104,7 +106,17 @@ int main()
     float accumulator = 0.0f;
     float FIXED_DELTA_TIME = 1.0f/60.0f;
 
-    Vector3 obstacleVel = {0,0,0};
+    Vector3 obstacleVel = {0,0,0}; //this not being 0 caused the collision detection being detected early, dammit! my collision detection algorithm was fine
+
+    //what happened:
+
+    /*
+    I left obstacleVel with a value of {0,0,1200} and did not update the obstacle, but i fed this to the SAT CCD function so it thought that
+    collider B was moving when it wasn't, because of this the actual relative velocity was mis-matched causing the function to produce wrong
+    enter and exit times.
+
+    PD: it also succsessfully detects collisions with insane spins so rotation also works
+    */
 
     while (!WindowShouldClose())
     {
@@ -143,7 +155,7 @@ int main()
                 testColliderColor = WHITE;
             }
 
-            obstacleColliderTransform.translation += obstacleVel * FIXED_DELTA_TIME;
+            //obstacleColliderTransform.translation += obstacleVel * FIXED_DELTA_TIME;
             player.UpdatePlayer(FIXED_DELTA_TIME);
 
             for (int b = 0; b < player.bulletPool.activeBullets.size(); b++)
@@ -280,7 +292,14 @@ int main()
             player.FireM(FIXED_DELTA_TIME);
 
             player.UpdateCamera(FIXED_DELTA_TIME);
+
+
+            //updating shader test
+
+            gradientSkyShader.maxHeight = -(player.GetPosition().y *  1e-10 * skyBoxRadius);
             
+            gradientSkyShader.minHeight = skyBoxRadius / (1.0f + player.GetPosition().y * 0.0001f);
+
             accumulator -= FIXED_DELTA_TIME;
         }
 
@@ -297,13 +316,13 @@ int main()
         
         DrawSkySphere(shpereSkyModel, &gradientSkyShader, player.camera);
 
-        //DrawModel(shpereSkyModel, {0,0,0}, 1,{255,255,255,100});
-
         DrawFlatShadedModel(player.GetTransform(), planeModel, &shaderData);
 
         //DrawColliderWire(testCollider,player.GetHitboxTransform(), RED);
         //DrawCollider(testCollider, player.GetHitboxTransform(), testColliderColor);
         //DrawColliderFaceNormals(testCollider, player.GetHitboxTransform(), 10);
+
+        DrawColliderFaceNormals(obstacleCollider, obstacleColliderTransform, 10);
 
         //DrawSphere(player.GetTransform().translation, testColliderRadius, testColliderColor);
 

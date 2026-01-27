@@ -109,7 +109,7 @@ Player::Player()
     engineGlowChange = 0.2f;
 
     //bullets
-    bulletPool = BulletPool(60, 1);
+    bulletPool = BulletPool(60, 2);
     bulletTransform = {};
     bulletTransform.scale = {1.0f, 1.0f, 1.0f};
 

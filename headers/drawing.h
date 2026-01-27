@@ -81,6 +81,12 @@ inline void DrawSkySphere(const Model& model, GradientShaderData* shaderData, Ca
 
     rlSetMatrixModelview(view);
 
+    SetShaderValue(shaderData->__shader,
+    shaderData->minHeightLoc, &shaderData->minHeight, SHADER_UNIFORM_FLOAT);
+
+    SetShaderValue(shaderData->__shader,
+    shaderData->maxHeightLoc, &shaderData->maxHeight, SHADER_UNIFORM_FLOAT);
+
     DrawModel(model, {0,0,0}, 1, WHITE);
     rlEnableDepthMask();
     rlEnableBackfaceCulling();

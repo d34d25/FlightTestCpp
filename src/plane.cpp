@@ -48,7 +48,7 @@ PlaneParams GetPlaneParams(Planes plane)
         params.idleThrust = 30000; 
 
         params.acceleration = 10500;// * 900;//  / 2.0f;
-        params.brake = 9500;
+        params.brake = 9500 * 1.5f;
 
         params.returnSpeedHigh = 4000;
         params.returnSpeedLow = 2500;
@@ -76,7 +76,7 @@ PlaneParams GetPlaneParams(Planes plane)
         params.rollAcceleration = response * 4.0f;
         params.yawAcceleration = response;
 
-        params.modelPath = "assets/F15Actived.obj";
+        params.modelPath = "assets/F15Actived.obj"; //"assets/AF-14.obj"; skip index: 3
         params.skipMaterialIndex = 4;
 
         break;

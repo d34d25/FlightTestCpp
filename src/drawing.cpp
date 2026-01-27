@@ -110,7 +110,7 @@ void mApplyGradientShader(GradientShaderData *shaderData, Model *model)
     shaderData->bottomColorLoc, colorArray_Bottom, SHADER_UNIFORM_VEC4);
 
     SetShaderValue(shaderData->__shader,
-    shaderData->minHeightLoc, &shaderData->minHeight, SHADER_UNIFORM_FLOAT);
+    shaderData->minHeightLoc, &shaderData->minHeight, SHADER_UNIFORM_FLOAT); //update this
 
     SetShaderValue(shaderData->__shader,
     shaderData->maxHeightLoc, &shaderData->maxHeight, SHADER_UNIFORM_FLOAT);
